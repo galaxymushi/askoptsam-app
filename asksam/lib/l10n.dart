@@ -1,0 +1,395 @@
+import 'package:flutter/widgets.dart';
+
+class Strings {
+  const Strings(this.language);
+
+  final String language;
+
+  static const supported = {'en': 'English', 'sw': 'Kiswahili'};
+
+  String get(String key) => _all[language]?[key] ?? _all['en']![key] ?? key;
+
+  String format(String key, Map<String, String> values) {
+    var text = get(key);
+    values.forEach((k, v) => text = text.replaceAll('{$k}', v));
+    return text;
+  }
+
+  static const _en = <String, String>{
+    'signIn': 'Sign in',
+    'createAccount': 'Create new account',
+    'createAccountCta': 'Create account',
+    'email': 'Email',
+    'emailHint': 'you@example.com',
+    'password': 'Password',
+    'passwordHint': 'Your password',
+    'name': 'Name',
+    'nameHint': 'Your name',
+    'forgotPassword': 'Forgot password?',
+    'welcomeBack': 'Welcome back',
+    'signInSubtitle': 'Sign in to continue with AskOptSam.',
+    'newHere': 'New here?',
+    'createYourAccount': 'Create your account',
+    'passwordRule': 'At least 8 characters',
+    'agreeTerms': 'I agree to the Terms and Privacy Policy',
+    'forgotTitle': 'Forgot password?',
+    'forgotSubtitle':
+        'Enter your email and we\'ll send you a reset link.',
+    'sendResetLink': 'Send reset link',
+    'resetSent': 'Reset link sent',
+    'resetSentBody':
+        'Check {email} for a link to reset your password.',
+    'ok': 'OK',
+    'backToSignIn': 'Back to sign in',
+    'welcomeHi': 'Hi there!',
+    'welcomeTitle': 'Welcome to AskOptSam',
+    'hiImSam': "Hi there, I'm AskOptSam",
+    'askAnything': 'Ask me anything…',
+    'tryAsking': 'TRY ASKING',
+    'chipExplain': 'Explain something simply',
+    'chipWrite': 'Help me write',
+    'chipSummarize': 'Summarize this',
+    'offline': "You're offline. Check your connection and try again.",
+    'couldntSend': "Couldn't send your message.",
+    'tryAgain': 'Try again',
+    'library': 'Library',
+    'searchChats': 'Search saved chats',
+    'nothingSaved': 'Nothing saved yet',
+    'savedHere': 'Your saved chats will show up here.',
+    'startChat': 'Start a chat',
+    'settings': 'Settings',
+    'account': 'ACCOUNT',
+    'profile': 'Profile',
+    'notifications': 'Notifications',
+    'preferences': 'PREFERENCES',
+    'darkMode': 'Dark mode',
+    'language': 'Language',
+    'aboutSection': 'ABOUT',
+    'privacyTerms': 'Privacy and terms',
+    'helpFeedback': 'Help and feedback',
+    'about': 'About',
+    'supportSection': 'SUPPORT THE PROJECT',
+    'buyCoffee': 'Buy OptSam a coffee',
+    'donateLonger': 'Donate to make the project last longer',
+    'logOut': 'Log out',
+    'supportTitle': 'Support AskOptSam',
+    'buySamCoffee': 'Buy OptSam a coffee',
+    'helpKeepGoing': 'Help keep the project going.',
+    'oneCoffee': '1 coffee',
+    'threeCoffees': '3 coffees',
+    'fiveCoffees': '5 coffees',
+    'buyCoffeeCta': 'Buy a coffee',
+    'donate': 'Donate',
+    'donateTitle': 'Donate to make the project last longer',
+    'thanks': 'Thank you for keeping AskOptSam going.',
+    'payTitle': 'Payment',
+    'donationLabel': 'Donation',
+    'coffeeLabel': 'Coffee',
+    'mobileMoney': 'MOBILE MONEY',
+    'merchantNumber': 'Payment number',
+    'copied': 'Copied',
+    'payName': 'Account name',
+    'paySteps': 'How to pay',
+    'stepDial': 'Open the USSD menu with the button below.',
+    'stepChoose':
+        'Choose “Pay” (Lipa kwa…) then enter {account} and the amount {amount}.',
+    'stepDone': 'After paying, tap “I have paid” so we can verify it.',
+    'dialUssd': 'Open {code}',
+    'dialFailed': 'Could not open the dialer. Dial the code manually.',
+    'ivePaid': 'I have paid',
+    'claimTitle': 'Payment noted',
+    'claimBody':
+        'Reference {ref}. We will verify your payment and get back to you.',
+    'sendReceipt': 'Send receipt',
+    'receiptText':
+        'AskOptSam payment\nReference: {ref}\nMethod: {channel}\nAmount: TZS {amount}\nStatus: awaiting verification',
+    'paySafeNote':
+        'AskOptSam never asks for your PIN or OTP. Pay only to the numbers shown here.',
+    'amountHint': 'Amount in TZS',
+    'invalidAmount': 'Enter a valid amount of TZS 500 or more',
+    'donateAmount': 'Donate {amount}',
+    'coffeeAmount': 'Buy a coffee · {amount}',
+    'supportedPayments': 'Payment methods',
+    'customAmount': 'Other amount',
+    'aboutTitle': 'About',
+    'developedBy':
+        'Developed with founder J.M. Samuel and co-founder J.M. Emanuel.',
+    'founder': 'Founder',
+    'coFounder': 'Co-founder',
+    'version': 'Version',
+    'rightsReserved': '© 2026 AskOptSam. All rights reserved.',
+    'profileTitle': 'Profile',
+    'saveChanges': 'Save changes',
+    'savedToast': 'Saved',
+    'notificationsTitle': 'Notifications',
+    'replies': 'New replies',
+    'dailyTip': 'Daily tip',
+    'updates': 'Product updates',
+    'languageTitle': 'Language',
+    'english': 'English',
+    'kiswahili': 'Kiswahili',
+    'privacyTitle': 'Privacy and terms',
+    'helpTitle': 'Help and feedback',
+    'newChat': 'New chat',
+    'delete': 'Delete',
+    'rename': 'Rename',
+    'cancel': 'Cancel',
+    'errorGeneric': 'Something went wrong. Please try again.',
+    'errorNetwork': 'No connection. Check your internet and try again.',
+    'errorEmailInUse': 'That email already has an account.',
+    'errorWrongPassword': 'That password is incorrect.',
+    'errorUserNotFound': 'No account found for that email.',
+    'errorWeakPassword': 'Use at least 8 characters.',
+    'errorInvalidEmail': 'Enter a valid email address.',
+    'errorTerms': 'Please accept the terms to continue.',
+    'confirmLogout': 'Log out of AskOptSam?',
+    'supportNotSet': 'No payment link is set up yet.',
+    'noResults': 'No chats match your search.',
+    'chatNotConnected': 'Chat isn\'t connected yet.',
+    'chatNotConnectedHint':
+        'This build was made without an AI key. Rebuild with your API settings to turn chat on.',
+    'typeName': 'Type your name',
+    'renameChat': 'Rename chat',
+    'send': 'Send',
+    'you': 'You',
+    'savedChats': 'Saved chats',
+    'openChat': 'Open chat',
+    'messageHelp':
+        'AskOptSam answers questions, explains ideas and helps you write.',
+    'contactSupport': 'Send feedback',
+    'privacyBody':
+        'AskOptSam stores your chats so you can find them in your Library. '
+        'Your messages are sent to the AI service to generate answers. '
+        'We never sell your data.',
+    'helpBody':
+        'Tell us what worked, what didn\'t, or what you\'d like AskOptSam to do next.',
+    'feedbackSubject': 'AskOptSam feedback',
+    'daysToday': 'Today',
+    'daysYesterday': 'Yesterday',
+    'resetLocalTitle': 'On-device account',
+    'resetLocalBody':
+        'This account lives on this phone, so there is no email reset link. '
+        'If you forgot the password, create a new account.',
+    'errorChatAuth': 'The chat service rejected its API key.',
+    'errorChatRate': 'Too many requests. Try again in a moment.',
+    'errorChatServer': 'The chat service had a problem. Try again.',
+    'eyeInfo': 'EYE INFORMATION',
+    'factOfDay': 'FACT OF THE DAY',
+    'readMore': 'Read more',
+    'tipLabel': 'Tip',
+    'factDisclaimer':
+        'General eye-health education, not a diagnosis. If your eyes hurt or '
+        'your sight changes, see an eye specialist.',
+    'noNotifications': 'No notifications yet',
+    'noNotificationsBody':
+        'Replies, daily tips and updates will show up here.',
+    'markAllRead': 'Mark all read',
+    'notificationSettings': 'NOTIFICATION SETTINGS',
+    'noticeWelcomeTitle': 'Welcome to AskOptSam',
+    'noticeWelcomeBody':
+        'Ask anything about your eyes. Your chats are saved in the Library.',
+    'noticeReplyTitle': 'New answer',
+    'noticeTipTitle': 'Today\'s eye tip',
+    'syncedCloud': 'Synced with the cloud',
+    'storedPhone': 'Stored on this phone',
+    'askAboutThis': 'Ask AskOptSam about this',
+  };
+
+  static const _sw = <String, String>{
+    'signIn': 'Ingia',
+    'createAccount': 'Fungua akaunti mpya',
+    'createAccountCta': 'Fungua akaunti',
+    'email': 'Barua pepe',
+    'emailHint': 'wewe@mfano.com',
+    'password': 'Nenosiri',
+    'passwordHint': 'Nenosiri lako',
+    'name': 'Jina',
+    'nameHint': 'Jina lako',
+    'forgotPassword': 'Umesahau nenosiri?',
+    'welcomeBack': 'Karibu tena',
+    'signInSubtitle': 'Ingia ili kuendelea na AskOptSam.',
+    'newHere': 'Mgeni hapa?',
+    'createYourAccount': 'Fungua akaunti yako',
+    'passwordRule': 'Angalau herufi 8',
+    'agreeTerms': 'Ninakubali Masharti na Sera ya Taarifa',
+    'forgotTitle': 'Umesahau nenosiri?',
+    'forgotSubtitle':
+        'Weka barua pepe yako na tutakutumia kiungo cha kubadilisha nenosiri.',
+    'sendResetLink': 'Tuma kiungo',
+    'resetSent': 'Kiungo kimetumwa',
+    'resetSentBody':
+        'Angalia {email} kwa kiungo cha kubadilisha nenosiri lako.',
+    'ok': 'Sawa',
+    'backToSignIn': 'Rudi kuingia',
+    'welcomeHi': 'Habari!',
+    'welcomeTitle': 'Karibu AskOptSam',
+    'hiImSam': 'Habari, mimi ni AskOptSam',
+    'askAnything': 'Niulize chochote…',
+    'tryAsking': 'JARIBU KUULIZA',
+    'chipExplain': 'Eleza kwa urahisi',
+    'chipWrite': 'Nisaidie kuandika',
+    'chipSummarize': 'Fupisha hii',
+    'offline': 'Huna mtandao. Angalia muunganisho wako na ujaribu tena.',
+    'couldntSend': 'Ujumbe wako haukutumwa.',
+    'tryAgain': 'Jaribu tena',
+    'library': 'Maktaba',
+    'searchChats': 'Tafuta mazungumzo',
+    'nothingSaved': 'Hakuna kilichohifadhiwa bado',
+    'savedHere': 'Mazungumzo yako yaliyohifadhiwa yataonekana hapa.',
+    'startChat': 'Anza mazungumzo',
+    'settings': 'Mipangilio',
+    'account': 'AKAUNTI',
+    'profile': 'Wasifu',
+    'notifications': 'Arifa',
+    'preferences': 'MAPENDELEO',
+    'darkMode': 'Hali ya giza',
+    'language': 'Lugha',
+    'aboutSection': 'KUHUSU',
+    'privacyTerms': 'Sera na masharti',
+    'helpFeedback': 'Msaada na maoni',
+    'about': 'Kuhusu',
+    'supportSection': 'SUA MRADI',
+    'buyCoffee': 'Nunua kahawa kwa OptSam',
+    'donateLonger': 'Changia ili mradi udumu',
+    'logOut': 'Toka',
+    'supportTitle': 'Saidia AskOptSam',
+    'buySamCoffee': 'Nunua kahawa kwa OptSam',
+    'helpKeepGoing': 'Saidia mradi uendelee.',
+    'oneCoffee': 'Kahawa 1',
+    'threeCoffees': 'Kahawa 3',
+    'fiveCoffees': 'Kahawa 5',
+    'buyCoffeeCta': 'Nunua kahawa',
+    'donate': 'Changia',
+    'donateTitle': 'Changia ili mradi udumu',
+    'thanks': 'Asante kwa kuiendeleza AskOptSam.',
+    'payTitle': 'Malipo',
+    'donationLabel': 'Mchango',
+    'coffeeLabel': 'Kahawa',
+    'mobileMoney': 'PESA ZA SIMU',
+    'merchantNumber': 'Namba ya malipo',
+    'copied': 'Imenakiliwa',
+    'payName': 'Jina la akaunti',
+    'paySteps': 'Jinsi ya kulipa',
+    'stepDial': 'Fungua menyu ya USSD kwa kitufe kilicho hapa chini.',
+    'stepChoose':
+        'Chagua “Lipa kwa…” kisha weka {account} na kiasi {amount}.',
+    'stepDone':
+        'Baada ya kulipa, bonyeza “Nimelipa” ili tuweze kuthibitisha.',
+    'dialUssd': 'Fungua {code}',
+    'dialFailed': 'Imeshindikana kufungua kipiga simu. Piga namba mwenyewe.',
+    'ivePaid': 'Nimelipa',
+    'claimTitle': 'Malipo yamepokelewa',
+    'claimBody':
+        'Kumbukumbu {ref}. Tutathibitisha malipo yako na tutawasiliana nawe.',
+    'sendReceipt': 'Tuma risiti',
+    'receiptText':
+        'Malipo ya AskOptSam\nKumbukumbu: {ref}\nNjia: {channel}\nKiasi: TZS {amount}\nHali: inasubiri uthibitisho',
+    'paySafeNote':
+        'AskOptSam haiombi PIN wala OTP yako. Lipa tu kwa namba zinazoonekana hapa.',
+    'amountHint': 'Kiasi kwa TZS',
+    'invalidAmount': 'Weka kiasi sahihi cha TZS 500 au zaidi',
+    'donateAmount': 'Changia {amount}',
+    'coffeeAmount': 'Nunua kahawa · {amount}',
+    'supportedPayments': 'Njia za malipo',
+    'customAmount': 'Kiasi kingine',
+    'aboutTitle': 'Kuhusu',
+    'developedBy':
+        'Imeundwa na mwanzilishi J.M. Samuel na mwanzilishi mwenza J.M. Emanuel.',
+    'founder': 'Mwanzilishi',
+    'coFounder': 'Mwanzilishi mwenza',
+    'version': 'Toleo',
+    'rightsReserved': '© 2026 AskOptSam. Haki zote zimehifadhiwa.',
+    'profileTitle': 'Wasifu',
+    'saveChanges': 'Hifadhi mabadiliko',
+    'savedToast': 'Imehifadhiwa',
+    'notificationsTitle': 'Arifa',
+    'replies': 'Majibu mapya',
+    'dailyTip': 'Kidokezo cha kila siku',
+    'updates': 'Taarifa za bidhaa',
+    'languageTitle': 'Lugha',
+    'english': 'Kiingereza',
+    'kiswahili': 'Kiswahili',
+    'privacyTitle': 'Sera na masharti',
+    'helpTitle': 'Msaada na maoni',
+    'newChat': 'Mazungumzo mapya',
+    'delete': 'Futa',
+    'rename': 'Badilisha jina',
+    'cancel': 'Ghairi',
+    'errorGeneric': 'Hitilafu imetokea. Tafadhali jaribu tena.',
+    'errorNetwork': 'Hakuna muunganisho. Angalia intaneti yako na ujaribu tena.',
+    'errorEmailInUse': 'Barua pepe hii tayari ina akaunti.',
+    'errorWrongPassword': 'Nenosiri si sahihi.',
+    'errorUserNotFound': 'Hakuna akaunti kwa barua pepe hiyo.',
+    'errorWeakPassword': 'Tumia angalau herufi 8.',
+    'errorInvalidEmail': 'Weka barua pepe sahihi.',
+    'errorTerms': 'Tafadhali kubali masharti ili kuendelea.',
+    'confirmLogout': 'Toka kwenye AskOptSam?',
+    'supportNotSet': 'Kiungo cha malipo bado hakijawekwa.',
+    'noResults': 'Hakuna mazungumzo yanayolingana.',
+    'chatNotConnected': 'Mazungumzo hayajaunganishwa bado.',
+    'chatNotConnectedHint':
+        'Toleo hili halina ufunguo wa AI. Jenga tena ukiwa na mipangilio ya API.',
+    'typeName': 'Andika jina lako',
+    'renameChat': 'Badilisha jina la mazungumzo',
+    'send': 'Tuma',
+    'you': 'Wewe',
+    'savedChats': 'Mazungumzo yaliyohifadhiwa',
+    'openChat': 'Fungua mazungumzo',
+    'messageHelp':
+        'AskOptSam hujibu maswali, hufafanua mambo na hukusaidia kuandika.',
+    'contactSupport': 'Tuma maoni',
+    'privacyBody':
+        'AskOptSam huhifadhi mazungumzo yako ili uyapate kwenye Maktaba. '
+        'Ujumbe wako hutumwa kwa huduma ya AI ili kupata majibu. '
+        'Hatuuzi taarifa zako.',
+    'helpBody':
+        'Tuambie kipi kilifanya kazi, kipi hakikufanya kazi, au ungependa AskOptSam ifanye nini baadaye.',
+    'feedbackSubject': 'Maoni kuhusu AskOptSam',
+    'daysToday': 'Leo',
+    'daysYesterday': 'Jana',
+    'resetLocalTitle': 'Akaunti ya kifaa hiki',
+    'resetLocalBody':
+        'Akaunti hii iko kwenye simu hii, kwa hivyo hakuna kiungo cha barua pepe. '
+        'Umesahau nenosiri? Fungua akaunti mpya.',
+    'errorChatAuth': 'Huduma ya mazungumzo imekataa ufunguo wa API.',
+    'errorChatRate': 'Maombi ni mengi mno. Jaribu tena baada ya muda mfupi.',
+    'errorChatServer': 'Huduma ya mazungumzo imepata hitilafu. Jaribu tena.',
+    'eyeInfo': 'TAARIFA ZA MACHO',
+    'factOfDay': 'TAARIFA YA LEO',
+    'readMore': 'Soma zaidi',
+    'tipLabel': 'Kidokezo',
+    'factDisclaimer':
+        'Elimu ya jumla ya afya ya macho, si utambuzi. Macho yakiuma au uoni '
+        'ukibadilika, mwone mtaalamu wa macho.',
+    'noNotifications': 'Hakuna arifa bado',
+    'noNotificationsBody':
+        'Majibu, vidokezo vya kila siku na taarifa zitaonekana hapa.',
+    'markAllRead': 'Soma zote',
+    'notificationSettings': 'MIPANGILIO YA ARIFA',
+    'noticeWelcomeTitle': 'Karibu AskOptSam',
+    'noticeWelcomeBody':
+        'Uliza chochote kuhusu macho yako. Mazungumzo yako yanahifadhiwa kwenye Maktaba.',
+    'noticeReplyTitle': 'Jibu jipya',
+    'noticeTipTitle': 'Kidokezo cha leo',
+    'syncedCloud': 'Inasawazishwa na wingu',
+    'storedPhone': 'Imehifadhiwa kwenye simu hii',
+    'askAboutThis': 'Uliza AskOptSam kuhusu hili',
+  };
+
+  static const _all = {'en': _en, 'sw': _sw};
+}
+
+class L10nScope extends InheritedWidget {
+  const L10nScope({super.key, required this.strings, required super.child});
+
+  final Strings strings;
+
+  static Strings of(BuildContext context) {
+    final scope = context.dependOnInheritedWidgetOfExactType<L10nScope>();
+    return scope?.strings ?? const Strings('en');
+  }
+
+  @override
+  bool updateShouldNotify(L10nScope oldWidget) =>
+      oldWidget.strings.language != strings.language;
+}

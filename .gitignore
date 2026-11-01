@@ -1,0 +1,9 @@
+# Local tooling and verification artifacts
+.chrome-profile/
+.shots/
+.pdfpages/
+*.log
+
+# OS noise
+.DS_Store
+Thumbs.db
