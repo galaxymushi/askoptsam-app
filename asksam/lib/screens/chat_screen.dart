@@ -7,7 +7,9 @@ import '../app_state.dart';
 import '../l10n.dart';
 import '../models.dart';
 import '../services/ai_service.dart';
+import '../services/daily_intelligence_service.dart';
 import '../services/notification_store.dart';
+import '../services/update_service.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 
@@ -38,6 +40,10 @@ class ChatScreenState extends State<ChatScreen> {
   bool _offline = false;
   String? _errorCard; // localized copy shown under a failed send
   String? _pendingText; // last user text that needs retrying
+  DailyBriefing _dailyBriefing = DailyIntelligenceService.seedForDay(
+    DateTime.now(),
+  );
+  AppRelease? _updateRelease;
 
   @override
   void initState() {
@@ -51,12 +57,41 @@ class ChatScreenState extends State<ChatScreen> {
           updatedAt: DateTime.now(),
           messages: [],
         );
+    _initIntelligenceAndUpdates();
     final prompt = widget.initialPrompt;
     if (prompt != null && prompt.trim().isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _send(prompt);
       });
     }
+  }
+
+  Future<void> _initIntelligenceAndUpdates() async {
+    final cachedDaily = await DailyIntelligenceService.instance.loadToday();
+    final cachedUpdate = await UpdateService.instance.cachedUpdate();
+    if (!mounted) return;
+    setState(() {
+      _dailyBriefing = cachedDaily;
+      _updateRelease = cachedUpdate;
+    });
+    final app = AppScope.read(context);
+    final uid = app.user?.uid;
+    if (uid == null) return;
+    final briefing = await DailyIntelligenceService.instance.syncDailyNotice(
+      uid,
+      language: app.settings.language,
+      includeDailyTip: app.settings.notifyTips,
+    );
+    final release = await UpdateService.instance.syncUpdateNotice(
+      uid,
+      language: app.settings.language,
+      notifyUpdates: app.settings.notifyUpdates,
+    );
+    if (!mounted) return;
+    setState(() {
+      _dailyBriefing = briefing;
+      if (release != null) _updateRelease = release;
+    });
   }
 
   @override
@@ -319,6 +354,12 @@ class ChatScreenState extends State<ChatScreen> {
                 ),
               ],
             ),
+            if (_updateRelease != null)
+              _UpdateStrip(
+                release: _updateRelease!,
+                onTap: () =>
+                    UpdateService.instance.openDownload(_updateRelease!),
+              ),
             if (_offline) _OfflineBanner(text: t.get('offline')),
             Expanded(
               child: _empty
@@ -346,7 +387,11 @@ class ChatScreenState extends State<ChatScreen> {
                             onSend: _sending ? null : () => _send(),
                           ),
                         ),
-                        _SuggestionChips(onPick: _send),
+                        _SuggestionChips(
+                          onPick: _send,
+                          dailyQuestions:
+                              _dailyBriefing.questions(t.language),
+                        ),
                         const SizedBox(height: 12),
                       ],
                     )
@@ -543,16 +588,70 @@ class _ChatGreeting extends StatelessWidget {
   }
 }
 
+class _UpdateStrip extends StatelessWidget {
+  const _UpdateStrip({required this.release, required this.onTap});
+
+  final AppRelease release;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L10nScope.of(context);
+    return Material(
+      color: AppColors.primary,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.system_update_alt_rounded,
+                color: Colors.white,
+                size: 19,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  '${t.format('noticeUpdateTitle', {'version': release.version})} · ${t.get('downloadUpdate')}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.download_rounded,
+                color: Colors.white,
+                size: 19,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SuggestionChips extends StatelessWidget {
-  const _SuggestionChips({required this.onPick});
+  const _SuggestionChips({
+    required this.onPick,
+    this.dailyQuestions = const [],
+  });
 
   final ValueChanged<String> onPick;
+  final List<String> dailyQuestions;
 
   @override
   Widget build(BuildContext context) {
     final t = L10nScope.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final chips = [
+      ...dailyQuestions.take(3),
       t.get('chipExplain'),
       t.get('chipWrite'),
       t.get('chipSummarize'),

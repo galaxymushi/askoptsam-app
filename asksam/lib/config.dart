@@ -27,6 +27,22 @@ class AppConfig {
   static const supportUrl = String.fromEnvironment('SUPPORT_URL');
   static const supportEmail = String.fromEnvironment('SUPPORT_EMAIL');
 
+  static const releasesApiUrl = String.fromEnvironment(
+    'RELEASES_API_URL',
+    defaultValue:
+        'https://api.github.com/repos/galaxymushi/askoptsam-app/releases/latest',
+  );
+  static const latestApkDownloadUrl = String.fromEnvironment(
+    'LATEST_APK_URL',
+    defaultValue:
+        'https://github.com/galaxymushi/askoptsam-app/releases/latest/download/app-release.apk',
+  );
+  static const releasesPageUrl = String.fromEnvironment(
+    'RELEASES_PAGE_URL',
+    defaultValue:
+        'https://github.com/galaxymushi/askoptsam-app/releases/latest',
+  );
+
   // Payment details (Tanzania). These are the receiving numbers the operator
   // owns; overriding them at build time replaces the defaults.
   static const payAccountName = String.fromEnvironment(

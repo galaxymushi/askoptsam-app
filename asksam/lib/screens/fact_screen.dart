@@ -31,9 +31,9 @@ class FactScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(22, 6, 22, 28),
           children: [
-            FactArtwork(kind: fact.art, height: 200, radius: 26),
+            FactArtwork(fact: fact, height: 200, radius: 26),
             const SizedBox(height: 4),
-            FactPhotoCredit(kind: fact.art),
+            FactPhotoCredit(fact: fact),
             const SizedBox(height: 14),
             Text(
               fact.title(lang),

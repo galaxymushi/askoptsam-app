@@ -14,13 +14,13 @@ import '../theme.dart';
 class FactArtwork extends StatelessWidget {
   const FactArtwork({
     super.key,
-    required this.kind,
+    required this.fact,
     this.height = 150,
     this.radius = 22,
     this.borderRadius,
   });
 
-  final FactArt kind;
+  final EyeFact fact;
   final double height;
   final double radius;
   final BorderRadiusGeometry? borderRadius;
@@ -28,7 +28,7 @@ class FactArtwork extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final photo = factPhotos[kind];
+    final photo = photoFor(fact);
     return ClipRRect(
       borderRadius: borderRadius ?? BorderRadius.circular(radius),
       child: SizedBox(
@@ -38,7 +38,7 @@ class FactArtwork extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             CustomPaint(
-              painter: _ArtPainter(kind: kind, dark: dark),
+              painter: _ArtPainter(kind: fact.art, dark: dark),
             ),
             if (photo != null)
               Image.asset(
@@ -62,12 +62,12 @@ class FactArtwork extends StatelessWidget {
 /// Attribution line for the photo above a fact. Tapping it opens the original
 /// file page, where the full author and licence details live.
 class FactPhotoCredit extends StatelessWidget {
-  const FactPhotoCredit({super.key, required this.kind});
+  const FactPhotoCredit({super.key, required this.fact});
 
-  final FactArt kind;
+  final EyeFact fact;
 
   Future<void> _open() async {
-    final photo = factPhotos[kind];
+    final photo = photoFor(fact);
     if (photo == null) return;
     try {
       await launchUrl(
@@ -81,7 +81,7 @@ class FactPhotoCredit extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final photo = factPhotos[kind];
+    final photo = photoFor(fact);
     if (photo == null) return const SizedBox.shrink();
     final t = L10nScope.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;

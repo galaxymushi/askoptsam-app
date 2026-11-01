@@ -58,6 +58,21 @@ class AiService {
     }
   }
 
+  /// Collects a complete single-turn response from AskOptSam's AI brain.
+  Future<String> completePrompt(String prompt, {String lang = 'sw'}) async {
+    final buffer = StringBuffer();
+    final turn = ChatMessage(
+      id: 'daily-${DateTime.now().microsecondsSinceEpoch}',
+      role: 'user',
+      text: prompt,
+      createdAt: DateTime.now(),
+    );
+    await for (final chunk in streamReply([turn], lang: lang)) {
+      buffer.write(chunk);
+    }
+    return buffer.toString().trim();
+  }
+
   /// Hosted AskOptsam assistant (same persona, sources and guardrails as the
   /// web app). Server-sent events: meta, token, done, error.
   Stream<String> _streamAskOptsam(List<ChatMessage> history, String lang) async* {

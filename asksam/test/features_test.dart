@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:asksam/app_state.dart';
@@ -17,9 +21,11 @@ import 'package:asksam/screens/privacy_screen.dart';
 import 'package:asksam/screens/settings_screen.dart';
 import 'package:asksam/services/auth_service.dart';
 import 'package:asksam/services/chat_store.dart';
+import 'package:asksam/services/daily_intelligence_service.dart';
 import 'package:asksam/services/notification_store.dart';
 import 'package:asksam/services/payment_service.dart';
 import 'package:asksam/services/settings_controller.dart';
+import 'package:asksam/services/update_service.dart';
 
 const _user = AppUser(uid: 'tester', email: 't@x.tz', name: 'Tester');
 
@@ -248,10 +254,12 @@ void main() {
     expect(ChatMessage.fromMap(plain.toMap()).feedback, isNull);
   });
 
-  test('every eye fact has a licensed real photograph', () {
-    for (final art in FactArt.values) {
-      final photo = factPhotos[art];
-      expect(photo, isNotNull, reason: '$art has no photo');
+  test('every eye fact has its own licensed real photograph', () {
+    expect(factPhotos.length, EyeFacts.all.length);
+    final assets = <String>{};
+    for (final fact in EyeFacts.all) {
+      final photo = factPhotos[fact.id];
+      expect(photo, isNotNull, reason: '${fact.id} has no photo');
       expect(photo!.asset, startsWith('assets/images/facts/'));
       expect(photo.asset, endsWith('.jpg'));
       expect(photo.author.trim(), isNotEmpty);
@@ -260,7 +268,11 @@ void main() {
         photo.sourceUrl,
         startsWith('https://commons.wikimedia.org/wiki/File:'),
       );
+      assets.add(photo.asset);
     }
+    // Only a handful of closely related facts may share a file; the rest must
+    // be their own picture so a fact never shows an unrelated subject.
+    expect(assets.length, greaterThanOrEqualTo(16));
   });
 
   test('privacy and terms documents are complete in both languages', () {
@@ -357,5 +369,106 @@ void main() {
     await tester.scrollUntilVisible(find.text('Fungua msaada'), 300);
     expect(find.text('Fungua msaada'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  test('update service detects newer versions and creates download notices', () async {
+    expect(UpdateService.isNewerVersion('v2.3.0', '2.2.0'), isTrue);
+    expect(UpdateService.isNewerVersion('2.3.1', '2.3.0+6'), isTrue);
+    expect(UpdateService.isNewerVersion('2.3.0', '2.3.0'), isFalse);
+    expect(UpdateService.isNewerVersion('2.1.0', '2.3.0'), isFalse);
+
+    final mockClient = MockClient((request) async {
+      return http.Response(
+        jsonEncode({
+          'tag_name': 'v2.4.0',
+          'name': 'AskOptSam 2.4.0',
+          'body': '- Arifa za toleo jipya\n- AI ya kila siku',
+          'html_url':
+              'https://github.com/galaxymushi/askoptsam-app/releases/tag/v2.4.0',
+          'assets': [
+            {
+              'name': 'app-release.apk',
+              'browser_download_url':
+                  'https://github.com/galaxymushi/askoptsam-app/releases/download/v2.4.0/app-release.apk',
+            },
+          ],
+        }),
+        200,
+      );
+    });
+
+    final release = await UpdateService.instance.syncUpdateNotice(
+      'tester',
+      language: 'sw',
+      installedVersion: '2.3.0',
+      client: mockClient,
+    );
+
+    expect(release, isNotNull);
+    expect(release!.version, '2.4.0');
+    expect(
+      release.downloadUrl,
+      'https://github.com/galaxymushi/askoptsam-app/releases/download/v2.4.0/app-release.apk',
+    );
+
+    final notices = await NotificationStore().load('tester');
+    final updateNotice = notices.firstWhere((n) => n.kind == NoticeKind.update);
+    expect(updateNotice.title, contains('2.4.0'));
+    expect(updateNotice.actionUrl, release.downloadUrl);
+  });
+
+  test('autonomous daily intelligence generates and caches daily AI insight', () async {
+    final day1 = DateTime(2026, 11, 1);
+    final day2 = DateTime(2026, 11, 2);
+
+    final seed1 = DailyIntelligenceService.seedForDay(day1);
+    final seed2 = DailyIntelligenceService.seedForDay(day2);
+    expect(seed1.titleSw, isNot(seed2.titleSw));
+    expect(seed1.questionsSw, isNotEmpty);
+    expect(seed1.questionsEn, isNotEmpty);
+
+    final aiBriefing = await DailyIntelligenceService.instance.syncDailyNotice(
+      'tester',
+      language: 'sw',
+      now: day1,
+      aiCompleter: (_) async => jsonEncode({
+        'titleSw': 'Kulinda macho wakati wa joto kali',
+        'titleEn': 'Protecting eyes during intense heat',
+        'bodySw':
+            'Upepo mkavu na joto huongeza uvukizi wa machozi. Kunywa maji na vaa miwani.',
+        'bodyEn':
+            'Dry wind and heat speed up tear evaporation. Stay hydrated and wear sunglasses.',
+        'actionSw': 'Kunywa glasi mbili za maji kabla ya saa sita mchana leo.',
+        'actionEn': 'Drink two glasses of water before noon today.',
+        'didYouKnowSw': 'Kornea hupata oksijeni moja kwa moja kutoka hewani.',
+        'didYouKnowEn': 'The cornea gets oxygen directly from the air.',
+        'questionsSw': [
+          'Joto linaathirije macho?',
+          'Miwani gani inafaa kwenye jua?',
+        ],
+        'questionsEn': [
+          'How does heat affect the eyes?',
+          'Which sunglasses are best in strong sun?',
+        ],
+      }),
+    );
+
+    expect(aiBriefing.aiGenerated, isTrue);
+    expect(aiBriefing.titleSw, 'Kulinda macho wakati wa joto kali');
+
+    final cached = await DailyIntelligenceService.instance.loadToday(now: day1);
+    expect(cached.aiGenerated, isTrue);
+    expect(cached.titleSw, 'Kulinda macho wakati wa joto kali');
+
+    final notices = await NotificationStore().load('tester');
+    expect(
+      notices.any(
+        (n) =>
+            n.id == 'daily-ai-2026-11-01' &&
+            n.prompt != null &&
+            n.prompt!.isNotEmpty,
+      ),
+      isTrue,
+    );
   });
 }

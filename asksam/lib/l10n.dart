@@ -196,6 +196,26 @@ class Strings {
     'photoCredit': 'Photo: {author} · {license} · Wikimedia Commons',
     'photoCreditOpen': 'Open photo source',
     'lastUpdated': 'Last updated {date}',
+    'noticeUpdateTitle': 'New version {version} available',
+    'noticeUpdateBody':
+        'Tap here to download AskOptSam {version} now. {notes}',
+    'updateAvailableBadge': 'NEW VERSION {version}',
+    'updateAvailableTitle': 'AskOptSam {version} is ready',
+    'downloadUpdate': 'Download new version',
+    'tapToDownloadUpdate': 'Tap to download new version',
+    'checkForUpdates': 'Check for updates',
+    'upToDateToast': 'You are using the latest version of AskOptSam.',
+    'checkingUpdates': 'Checking for updates…',
+    'dailyAiBadge': 'TODAY\'S NEW AI INSIGHT',
+    'dailyAiLiveBadge': 'LIVE AI',
+    'dailyActionLabel': 'Today\'s action',
+    'didYouKnowLabel': 'Did you know?',
+    'generateFreshAi': 'New insight',
+    'generatingAi': 'Thinking…',
+    'exploreWithAi': 'Ask AskOptSam about this',
+    'noticeDailyAiTitle': 'Today\'s new AI discovery',
+    'tapToAskAi': 'Tap to explore with AskOptSam',
+    'todaySmartQuestions': 'TODAY\'S SMART QUESTIONS',
   };
 
   static const _sw = <String, String>{
@@ -381,6 +401,26 @@ class Strings {
     'photoCredit': 'Picha: {author} · {license} · Wikimedia Commons',
     'photoCreditOpen': 'Fungua chanzo cha picha',
     'lastUpdated': 'Imesasishwa {date}',
+    'noticeUpdateTitle': 'Toleo jipya {version} linapatikana',
+    'noticeUpdateBody':
+        'Bonyeza hapa kupakua AskOptSam {version} sasa. {notes}',
+    'updateAvailableBadge': 'TOLEO JIPYA {version}',
+    'updateAvailableTitle': 'AskOptSam {version} iko tayari',
+    'downloadUpdate': 'Pakua toleo jipya',
+    'tapToDownloadUpdate': 'Bonyeza kupakua toleo jipya',
+    'checkForUpdates': 'Angalia toleo jipya',
+    'upToDateToast': 'Unatumia toleo la kisasa zaidi la AskOptSam.',
+    'checkingUpdates': 'Inatafuta toleo jipya…',
+    'dailyAiBadge': 'JAMBO JIPYA LA LEO · AI',
+    'dailyAiLiveBadge': 'AI MOJA KWA MOJA',
+    'dailyActionLabel': 'Hatua ya leo',
+    'didYouKnowLabel': 'Je, wajua?',
+    'generateFreshAi': 'Jambo jingine',
+    'generatingAi': 'Inabuni…',
+    'exploreWithAi': 'Jadili na AskOptSam kuhusu hili',
+    'noticeDailyAiTitle': 'Jambo jipya la leo kutoka AI',
+    'tapToAskAi': 'Bonyeza kujadili na AskOptSam',
+    'todaySmartQuestions': 'MASWALI YA LEO KUTOKA AI',
   };
 
   static const _all = {'en': _en, 'sw': _sw};

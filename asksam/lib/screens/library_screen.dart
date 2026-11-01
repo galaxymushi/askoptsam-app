@@ -4,7 +4,9 @@ import '../app_state.dart';
 import '../content/eye_facts.dart';
 import '../l10n.dart';
 import '../models.dart';
+import '../services/daily_intelligence_service.dart';
 import '../services/notification_store.dart';
+import '../services/update_service.dart';
 import '../theme.dart';
 import '../widgets/fact_art.dart';
 import '../widgets/ui.dart';
@@ -27,6 +29,11 @@ class LibraryScreenState extends State<LibraryScreen> {
   List<ChatSession> _sessions = [];
   bool _loading = true;
   int _unread = 0;
+  DailyBriefing _dailyBriefing = DailyIntelligenceService.seedForDay(
+    DateTime.now(),
+  );
+  bool _generatingDaily = false;
+  AppRelease? _updateRelease;
 
   @override
   void initState() {
@@ -47,12 +54,21 @@ class LibraryScreenState extends State<LibraryScreen> {
     if (mounted) setState(() => _loading = true);
     try {
       final sessions = await app.store.load(uid);
+      final cachedDaily = await DailyIntelligenceService.instance.loadToday();
+      final cachedUpdate = await UpdateService.instance.cachedUpdate();
       if (!mounted) return;
       setState(() {
         _sessions = sessions;
+        _dailyBriefing = cachedDaily;
+        _updateRelease = cachedUpdate;
         _loading = false;
       });
-      await _syncNotices(uid, app.settings.language, app.settings.notifyTips);
+      await _syncNotices(
+        uid,
+        app.settings.language,
+        app.settings.notifyTips,
+        app.settings.notifyUpdates,
+      );
     } catch (error) {
       debugPrint('Could not load chats: $error');
       if (!mounted) return;
@@ -64,6 +80,7 @@ class LibraryScreenState extends State<LibraryScreen> {
     String uid,
     String language,
     bool includeDailyTip,
+    bool includeUpdates,
   ) async {
     final s = Strings(language);
     await _notices.addOnce(
@@ -86,6 +103,54 @@ class LibraryScreenState extends State<LibraryScreen> {
     }
     final unread = await _notices.unread(uid);
     if (mounted) setState(() => _unread = unread);
+
+    // Run autonomous daily AI synthesis and GitHub release check asynchronously
+    // so the screen renders immediately and updates live when complete.
+    _runAutonomousChecks(uid, language, includeDailyTip, includeUpdates);
+  }
+
+  Future<void> _runAutonomousChecks(
+    String uid,
+    String language,
+    bool includeDailyTip,
+    bool includeUpdates,
+  ) async {
+    try {
+      final briefing = await DailyIntelligenceService.instance.syncDailyNotice(
+        uid,
+        language: language,
+        includeDailyTip: includeDailyTip,
+      );
+      final release = await UpdateService.instance.syncUpdateNotice(
+        uid,
+        language: language,
+        notifyUpdates: includeUpdates,
+      );
+      final unread = await _notices.unread(uid);
+      if (!mounted) return;
+      setState(() {
+        _dailyBriefing = briefing;
+        if (release != null) _updateRelease = release;
+        _unread = unread;
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _generateFreshDaily() async {
+    if (_generatingDaily) return;
+    setState(() => _generatingDaily = true);
+    try {
+      final fresh = await DailyIntelligenceService.instance.refreshWithAi(
+        forceNew: true,
+      );
+      if (!mounted) return;
+      setState(() {
+        _dailyBriefing = fresh;
+        _generatingDaily = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _generatingDaily = false);
+    }
   }
 
   List<ChatSession> get _visible {
@@ -273,6 +338,15 @@ class LibraryScreenState extends State<LibraryScreen> {
                       child: ListView(
                         padding: const EdgeInsets.fromLTRB(22, 6, 22, 24),
                         children: [
+                          if (_updateRelease != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 14),
+                              child: _UpdateBanner(
+                                release: _updateRelease!,
+                                onDownload: () => UpdateService.instance
+                                    .openDownload(_updateRelease!),
+                              ),
+                            ),
                           _FactHero(
                             fact: today,
                             lang: t.language,
@@ -293,6 +367,30 @@ class LibraryScreenState extends State<LibraryScreen> {
                                 onTap: () => _openFact(more[index]),
                               ),
                             ),
+                          ),
+                          const SizedBox(height: 16),
+                          _DailyIntelligenceCard(
+                            briefing: _dailyBriefing,
+                            lang: t.language,
+                            generating: _generatingDaily,
+                            onRefresh: _generateFreshDaily,
+                            onExplore: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ChatScreen(
+                                    initialPrompt:
+                                        _dailyBriefing.chatPrompt(t.language),
+                                  ),
+                                ),
+                              );
+                            },
+                            onPickQuestion: (q) {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ChatScreen(initialPrompt: q),
+                                ),
+                              );
+                            },
                           ),
                           SectionLabel(t.get('savedChats')),
                           if (_sessions.isEmpty)
@@ -425,7 +523,7 @@ class _FactHero extends StatelessWidget {
               Stack(
                 children: [
                   FactArtwork(
-                    kind: fact.art,
+                    fact: fact,
                     height: 150,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(24),
@@ -542,7 +640,7 @@ class _FactCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 FactArtwork(
-                  kind: fact.art,
+                  fact: fact,
                   height: 96,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(20),
@@ -683,6 +781,352 @@ class _EmptyChats extends StatelessWidget {
             label: t.get('startChat'),
             height: 50,
             onPressed: onCreate,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UpdateBanner extends StatelessWidget {
+  const _UpdateBanner({required this.release, required this.onDownload});
+
+  final AppRelease release;
+  final VoidCallback onDownload;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L10nScope.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? const [Color(0xFF142C63), Color(0xFF0A438A)]
+              : const [Color(0xFF0A5FF2), Color(0xFF1B86F8)],
+        ),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  t.format('updateAvailableBadge', {
+                    'version': release.version,
+                  }),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              const Icon(
+                Icons.system_update_alt_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            t.format('updateAvailableTitle', {'version': release.version}),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18.5,
+              fontWeight: FontWeight.w800,
+              height: 1.2,
+            ),
+          ),
+          if (release.notes.isNotEmpty) ...[
+            const SizedBox(height: 5),
+            Text(
+              release.notes,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontSize: 13.5,
+                height: 1.35,
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: ElevatedButton.icon(
+              onPressed: onDownload,
+              icon: const Icon(Icons.download_rounded, size: 19),
+              label: Text(
+                t.get('downloadUpdate'),
+                style: const TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppColors.primary,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DailyIntelligenceCard extends StatelessWidget {
+  const _DailyIntelligenceCard({
+    required this.briefing,
+    required this.lang,
+    required this.generating,
+    required this.onRefresh,
+    required this.onExplore,
+    required this.onPickQuestion,
+  });
+
+  final DailyBriefing briefing;
+  final String lang;
+  final bool generating;
+  final VoidCallback onRefresh;
+  final VoidCallback onExplore;
+  final ValueChanged<String> onPickQuestion;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L10nScope.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final questions = briefing.questions(lang);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : const Color(0xFFF6F9FF),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF2E6BFF).withValues(alpha: 0.45)
+              : const Color(0xFFCCE0FF),
+          width: 1.3,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.auto_awesome_rounded,
+                      size: 13.5,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      t.get('dailyAiBadge'),
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.7,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              InkWell(
+                onTap: generating ? null : onRefresh,
+                borderRadius: BorderRadius.circular(999),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.refresh_rounded,
+                        size: 15,
+                        color: isDark ? AppColors.darkMuted : AppColors.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        generating
+                            ? t.get('generatingAi')
+                            : t.get('generateFreshAi'),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color:
+                              isDark ? AppColors.darkMuted : AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            briefing.title(lang),
+            style: const TextStyle(
+              fontSize: 19.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+              height: 1.22,
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            briefing.body(lang),
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.45,
+              color: isDark ? AppColors.darkText : AppColors.ink,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSoft : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.border,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.bolt_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.get('dailyActionLabel'),
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        briefing.action(lang),
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          height: 1.38,
+                          color: isDark ? AppColors.darkText : AppColors.ink,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (questions.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: questions
+                  .take(2)
+                  .map(
+                    (q) => InkWell(
+                      onTap: () => onPickQuestion(q),
+                      borderRadius: BorderRadius.circular(999),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.darkSoft : Colors.white,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.border,
+                          ),
+                        ),
+                        child: Text(
+                          q,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: onExplore,
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Text(
+                    t.get('exploreWithAi'),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 17,
+                    color: AppColors.primary,
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

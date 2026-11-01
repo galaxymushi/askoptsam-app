@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../app_state.dart';
 import '../l10n.dart';
 import '../services/notification_store.dart';
+import '../services/update_service.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
+import 'chat_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -50,9 +52,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _open(AppNotice notice) async {
     final uid = _uid;
-    if (uid == null || notice.read) return;
-    await _store.markRead(uid, notice.id);
-    await _load();
+    if (uid != null && !notice.read) {
+      await _store.markRead(uid, notice.id);
+      await _load();
+    }
+    final actionUrl = notice.actionUrl;
+    if (actionUrl != null && actionUrl.trim().isNotEmpty) {
+      await UpdateService.instance.openUrl(actionUrl);
+      return;
+    }
+    final prompt = notice.prompt;
+    if (prompt != null && prompt.trim().isNotEmpty && mounted) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => ChatScreen(initialPrompt: prompt)),
+      );
+    }
   }
 
   int get _unread => _items.where((n) => !n.read).length;
@@ -120,6 +134,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       activeThumbColor: Colors.white,
                       activeTrackColor: AppColors.primary,
                       onChanged: settings.setNotifyTips,
+                    ),
+                  ),
+                  SettingsTile(
+                    icon: Icons.system_update_alt_rounded,
+                    title: t.get('updates'),
+                    onTap: () =>
+                        settings.setNotifyUpdates(!settings.notifyUpdates),
+                    trailing: Switch(
+                      value: settings.notifyUpdates,
+                      activeThumbColor: Colors.white,
+                      activeTrackColor: AppColors.primary,
+                      onChanged: settings.setNotifyUpdates,
                     ),
                   ),
                 ],
@@ -243,6 +269,68 @@ class _NoticeTile extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
+                      if (notice.actionUrl != null &&
+                          notice.actionUrl!.trim().isNotEmpty) ...[
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.download_rounded,
+                                size: 15,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  L10nScope.of(context)
+                                      .get('tapToDownloadUpdate'),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ] else if (notice.prompt != null &&
+                          notice.prompt!.trim().isNotEmpty) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 5),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.auto_awesome_rounded,
+                                size: 14,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  L10nScope.of(context).get('tapToAskAi'),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       Text(
                         _timeLabel(context),
                         style: TextStyle(

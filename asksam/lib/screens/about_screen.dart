@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../l10n.dart';
+import '../services/update_service.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 
@@ -14,6 +15,8 @@ class AboutScreen extends StatefulWidget {
 
 class _AboutScreenState extends State<AboutScreen> {
   String _version = '';
+  AppRelease? _update;
+  bool _checking = false;
 
   @override
   void initState() {
@@ -23,6 +26,31 @@ class _AboutScreenState extends State<AboutScreen> {
         setState(() => _version = '${info.version} (${info.buildNumber})');
       }
     });
+    UpdateService.instance.cachedUpdate().then((release) {
+      if (mounted && release != null) {
+        setState(() => _update = release);
+      }
+    });
+  }
+
+  Future<void> _checkUpdates() async {
+    if (_checking) return;
+    setState(() => _checking = true);
+    final release = await UpdateService.instance.checkForUpdate();
+    if (!mounted) return;
+    setState(() {
+      _checking = false;
+      _update = release;
+    });
+    if (release == null) {
+      final t = L10nScope.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.get('upToDateToast')),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
@@ -84,6 +112,26 @@ class _AboutScreenState extends State<AboutScreen> {
                 role: t.get('coFounder'),
               ),
               const Spacer(),
+              if (_update != null) ...[
+                PrimaryButton(
+                  label:
+                      '${t.get('downloadUpdate')} (${_update!.version})',
+                  height: 50,
+                  onPressed: () =>
+                      UpdateService.instance.openDownload(_update!),
+                ),
+                const SizedBox(height: 12),
+              ] else ...[
+                OutlinePillButton(
+                  label: _checking
+                      ? t.get('checkingUpdates')
+                      : t.get('checkForUpdates'),
+                  height: 48,
+                  icon: Icons.system_update_alt_rounded,
+                  onPressed: _checking ? null : _checkUpdates,
+                ),
+                const SizedBox(height: 12),
+              ],
               Text(
                 '${t.get('version')} $_version',
                 textAlign: TextAlign.center,

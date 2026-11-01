@@ -12,6 +12,8 @@ class AppNotice {
     required this.body,
     required this.createdAt,
     this.read = false,
+    this.actionUrl,
+    this.prompt,
   });
 
   final String id;
@@ -21,6 +23,13 @@ class AppNotice {
   final DateTime createdAt;
   bool read;
 
+  /// Optional external URL (such as the direct APK download for a new release)
+  /// opened when the user taps the notice.
+  final String? actionUrl;
+
+  /// Optional AI chat prompt launched when the user taps a daily discovery notice.
+  final String? prompt;
+
   Map<String, dynamic> toMap() => {
         'id': id,
         'kind': kind.name,
@@ -28,6 +37,8 @@ class AppNotice {
         'body': body,
         'createdAt': createdAt.toIso8601String(),
         'read': read,
+        if (actionUrl != null && actionUrl!.isNotEmpty) 'actionUrl': actionUrl,
+        if (prompt != null && prompt!.isNotEmpty) 'prompt': prompt,
       };
 
   static AppNotice fromMap(Map<String, dynamic> map) => AppNotice(
@@ -41,6 +52,8 @@ class AppNotice {
         createdAt: DateTime.tryParse(map['createdAt'] as String? ?? '') ??
             DateTime.now(),
         read: map['read'] as bool? ?? false,
+        actionUrl: map['actionUrl'] as String?,
+        prompt: map['prompt'] as String?,
       );
 }
 
@@ -81,6 +94,8 @@ class NotificationStore {
     required NoticeKind kind,
     required String title,
     required String body,
+    String? actionUrl,
+    String? prompt,
   }) async {
     final items = await load(uid);
     if (items.any((n) => n.id == id)) return false;
@@ -92,6 +107,8 @@ class NotificationStore {
         title: title,
         body: body,
         createdAt: DateTime.now(),
+        actionUrl: actionUrl,
+        prompt: prompt,
       ),
     );
     await _write(uid, items.take(_limit).toList());
