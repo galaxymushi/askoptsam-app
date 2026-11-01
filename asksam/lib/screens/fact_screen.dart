@@ -32,7 +32,9 @@ class FactScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(22, 6, 22, 28),
           children: [
             FactArtwork(kind: fact.art, height: 200, radius: 26),
-            const SizedBox(height: 22),
+            const SizedBox(height: 4),
+            FactPhotoCredit(kind: fact.art),
+            const SizedBox(height: 14),
             Text(
               fact.title(lang),
               style: const TextStyle(
@@ -85,9 +87,7 @@ class FactScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 15,
                             height: 1.45,
-                            color: isDark
-                                ? AppColors.darkText
-                                : AppColors.ink,
+                            color: isDark ? AppColors.darkText : AppColors.ink,
                           ),
                         ),
                       ],
@@ -111,9 +111,9 @@ class FactScreen extends StatelessWidget {
               onPressed: () {
                 final prompt = lang == 'sw'
                     ? 'Nieleze zaidi kuhusu "${fact.title('sw')}". '
-                        'Nifanye nini kivitendo leo?'
+                          'Nifanye nini kivitendo leo?'
                     : 'Tell me more about "${fact.title('en')}". '
-                        'What should I do about it today?';
+                          'What should I do about it today?';
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => ChatScreen(initialPrompt: prompt),

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,12 +7,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:asksam/app_state.dart';
 import 'package:asksam/content/eye_facts.dart';
+import 'package:asksam/content/fact_photos.dart';
 import 'package:asksam/l10n.dart';
 import 'package:asksam/models.dart';
+import 'package:asksam/screens/chat_screen.dart';
 import 'package:asksam/screens/fact_screen.dart';
 import 'package:asksam/screens/library_screen.dart';
 import 'package:asksam/screens/notifications_screen.dart';
 import 'package:asksam/screens/pay_screen.dart';
+import 'package:asksam/screens/privacy_screen.dart';
 import 'package:asksam/screens/settings_screen.dart';
 import 'package:asksam/services/auth_service.dart';
 import 'package:asksam/services/chat_store.dart';
@@ -44,17 +46,23 @@ Future<void> _loadFonts() async {
   final inter = FontLoader('Inter');
   for (final weight in ['Regular', 'Medium', 'SemiBold', 'Bold', 'ExtraBold']) {
     final bytes = File('assets/fonts/Inter-$weight.ttf').readAsBytesSync();
-    inter.addFont(Future.value(ByteData.sublistView(Uint8List.fromList(bytes))));
+    inter.addFont(
+      Future.value(ByteData.sublistView(Uint8List.fromList(bytes))),
+    );
   }
   await inter.load();
 
   final root = Platform.environment['FLUTTER_ROOT'] ?? r'C:\src\flutter';
-  final iconFile =
-      File('$root/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf');
+  final iconFile = File(
+    '$root/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
+  );
   if (iconFile.existsSync()) {
     final icons = FontLoader('MaterialIcons');
-    icons.addFont(Future.value(
-        ByteData.sublistView(Uint8List.fromList(iconFile.readAsBytesSync()))));
+    icons.addFont(
+      Future.value(
+        ByteData.sublistView(Uint8List.fromList(iconFile.readAsBytesSync())),
+      ),
+    );
     await icons.load();
   }
 }
@@ -68,7 +76,12 @@ Future<AppState> _state() async {
   )..user = _user;
 }
 
-Widget _shot(AppState state, Widget home, {String lang = 'sw', bool dark = false}) {
+Widget _shot(
+  AppState state,
+  Widget home, {
+  String lang = 'sw',
+  bool dark = false,
+}) {
   return RepaintBoundary(
     key: const ValueKey('shot'),
     child: MaterialApp(
@@ -92,6 +105,15 @@ Future<void> _settle(WidgetTester tester) async {
   }
 }
 
+Future<void> _warmPhotos(WidgetTester tester) async {
+  await tester.runAsync(() async {
+    final context = tester.element(find.byType(MaterialApp));
+    for (final photo in factPhotos.values) {
+      await precacheImage(AssetImage(photo.asset), context);
+    }
+  });
+}
+
 Future<void> _capture(WidgetTester tester, String name) async {
   await expectLater(
     find.byKey(const ValueKey('shot')),
@@ -112,6 +134,8 @@ void main() {
 
     await tester.pumpWidget(_shot(state, const LibraryScreen()));
     await _settle(tester);
+    await _warmPhotos(tester);
+    await tester.pump();
     await _capture(tester, 'library');
 
     await tester.pumpWidget(_shot(state, const LibraryScreen(), dark: true));
@@ -122,6 +146,40 @@ void main() {
     await tester.pumpWidget(_shot(state, FactScreen(fact: fact)));
     await _settle(tester);
     await _capture(tester, 'fact');
+
+    final chat = ChatSession(
+      id: 'sample',
+      title: 'Macho makavu',
+      createdAt: DateTime(2026, 11, 1),
+      updatedAt: DateTime(2026, 11, 1),
+      messages: [
+        ChatMessage(
+          id: 'u1',
+          role: 'user',
+          text: 'Nifanye nini macho yangu yakiwa makavu wakati wa kazi?',
+          createdAt: DateTime(2026, 11, 1),
+        ),
+        ChatMessage(
+          id: 'a1',
+          role: 'assistant',
+          text:
+              'Anza na hatua hizi rahisi:\n\n'
+              '**1. Fumba mara kwa mara.** Fumba macho taratibu mara 10; '
+              'kufumba kunalowesha uso wa jicho.\n\n'
+              '**2. Tumia kanuni ya 20-20-20.** Kila dakika 20, tazama kitu '
+              'kilicho mbali kwa sekunde 20.\n\n'
+              '**3. Punguza upepo wa kiyoyozi.** Upepo unaokuja moja kwa moja '
+              'machoni huongeza ukavu.\n\n'
+              'Kama ukavu unaendelea siku nyingi au una maumivu, pima macho '
+              'kwa mtaalamu.',
+          createdAt: DateTime(2026, 11, 1),
+          feedback: 'up',
+        ),
+      ],
+    );
+    await tester.pumpWidget(_shot(state, ChatScreen(session: chat)));
+    await _settle(tester);
+    await _capture(tester, 'chat');
 
     await tester.pumpWidget(_shot(state, const NotificationsScreen()));
     await _settle(tester);
@@ -136,5 +194,9 @@ void main() {
     await tester.pumpWidget(_shot(state, const SettingsScreen()));
     await _settle(tester);
     await _capture(tester, 'settings');
+
+    await tester.pumpWidget(_shot(state, const PrivacyScreen()));
+    await _settle(tester);
+    await _capture(tester, 'privacy');
   });
 }

@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app_state.dart';
 import '../l10n.dart';
@@ -41,7 +42,8 @@ class ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _session = widget.session ??
+    _session =
+        widget.session ??
         ChatSession(
           id: _newId(),
           title: '',
@@ -141,12 +143,14 @@ class ChatScreenState extends State<ChatScreen> {
       _pendingText = null;
       _typing = true;
       _sending = true;
-      _session.messages.add(ChatMessage(
-        id: _newId(),
-        role: 'user',
-        text: text,
-        createdAt: DateTime.now(),
-      ));
+      _session.messages.add(
+        ChatMessage(
+          id: _newId(),
+          role: 'user',
+          text: text,
+          createdAt: DateTime.now(),
+        ),
+      );
     });
     _scrollToEnd();
     await _streamReply(t);
@@ -170,8 +174,10 @@ class ChatScreenState extends State<ChatScreen> {
     final buffer = StringBuffer();
 
     try {
-      await for (final chunk in AiService.instance
-          .streamReply(history, lang: t.language)) {
+      await for (final chunk in AiService.instance.streamReply(
+        history,
+        lang: t.language,
+      )) {
         buffer.write(chunk);
         if (!mounted) return;
         setState(() {
@@ -233,6 +239,38 @@ class ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _copyMessage(ChatMessage message) async {
+    final t = L10nScope.of(context);
+    await Clipboard.setData(ClipboardData(text: message.text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(t.get('copied')),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _rate(ChatMessage message, String value) async {
+    final t = L10nScope.of(context);
+    setState(() {
+      message.feedback = message.feedback == value ? null : value;
+    });
+    await _save();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(t.get('feedbackThanks')),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _resend(ChatMessage message) async {
+    if (_sending) return;
+    await _send(message.text);
+  }
+
   void startNewChat() {
     setState(() {
       _session = ChatSession(
@@ -289,8 +327,12 @@ class ChatScreenState extends State<ChatScreen> {
                       children: [
                         _ChatGreeting(
                           title: t.get('hiImSam'),
-                          subtitle: configured ? null : t.get('chatNotConnected'),
-                          hint: configured ? null : t.get('chatNotConnectedHint'),
+                          subtitle: configured
+                              ? null
+                              : t.get('chatNotConnected'),
+                          hint: configured
+                              ? null
+                              : t.get('chatNotConnectedHint'),
                         ),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
@@ -312,10 +354,27 @@ class ChatScreenState extends State<ChatScreen> {
                       controller: _scroll,
                       padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
                       itemCount:
-                          _session.messages.length + (_typing ? 1 : 0) + (_errorCard != null ? 1 : 0),
+                          _session.messages.length +
+                          (_typing ? 1 : 0) +
+                          (_errorCard != null ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (index < _session.messages.length) {
-                          return _Bubble(message: _session.messages[index]);
+                          final message = _session.messages[index];
+                          final streaming =
+                              _sending &&
+                              index == _session.messages.length - 1 &&
+                              !message.isUser;
+                          return _Bubble(
+                            message: message,
+                            interactive: !streaming,
+                            onCopy: () => _copyMessage(message),
+                            onResend: message.isUser && !_sending
+                                ? () => _resend(message)
+                                : null,
+                            onFeedback: message.isUser
+                                ? null
+                                : (value) => _rate(message, value),
+                          );
                         }
                         if (_typing && index == _session.messages.length) {
                           return const _TypingBubble();
@@ -333,7 +392,9 @@ class ChatScreenState extends State<ChatScreen> {
                 controller: _input,
                 focusNode: _focus,
                 enabled: configured && !_sending,
-                hint: configured ? t.get('askAnything') : t.get('chatNotConnected'),
+                hint: configured
+                    ? t.get('askAnything')
+                    : t.get('chatNotConnected'),
                 onSend: _sending ? null : () => _send(),
               ),
           ],
@@ -391,8 +452,9 @@ class _ChatGreeting extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bubbleColor =
-        isDark ? const Color(0xFF12224F) : const Color(0xFFF0F5FF);
+    final bubbleColor = isDark
+        ? const Color(0xFF12224F)
+        : const Color(0xFFF0F5FF);
     return Padding(
       padding: const EdgeInsets.fromLTRB(26, 24, 26, 6),
       child: Column(
@@ -405,7 +467,10 @@ class _ChatGreeting extends StatelessWidget {
             children: [
               Container(
                 margin: const EdgeInsets.only(top: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 18,
+                ),
                 decoration: BoxDecoration(
                   color: bubbleColor,
                   borderRadius: BorderRadius.circular(22),
@@ -524,8 +589,9 @@ class _SuggestionChips extends StatelessWidget {
                         color: isDark ? AppColors.darkSurface : Colors.white,
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                          color:
-                              isDark ? AppColors.darkBorder : AppColors.border,
+                          color: isDark
+                              ? AppColors.darkBorder
+                              : AppColors.border,
                         ),
                       ),
                       child: Text(
@@ -567,105 +633,217 @@ class _Composer extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
       child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 6, 7, 6),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : Colors.white,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: isDark ? const Color(0xFF2E6BFF) : AppColors.primary,
-              width: 1.6,
-            ),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  enabled: enabled,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (_) => onSend?.call(),
-                  style: const TextStyle(fontSize: 16.5),
-                  decoration: InputDecoration(
-                    hintText: hint,
-                    filled: false,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    disabledBorder: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Material(
-                color: onSend == null
-                    ? AppColors.primary.withValues(alpha: 0.45)
-                    : AppColors.primary,
-                shape: const CircleBorder(),
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: onSend,
-                  child: const SizedBox(
-                    width: 46,
-                    height: 46,
-                    child: Icon(
-                      Icons.arrow_forward_rounded,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+        padding: const EdgeInsets.fromLTRB(20, 6, 7, 6),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: isDark ? const Color(0xFF2E6BFF) : AppColors.primary,
+            width: 1.6,
           ),
         ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                enabled: enabled,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) => onSend?.call(),
+                style: const TextStyle(fontSize: 16.5),
+                decoration: InputDecoration(
+                  hintText: hint,
+                  filled: false,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Material(
+              color: onSend == null
+                  ? AppColors.primary.withValues(alpha: 0.45)
+                  : AppColors.primary,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: onSend,
+                child: const SizedBox(
+                  width: 46,
+                  height: 46,
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required this.message});
+  const _Bubble({
+    required this.message,
+    required this.onCopy,
+    this.onResend,
+    this.onFeedback,
+    this.interactive = true,
+  });
 
   final ChatMessage message;
+  final VoidCallback onCopy;
+  final VoidCallback? onResend;
+  final ValueChanged<String>? onFeedback;
+  final bool interactive;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = L10nScope.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isUser = message.isUser;
+
+    final actions = <Widget>[];
+    if (interactive) {
+      if (isUser) {
+        actions.add(
+          _ActionIcon(
+            icon: Icons.copy_rounded,
+            tooltip: t.get('copy'),
+            onTap: onCopy,
+          ),
+        );
+        if (onResend != null) {
+          actions.add(
+            _ActionIcon(
+              icon: Icons.refresh_rounded,
+              tooltip: t.get('resend'),
+              onTap: onResend!,
+            ),
+          );
+        }
+      } else {
+        actions.add(
+          _ActionIcon(
+            icon: message.feedback == 'up'
+                ? Icons.thumb_up_alt_rounded
+                : Icons.thumb_up_off_alt_rounded,
+            tooltip: t.get('feedbackUp'),
+            active: message.feedback == 'up',
+            onTap: () => onFeedback?.call('up'),
+          ),
+        );
+        actions.add(
+          _ActionIcon(
+            icon: message.feedback == 'down'
+                ? Icons.thumb_down_alt_rounded
+                : Icons.thumb_down_off_alt_rounded,
+            tooltip: t.get('feedbackDown'),
+            active: message.feedback == 'down',
+            onTap: () => onFeedback?.call('down'),
+          ),
+        );
+        actions.add(
+          _ActionIcon(
+            icon: Icons.copy_rounded,
+            tooltip: t.get('copy'),
+            onTap: onCopy,
+          ),
+        );
+      }
+    }
+
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.8,
+        ),
+        child: Column(
+          crossAxisAlignment: isUser
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              decoration: BoxDecoration(
+                color: isUser
+                    ? AppColors.primary
+                    : (isDark
+                          ? const Color(0xFF12224F)
+                          : const Color(0xFFF0F5FF)),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(isUser ? 22 : 6),
+                  topRight: Radius.circular(isUser ? 6 : 22),
+                  bottomLeft: const Radius.circular(22),
+                  bottomRight: const Radius.circular(22),
+                ),
+              ),
+              child: isUser
+                  ? Text(
+                      message.text,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        height: 1.42,
+                        color: Colors.white,
+                      ),
+                    )
+                  : _MarkdownText(
+                      text: message.text,
+                      color: isDark ? AppColors.darkText : AppColors.navy,
+                    ),
+            ),
+            if (actions.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Row(mainAxisSize: MainAxisSize.min, children: actions),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionIcon extends StatelessWidget {
+  const _ActionIcon({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.active = false,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isUser = message.isUser;
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.8,
+    final color = active
+        ? AppColors.primary
+        : (isDark ? AppColors.darkMuted : AppColors.muted);
+    return Tooltip(
+      message: tooltip,
+      child: InkResponse(
+        onTap: onTap,
+        radius: 18,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+          child: Icon(icon, size: 18, color: color),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: BoxDecoration(
-          color: isUser
-              ? AppColors.primary
-              : (isDark ? const Color(0xFF12224F) : const Color(0xFFF0F5FF)),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(isUser ? 22 : 6),
-            topRight: Radius.circular(isUser ? 6 : 22),
-            bottomLeft: const Radius.circular(22),
-            bottomRight: const Radius.circular(22),
-          ),
-        ),
-        child: isUser
-            ? Text(
-                message.text,
-                style: const TextStyle(
-                  fontSize: 16,
-                  height: 1.42,
-                  color: Colors.white,
-                ),
-              )
-            : _MarkdownText(
-                text: message.text,
-                color: isDark ? AppColors.darkText : AppColors.navy,
-              ),
       ),
     );
   }
@@ -692,10 +870,12 @@ class _MarkdownText extends StatelessWidget {
       if (match.start > cursor) {
         spans.add(TextSpan(text: source.substring(cursor, match.start)));
       }
-      spans.add(TextSpan(
-        text: match.group(1),
-        style: const TextStyle(fontWeight: FontWeight.w700),
-      ));
+      spans.add(
+        TextSpan(
+          text: match.group(1),
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      );
       cursor = match.end;
     }
     if (cursor < source.length) {
@@ -710,10 +890,12 @@ class _MarkdownText extends StatelessWidget {
     final blocks = <Widget>[];
 
     void add(Widget child) {
-      blocks.add(Padding(
-        padding: EdgeInsets.only(top: blocks.isEmpty ? 0 : 9),
-        child: child,
-      ));
+      blocks.add(
+        Padding(
+          padding: EdgeInsets.only(top: blocks.isEmpty ? 0 : 9),
+          child: child,
+        ),
+      );
     }
 
     for (final raw in text.replaceAll('\r\n', '\n').split('\n')) {
@@ -721,78 +903,78 @@ class _MarkdownText extends StatelessWidget {
       if (line.isEmpty) continue;
 
       if (_rule.hasMatch(line)) {
-        add(Divider(
-          height: 1,
-          color: color.withValues(alpha: 0.12),
-        ));
+        add(Divider(height: 1, color: color.withValues(alpha: 0.12)));
         continue;
       }
 
       final heading = _heading.firstMatch(line);
       if (heading != null) {
-        add(Text.rich(
-          TextSpan(
-            children: _inline(heading.group(1)!, base),
-            style: base.copyWith(fontSize: 17.5, fontWeight: FontWeight.w800),
+        add(
+          Text.rich(
+            TextSpan(
+              children: _inline(heading.group(1)!, base),
+              style: base.copyWith(fontSize: 17.5, fontWeight: FontWeight.w800),
+            ),
           ),
-        ));
+        );
         continue;
       }
 
       final bullet = _bullet.firstMatch(line);
       if (bullet != null) {
-        add(Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 8, right: 9),
-              child: Container(
-                width: 5,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.5),
-                  shape: BoxShape.circle,
+        add(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 8, right: 9),
+                child: Container(
+                  width: 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: Text.rich(
-                TextSpan(children: _inline(bullet.group(1)!, base)),
-                style: base,
+              Expanded(
+                child: Text.rich(
+                  TextSpan(children: _inline(bullet.group(1)!, base)),
+                  style: base,
+                ),
               ),
-            ),
-          ],
-        ));
+            ],
+          ),
+        );
         continue;
       }
 
       final numbered = _numbered.firstMatch(line);
       if (numbered != null) {
-        add(Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 26,
-              child: Text(
-                '${numbered.group(1)}.',
-                style: base.copyWith(fontWeight: FontWeight.w700),
+        add(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 26,
+                child: Text(
+                  '${numbered.group(1)}.',
+                  style: base.copyWith(fontWeight: FontWeight.w700),
+                ),
               ),
-            ),
-            Expanded(
-              child: Text.rich(
-                TextSpan(children: _inline(numbered.group(2)!, base)),
-                style: base,
+              Expanded(
+                child: Text.rich(
+                  TextSpan(children: _inline(numbered.group(2)!, base)),
+                  style: base,
+                ),
               ),
-            ),
-          ],
-        ));
+            ],
+          ),
+        );
         continue;
       }
 
-      add(Text.rich(
-        TextSpan(children: _inline(line, base)),
-        style: base,
-      ));
+      add(Text.rich(TextSpan(children: _inline(line, base)), style: base));
     }
 
     return Column(
@@ -899,10 +1081,7 @@ class _ErrorCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              message,
-              style: const TextStyle(fontSize: 16, height: 1.4),
-            ),
+            Text(message, style: const TextStyle(fontSize: 16, height: 1.4)),
             if (onRetry != null) ...[
               const SizedBox(height: 12),
               OutlinedButton(
@@ -912,13 +1091,16 @@ class _ErrorCard extends StatelessWidget {
                   side: BorderSide(
                     color: isDark ? AppColors.darkBorder : Colors.white,
                   ),
-                  backgroundColor:
-                      isDark ? AppColors.darkSurface : Colors.white,
+                  backgroundColor: isDark
+                      ? AppColors.darkSurface
+                      : Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                 ),
                 child: Text(
                   retryLabel,

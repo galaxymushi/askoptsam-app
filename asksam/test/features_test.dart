@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:asksam/app_state.dart';
 import 'package:asksam/content/eye_facts.dart';
+import 'package:asksam/content/fact_photos.dart';
+import 'package:asksam/content/legal_text.dart';
 import 'package:asksam/l10n.dart';
 import 'package:asksam/models.dart';
+import 'package:asksam/screens/chat_screen.dart';
 import 'package:asksam/screens/library_screen.dart';
 import 'package:asksam/screens/notifications_screen.dart';
 import 'package:asksam/screens/pay_screen.dart';
+import 'package:asksam/screens/privacy_screen.dart';
 import 'package:asksam/screens/settings_screen.dart';
 import 'package:asksam/services/auth_service.dart';
 import 'package:asksam/services/chat_store.dart';
@@ -95,19 +100,23 @@ void main() {
   test('notification feed dedupes, counts unread and marks read', () async {
     final store = NotificationStore();
     expect(
-      await store.addOnce('tester',
-          id: 'welcome',
-          kind: NoticeKind.welcome,
-          title: 'Karibu',
-          body: 'Habari'),
+      await store.addOnce(
+        'tester',
+        id: 'welcome',
+        kind: NoticeKind.welcome,
+        title: 'Karibu',
+        body: 'Habari',
+      ),
       isTrue,
     );
     expect(
-      await store.addOnce('tester',
-          id: 'welcome',
-          kind: NoticeKind.welcome,
-          title: 'Karibu',
-          body: 'Habari'),
+      await store.addOnce(
+        'tester',
+        id: 'welcome',
+        kind: NoticeKind.welcome,
+        title: 'Karibu',
+        body: 'Habari',
+      ),
       isFalse,
     );
     expect(await store.load('tester'), hasLength(1));
@@ -140,8 +149,9 @@ void main() {
     expect(again.isDark, isTrue);
   });
 
-  testWidgets('library shows today\'s fact, the info rail and the bell',
-      (tester) async {
+  testWidgets('library shows today\'s fact, the info rail and the bell', (
+    tester,
+  ) async {
     await tester.pumpWidget(_app(await _state(), const LibraryScreen()));
     await _settle(tester);
 
@@ -160,14 +170,17 @@ void main() {
     );
   });
 
-  testWidgets('notification screen lists notices and clears the unread badge',
-      (tester) async {
+  testWidgets('notification screen lists notices and clears the unread badge', (
+    tester,
+  ) async {
     final store = NotificationStore();
-    await store.addOnce('tester',
-        id: 'welcome',
-        kind: NoticeKind.welcome,
-        title: 'Karibu AskOptSam',
-        body: 'Uliza chochote kuhusu macho yako.');
+    await store.addOnce(
+      'tester',
+      id: 'welcome',
+      kind: NoticeKind.welcome,
+      title: 'Karibu AskOptSam',
+      body: 'Uliza chochote kuhusu macho yako.',
+    );
 
     await tester.pumpWidget(_app(await _state(), const NotificationsScreen()));
     await _settle(tester);
@@ -181,8 +194,9 @@ void main() {
     expect(find.text('Soma zote'), findsNothing);
   });
 
-  testWidgets('payment screen offers Airtel and M-Pesa numbers only',
-      (tester) async {
+  testWidgets('payment screen offers Airtel and M-Pesa numbers only', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(await _state(), const PayScreen(amount: 2000, purpose: 'donation')),
     );
@@ -197,8 +211,9 @@ void main() {
     expect(find.textContaining('Halopesa'), findsNothing);
   });
 
-  testWidgets('settings dark-mode switch really flips and persists',
-      (tester) async {
+  testWidgets('settings dark-mode switch really flips and persists', (
+    tester,
+  ) async {
     final state = await _state();
     await tester.pumpWidget(_app(state, const SettingsScreen()));
     await _settle(tester);
@@ -210,5 +225,137 @@ void main() {
 
     final persisted = SettingsController(await SharedPreferences.getInstance());
     expect(persisted.isDark, isTrue);
+  });
+
+  test('message feedback survives a save and reload', () {
+    final message = ChatMessage(
+      id: 'm1',
+      role: 'assistant',
+      text: 'Jibu',
+      createdAt: DateTime(2026, 11, 1),
+      feedback: 'up',
+    );
+    final restored = ChatMessage.fromMap(message.toMap());
+    expect(restored.feedback, 'up');
+
+    final plain = ChatMessage(
+      id: 'm2',
+      role: 'user',
+      text: 'Swali',
+      createdAt: DateTime(2026, 11, 1),
+    );
+    expect(plain.toMap().containsKey('feedback'), isFalse);
+    expect(ChatMessage.fromMap(plain.toMap()).feedback, isNull);
+  });
+
+  test('every eye fact has a licensed real photograph', () {
+    for (final art in FactArt.values) {
+      final photo = factPhotos[art];
+      expect(photo, isNotNull, reason: '$art has no photo');
+      expect(photo!.asset, startsWith('assets/images/facts/'));
+      expect(photo.asset, endsWith('.jpg'));
+      expect(photo.author.trim(), isNotEmpty);
+      expect(photo.license.trim(), isNotEmpty);
+      expect(
+        photo.sourceUrl,
+        startsWith('https://commons.wikimedia.org/wiki/File:'),
+      );
+    }
+  });
+
+  test('privacy and terms documents are complete in both languages', () {
+    expect(LegalText.privacy.length, greaterThanOrEqualTo(8));
+    expect(LegalText.terms.length, greaterThanOrEqualTo(8));
+    for (final section in [...LegalText.privacy, ...LegalText.terms]) {
+      for (final lang in ['sw', 'en']) {
+        expect(section.title(lang).trim(), isNotEmpty);
+        expect(section.body(lang).trim().length, greaterThan(80));
+      }
+    }
+    for (final lang in ['sw', 'en']) {
+      expect(LegalText.intro(lang).trim().length, greaterThan(120));
+      expect(LegalText.updated(lang).trim(), isNotEmpty);
+    }
+  });
+
+  testWidgets('chat bubbles offer copy, feedback and resend', (tester) async {
+    final prefs = await SharedPreferences.getInstance();
+    final store = _MemoryChatStore();
+    final state = AppState(
+      settings: SettingsController(prefs),
+      auth: LocalAuthService(),
+      store: store,
+    )..user = _user;
+
+    final assistant = ChatMessage(
+      id: 'a1',
+      role: 'assistant',
+      text: 'Fumba macho mara kumi kila baada ya dakika 20.',
+      createdAt: DateTime(2026, 11, 1),
+    );
+    final user = ChatMessage(
+      id: 'u1',
+      role: 'user',
+      text: 'Nifanye nini macho yakiwa makavu?',
+      createdAt: DateTime(2026, 11, 1),
+    );
+    final session = ChatSession(
+      id: 's1',
+      title: 'Macho makavu',
+      createdAt: DateTime(2026, 11, 1),
+      updatedAt: DateTime(2026, 11, 1),
+      messages: [user, assistant],
+    );
+
+    String? copied;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied = (call.arguments as Map)['text'] as String?;
+        }
+        return null;
+      },
+    );
+
+    await tester.pumpWidget(_app(state, ChatScreen(session: session)));
+    await _settle(tester);
+
+    expect(find.byIcon(Icons.copy_rounded), findsNWidgets(2));
+    expect(find.byIcon(Icons.refresh_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.thumb_up_off_alt_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.thumb_down_off_alt_rounded), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.copy_rounded).first);
+    await _settle(tester);
+    expect(copied, isNotNull);
+    expect(find.text('Imenakiliwa'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.thumb_up_off_alt_rounded));
+    await _settle(tester);
+
+    expect(assistant.feedback, 'up');
+    expect(find.byIcon(Icons.thumb_up_alt_rounded), findsOneWidget);
+    expect(store.sessions.any((s) => s.id == 's1'), isTrue);
+
+    await tester.tap(find.byIcon(Icons.thumb_up_alt_rounded));
+    await _settle(tester);
+    expect(assistant.feedback, isNull);
+  });
+
+  testWidgets('privacy screen shows the full policy and terms', (tester) async {
+    await tester.pumpWidget(_app(await _state(), const PrivacyScreen()));
+    await _settle(tester);
+
+    expect(find.text('Sera na masharti'), findsWidgets);
+    expect(find.text('TAARIFA ZAKO'), findsOneWidget);
+    expect(find.text('Taarifa tunazohifadhi'), findsOneWidget);
+
+    await tester.scrollUntilVisible(find.text('MASHARTI YA MATUMIZI'), 300);
+    expect(find.text('MASHARTI YA MATUMIZI'), findsOneWidget);
+
+    await tester.scrollUntilVisible(find.text('Fungua msaada'), 300);
+    expect(find.text('Fungua msaada'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config.dart';
+import '../content/legal_text.dart';
 import '../l10n.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
@@ -13,6 +14,74 @@ class PrivacyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = L10nScope.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final lang = t.language;
+    final bodyColor = isDark ? AppColors.darkText : AppColors.ink;
+    final mutedColor = isDark ? AppColors.darkMuted : AppColors.muted;
+
+    Widget section(LegalSection item, int index) => Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 26,
+            height: 26,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSoft : const Color(0xFFE9F1FE),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Text(
+              '${index + 1}',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title(lang),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  item.body(lang),
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    height: 1.58,
+                    color: bodyColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    Widget partHeader(String label) => Padding(
+      padding: const EdgeInsets.only(top: 28, bottom: 2),
+      child: Text(
+        label.toUpperCase(),
+        style: const TextStyle(
+          fontSize: 12.5,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.2,
+          color: AppColors.primary,
+        ),
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -24,16 +93,92 @@ class PrivacyScreen extends StatelessWidget {
       body: SafeArea(
         top: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(26, 12, 26, 24),
+          padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
           children: [
-            const Center(child: BrandLogo(size: 108)),
-            const SizedBox(height: 22),
+            const Center(child: BrandLogo(size: 92)),
+            const SizedBox(height: 16),
             Text(
-              t.get('privacyBody'),
-              style: TextStyle(
-                fontSize: 16,
-                height: 1.55,
-                color: isDark ? AppColors.darkText : AppColors.ink,
+              t.get('privacyTitle'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              t.format('lastUpdated', {'date': LegalText.updated(lang)}),
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: mutedColor),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSoft : const Color(0xFFEFF5FF),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Text(
+                LegalText.intro(lang),
+                style: TextStyle(fontSize: 15, height: 1.55, color: bodyColor),
+              ),
+            ),
+            partHeader(t.get('privacyPart')),
+            for (var i = 0; i < LegalText.privacy.length; i++)
+              section(LegalText.privacy[i], i),
+            partHeader(t.get('termsPart')),
+            for (var i = 0; i < LegalText.terms.length; i++)
+              section(LegalText.terms[i], i),
+            const SizedBox(height: 28),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? AppColors.darkBorder : AppColors.border,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        size: 20,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          t.get('legalContactTitle'),
+                          style: const TextStyle(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    t.get('legalContactBody'),
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      height: 1.5,
+                      color: mutedColor,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  PrimaryButton(
+                    label: t.get('legalContactButton'),
+                    height: 48,
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const HelpScreen()),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -55,12 +200,11 @@ class HelpScreen extends StatelessWidget {
             query: 'subject=${Uri.encodeComponent(t.get('feedbackSubject'))}',
           )
         : (AppConfig.supportUrl.isNotEmpty
-            ? Uri.parse(AppConfig.supportUrl)
-            : null);
+              ? Uri.parse(AppConfig.supportUrl)
+              : null);
     if (target == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.get('supportNotSet'))),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(t.get('supportNotSet'))));
       return;
     }
     await launchUrl(target, mode: LaunchMode.externalApplication);

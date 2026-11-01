@@ -33,12 +33,10 @@ class Strings {
     'passwordRule': 'At least 8 characters',
     'agreeTerms': 'I agree to the Terms and Privacy Policy',
     'forgotTitle': 'Forgot password?',
-    'forgotSubtitle':
-        'Enter your email and we\'ll send you a reset link.',
+    'forgotSubtitle': 'Enter your email and we\'ll send you a reset link.',
     'sendResetLink': 'Send reset link',
     'resetSent': 'Reset link sent',
-    'resetSentBody':
-        'Check {email} for a link to reset your password.',
+    'resetSentBody': 'Check {email} for a link to reset your password.',
     'ok': 'OK',
     'backToSignIn': 'Back to sign in',
     'welcomeHi': 'Hi there!',
@@ -91,8 +89,7 @@ class Strings {
     'payName': 'Account name',
     'paySteps': 'How to pay',
     'stepDial': 'Open the USSD menu with the button below.',
-    'stepChoose':
-        'Choose “Pay” (Lipa kwa…) then enter {account} and the amount {amount}.',
+    'stepChoose': 'Choose “Pay” (Lipa kwa…) then enter {account} and the amount {amount}.',
     'stepDone': 'After paying, tap “I have paid” so we can verify it.',
     'dialUssd': 'Open {code}',
     'dialFailed': 'Could not open the dialer. Dial the code manually.',
@@ -101,10 +98,8 @@ class Strings {
     'claimBody':
         'Reference {ref}. We will verify your payment and get back to you.',
     'sendReceipt': 'Send receipt',
-    'receiptText':
-        'AskOptSam payment\nReference: {ref}\nMethod: {channel}\nAmount: TZS {amount}\nStatus: awaiting verification',
-    'paySafeNote':
-        'AskOptSam never asks for your PIN or OTP. Pay only to the numbers shown here.',
+    'receiptText': 'AskOptSam payment\nReference: {ref}\nMethod: {channel}\nAmount: TZS {amount}\nStatus: awaiting verification',
+    'paySafeNote': 'AskOptSam never asks for your PIN or OTP. Pay only to the numbers shown here.',
     'amountHint': 'Amount in TZS',
     'invalidAmount': 'Enter a valid amount of TZS 500 or more',
     'donateAmount': 'Donate {amount}',
@@ -146,8 +141,7 @@ class Strings {
     'supportNotSet': 'No payment link is set up yet.',
     'noResults': 'No chats match your search.',
     'chatNotConnected': 'Chat isn\'t connected yet.',
-    'chatNotConnectedHint':
-        'This build was made without an AI key. Rebuild with your API settings to turn chat on.',
+    'chatNotConnectedHint': 'This build was made without an AI key. Rebuild with your API settings to turn chat on.',
     'typeName': 'Type your name',
     'renameChat': 'Rename chat',
     'send': 'Send',
@@ -157,12 +151,14 @@ class Strings {
     'messageHelp':
         'AskOptSam answers questions, explains ideas and helps you write.',
     'contactSupport': 'Send feedback',
-    'privacyBody':
-        'AskOptSam stores your chats so you can find them in your Library. '
-        'Your messages are sent to the AI service to generate answers. '
-        'We never sell your data.',
-    'helpBody':
-        'Tell us what worked, what didn\'t, or what you\'d like AskOptSam to do next.',
+    'privacyPart': 'Your information',
+    'termsPart': 'Terms of use',
+    'legalContactTitle': 'Questions about your data?',
+    'legalContactBody':
+        'Use Help and feedback in Settings. We will answer and help you '
+        'correct or delete your information.',
+    'legalContactButton': 'Open help',
+    'helpBody': 'Tell us what worked, what didn\'t, or what you\'d like AskOptSam to do next.',
     'feedbackSubject': 'AskOptSam feedback',
     'daysToday': 'Today',
     'daysYesterday': 'Yesterday',
@@ -181,8 +177,7 @@ class Strings {
         'General eye-health education, not a diagnosis. If your eyes hurt or '
         'your sight changes, see an eye specialist.',
     'noNotifications': 'No notifications yet',
-    'noNotificationsBody':
-        'Replies, daily tips and updates will show up here.',
+    'noNotificationsBody': 'Replies, daily tips and updates will show up here.',
     'markAllRead': 'Mark all read',
     'notificationSettings': 'NOTIFICATION SETTINGS',
     'noticeWelcomeTitle': 'Welcome to AskOptSam',
@@ -193,6 +188,14 @@ class Strings {
     'syncedCloud': 'Synced with the cloud',
     'storedPhone': 'Stored on this phone',
     'askAboutThis': 'Ask AskOptSam about this',
+    'copy': 'Copy',
+    'resend': 'Resend',
+    'feedbackUp': 'Helpful answer',
+    'feedbackDown': 'Not helpful',
+    'feedbackThanks': 'Thanks — your feedback helps.',
+    'photoCredit': 'Photo: {author} · {license} · Wikimedia Commons',
+    'photoCreditOpen': 'Open photo source',
+    'lastUpdated': 'Last updated {date}',
   };
 
   static const _sw = <String, String>{
@@ -271,10 +274,8 @@ class Strings {
     'payName': 'Jina la akaunti',
     'paySteps': 'Jinsi ya kulipa',
     'stepDial': 'Fungua menyu ya USSD kwa kitufe kilicho hapa chini.',
-    'stepChoose':
-        'Chagua “Lipa kwa…” kisha weka {account} na kiasi {amount}.',
-    'stepDone':
-        'Baada ya kulipa, bonyeza “Nimelipa” ili tuweze kuthibitisha.',
+    'stepChoose': 'Chagua “Lipa kwa…” kisha weka {account} na kiasi {amount}.',
+    'stepDone': 'Baada ya kulipa, bonyeza “Nimelipa” ili tuweze kuthibitisha.',
     'dialUssd': 'Fungua {code}',
     'dialFailed': 'Imeshindikana kufungua kipiga simu. Piga namba mwenyewe.',
     'ivePaid': 'Nimelipa',
@@ -282,10 +283,8 @@ class Strings {
     'claimBody':
         'Kumbukumbu {ref}. Tutathibitisha malipo yako na tutawasiliana nawe.',
     'sendReceipt': 'Tuma risiti',
-    'receiptText':
-        'Malipo ya AskOptSam\nKumbukumbu: {ref}\nNjia: {channel}\nKiasi: TZS {amount}\nHali: inasubiri uthibitisho',
-    'paySafeNote':
-        'AskOptSam haiombi PIN wala OTP yako. Lipa tu kwa namba zinazoonekana hapa.',
+    'receiptText': 'Malipo ya AskOptSam\nKumbukumbu: {ref}\nNjia: {channel}\nKiasi: TZS {amount}\nHali: inasubiri uthibitisho',
+    'paySafeNote': 'AskOptSam haiombi PIN wala OTP yako. Lipa tu kwa namba zinazoonekana hapa.',
     'amountHint': 'Kiasi kwa TZS',
     'invalidAmount': 'Weka kiasi sahihi cha TZS 500 au zaidi',
     'donateAmount': 'Changia {amount}',
@@ -293,8 +292,7 @@ class Strings {
     'supportedPayments': 'Njia za malipo',
     'customAmount': 'Kiasi kingine',
     'aboutTitle': 'Kuhusu',
-    'developedBy':
-        'Imeundwa na mwanzilishi J.M. Samuel na mwanzilishi mwenza J.M. Emanuel.',
+    'developedBy': 'Imeundwa na mwanzilishi J.M. Samuel na mwanzilishi mwenza J.M. Emanuel.',
     'founder': 'Mwanzilishi',
     'coFounder': 'Mwanzilishi mwenza',
     'version': 'Toleo',
@@ -316,7 +314,8 @@ class Strings {
     'rename': 'Badilisha jina',
     'cancel': 'Ghairi',
     'errorGeneric': 'Hitilafu imetokea. Tafadhali jaribu tena.',
-    'errorNetwork': 'Hakuna muunganisho. Angalia intaneti yako na ujaribu tena.',
+    'errorNetwork':
+        'Hakuna muunganisho. Angalia intaneti yako na ujaribu tena.',
     'errorEmailInUse': 'Barua pepe hii tayari ina akaunti.',
     'errorWrongPassword': 'Nenosiri si sahihi.',
     'errorUserNotFound': 'Hakuna akaunti kwa barua pepe hiyo.',
@@ -327,8 +326,7 @@ class Strings {
     'supportNotSet': 'Kiungo cha malipo bado hakijawekwa.',
     'noResults': 'Hakuna mazungumzo yanayolingana.',
     'chatNotConnected': 'Mazungumzo hayajaunganishwa bado.',
-    'chatNotConnectedHint':
-        'Toleo hili halina ufunguo wa AI. Jenga tena ukiwa na mipangilio ya API.',
+    'chatNotConnectedHint': 'Toleo hili halina ufunguo wa AI. Jenga tena ukiwa na mipangilio ya API.',
     'typeName': 'Andika jina lako',
     'renameChat': 'Badilisha jina la mazungumzo',
     'send': 'Tuma',
@@ -338,12 +336,14 @@ class Strings {
     'messageHelp':
         'AskOptSam hujibu maswali, hufafanua mambo na hukusaidia kuandika.',
     'contactSupport': 'Tuma maoni',
-    'privacyBody':
-        'AskOptSam huhifadhi mazungumzo yako ili uyapate kwenye Maktaba. '
-        'Ujumbe wako hutumwa kwa huduma ya AI ili kupata majibu. '
-        'Hatuuzi taarifa zako.',
-    'helpBody':
-        'Tuambie kipi kilifanya kazi, kipi hakikufanya kazi, au ungependa AskOptSam ifanye nini baadaye.',
+    'privacyPart': 'Taarifa zako',
+    'termsPart': 'Masharti ya matumizi',
+    'legalContactTitle': 'Maswali kuhusu taarifa zako?',
+    'legalContactBody':
+        'Tumia Msaada na maoni kwenye Mipangilio. Tutakujibu na kukusaidia '
+        'kusahihisha au kufuta taarifa zako.',
+    'legalContactButton': 'Fungua msaada',
+    'helpBody': 'Tuambie kipi kilifanya kazi, kipi hakikufanya kazi, au ungependa AskOptSam ifanye nini baadaye.',
     'feedbackSubject': 'Maoni kuhusu AskOptSam',
     'daysToday': 'Leo',
     'daysYesterday': 'Jana',
@@ -367,13 +367,20 @@ class Strings {
     'markAllRead': 'Soma zote',
     'notificationSettings': 'MIPANGILIO YA ARIFA',
     'noticeWelcomeTitle': 'Karibu AskOptSam',
-    'noticeWelcomeBody':
-        'Uliza chochote kuhusu macho yako. Mazungumzo yako yanahifadhiwa kwenye Maktaba.',
+    'noticeWelcomeBody': 'Uliza chochote kuhusu macho yako. Mazungumzo yako yanahifadhiwa kwenye Maktaba.',
     'noticeReplyTitle': 'Jibu jipya',
     'noticeTipTitle': 'Kidokezo cha leo',
     'syncedCloud': 'Inasawazishwa na wingu',
     'storedPhone': 'Imehifadhiwa kwenye simu hii',
     'askAboutThis': 'Uliza AskOptSam kuhusu hili',
+    'copy': 'Nakili',
+    'resend': 'Tuma tena',
+    'feedbackUp': 'Jibu linasaidia',
+    'feedbackDown': 'Jibu halisaidii',
+    'feedbackThanks': 'Asante — maoni yako yanatusaidia.',
+    'photoCredit': 'Picha: {author} · {license} · Wikimedia Commons',
+    'photoCreditOpen': 'Fungua chanzo cha picha',
+    'lastUpdated': 'Imesasishwa {date}',
   };
 
   static const _all = {'en': _en, 'sw': _sw};

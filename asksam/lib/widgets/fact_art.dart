@@ -1,11 +1,16 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../content/eye_facts.dart';
+import '../content/fact_photos.dart';
+import '../l10n.dart';
+import '../theme.dart';
 
-/// Illustrations for the eye facts. They are painted at runtime, so the app
-/// ships no photos and stays tiny while every fact still gets its own picture.
+/// The picture that heads each eye fact. It shows a real, freely licensed
+/// photograph; the painted artwork stays underneath as a placeholder while the
+/// photo decodes and as a fallback if an asset is ever missing.
 class FactArtwork extends StatelessWidget {
   const FactArtwork({
     super.key,
@@ -23,12 +28,89 @@ class FactArtwork extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final photo = factPhotos[kind];
     return ClipRRect(
       borderRadius: borderRadius ?? BorderRadius.circular(radius),
       child: SizedBox(
         height: height,
         width: double.infinity,
-        child: CustomPaint(painter: _ArtPainter(kind: kind, dark: dark)),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            CustomPaint(
+              painter: _ArtPainter(kind: kind, dark: dark),
+            ),
+            if (photo != null)
+              Image.asset(
+                photo.asset,
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.medium,
+                excludeFromSemantics: true,
+                frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                  if (wasSynchronouslyLoaded || frame != null) return child;
+                  return const SizedBox.shrink();
+                },
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Attribution line for the photo above a fact. Tapping it opens the original
+/// file page, where the full author and licence details live.
+class FactPhotoCredit extends StatelessWidget {
+  const FactPhotoCredit({super.key, required this.kind});
+
+  final FactArt kind;
+
+  Future<void> _open() async {
+    final photo = factPhotos[kind];
+    if (photo == null) return;
+    try {
+      await launchUrl(
+        Uri.parse(photo.sourceUrl),
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (_) {
+      // No browser or no connection: the printed credit still stands.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final photo = factPhotos[kind];
+    if (photo == null) return const SizedBox.shrink();
+    final t = L10nScope.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = isDark ? AppColors.darkMuted : AppColors.muted;
+    return Align(
+      alignment: Alignment.centerRight,
+      child: InkWell(
+        onTap: _open,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.photo_camera_outlined, size: 13, color: color),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  t.format('photoCredit', {
+                    'author': photo.author,
+                    'license': photo.license,
+                  }),
+                  maxLines: 2,
+                  style: TextStyle(fontSize: 11.5, height: 1.3, color: color),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -59,10 +141,16 @@ class _ArtPainter extends CustomPainter {
     );
 
     final bokeh = Paint()..color = Colors.white.withValues(alpha: 0.08);
-    canvas.drawCircle(Offset(size.width * 0.86, size.height * 0.18),
-        size.height * 0.42, bokeh);
-    canvas.drawCircle(Offset(size.width * 0.12, size.height * 0.92),
-        size.height * 0.3, bokeh);
+    canvas.drawCircle(
+      Offset(size.width * 0.86, size.height * 0.18),
+      size.height * 0.42,
+      bokeh,
+    );
+    canvas.drawCircle(
+      Offset(size.width * 0.12, size.height * 0.92),
+      size.height * 0.3,
+      bokeh,
+    );
 
     final unit = math.min(size.width, size.height) / 150;
     final center = Offset(size.width * 0.5, size.height * 0.54);
@@ -89,13 +177,7 @@ class _ArtPainter extends CustomPainter {
     }
   }
 
-  void _eye(
-    Canvas canvas,
-    Offset c,
-    double rx,
-    Color ink,
-    Color soft,
-  ) {
+  void _eye(Canvas canvas, Offset c, double rx, Color ink, Color soft) {
     final ry = rx * 0.58;
     final white = Paint()..color = Colors.white;
     final outline = Paint()
@@ -146,7 +228,10 @@ class _ArtPainter extends CustomPainter {
       Rect.fromCenter(center: c, width: 66 * unit, height: 92 * unit),
       Radius.circular(12 * unit),
     );
-    canvas.drawRRect(body, Paint()..color = Colors.white.withValues(alpha: 0.14));
+    canvas.drawRRect(
+      body,
+      Paint()..color = Colors.white.withValues(alpha: 0.14),
+    );
     canvas.drawRRect(
       body,
       Paint()
@@ -166,7 +251,10 @@ class _ArtPainter extends CustomPainter {
       ..strokeWidth = 2.5 * unit;
     canvas.drawArc(
       Rect.fromCenter(
-          center: c.translate(0, 18 * unit), width: 26 * unit, height: 26 * unit),
+        center: c.translate(0, 18 * unit),
+        width: 26 * unit,
+        height: 26 * unit,
+      ),
       -math.pi / 2,
       math.pi * 1.6,
       false,
@@ -193,13 +281,17 @@ class _ArtPainter extends CustomPainter {
       );
     }
     canvas.drawCircle(
-        c, 27 * unit, Paint()..color = Colors.white.withValues(alpha: 0.9));
+      c,
+      27 * unit,
+      Paint()..color = Colors.white.withValues(alpha: 0.9),
+    );
 
     final lens = RRect.fromRectAndRadius(
       Rect.fromCenter(
-          center: c.translate(-13 * unit, 6 * unit),
-          width: 22 * unit,
-          height: 15 * unit),
+        center: c.translate(-13 * unit, 6 * unit),
+        width: 22 * unit,
+        height: 15 * unit,
+      ),
       Radius.circular(7 * unit),
     );
     final lens2 = lens.shift(Offset(26 * unit, 0));
@@ -217,7 +309,10 @@ class _ArtPainter extends CustomPainter {
 
   void _food(Canvas canvas, Offset c, double unit, Color ink) {
     canvas.drawCircle(
-        c, 46 * unit, Paint()..color = Colors.white.withValues(alpha: 0.16));
+      c,
+      46 * unit,
+      Paint()..color = Colors.white.withValues(alpha: 0.16),
+    );
     canvas.drawCircle(
       c,
       46 * unit,
@@ -233,15 +328,17 @@ class _ArtPainter extends CustomPainter {
     canvas.translate(c.dx - 10 * unit, c.dy - 4 * unit);
     canvas.rotate(-0.5);
     canvas.drawOval(
-        Rect.fromCenter(center: Offset.zero, width: 40 * unit, height: 20 * unit),
-        leaf);
+      Rect.fromCenter(center: Offset.zero, width: 40 * unit, height: 20 * unit),
+      leaf,
+    );
     canvas.restore();
     canvas.save();
     canvas.translate(c.dx + 8 * unit, c.dy + 2 * unit);
     canvas.rotate(0.4);
     canvas.drawOval(
-        Rect.fromCenter(center: Offset.zero, width: 36 * unit, height: 18 * unit),
-        leaf2);
+      Rect.fromCenter(center: Offset.zero, width: 36 * unit, height: 18 * unit),
+      leaf2,
+    );
     canvas.restore();
 
     final carrot = Path()
@@ -277,7 +374,10 @@ class _ArtPainter extends CustomPainter {
         c.dy - 44 * unit,
       )
       ..close();
-    canvas.drawPath(path, Paint()..color = Colors.white.withValues(alpha: 0.92));
+    canvas.drawPath(
+      path,
+      Paint()..color = Colors.white.withValues(alpha: 0.92),
+    );
     canvas.drawCircle(
       c.translate(-8 * unit, 4 * unit),
       5 * unit,
@@ -292,7 +392,10 @@ class _ArtPainter extends CustomPainter {
 
   void _clock(Canvas canvas, Offset c, double unit, Color ink, Color soft) {
     canvas.drawCircle(
-        c, 42 * unit, Paint()..color = Colors.white.withValues(alpha: 0.94));
+      c,
+      42 * unit,
+      Paint()..color = Colors.white.withValues(alpha: 0.94),
+    );
     canvas.drawCircle(
       c,
       42 * unit,
@@ -330,16 +433,27 @@ class _ArtPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round,
     );
     canvas.drawCircle(c, 3.5 * unit, Paint()..color = _lightA);
-    canvas.drawCircle(c.translate(0, 52 * unit), 2 * unit, Paint()..color = soft);
+    canvas.drawCircle(
+      c.translate(0, 52 * unit),
+      2 * unit,
+      Paint()..color = soft,
+    );
   }
 
   void _moon(Canvas canvas, Offset c, double unit, Color ink, Color soft) {
     final moon = Path()
       ..addOval(Rect.fromCircle(center: c, radius: 38 * unit))
-      ..addOval(Rect.fromCircle(
-          center: c.translate(20 * unit, -12 * unit), radius: 32 * unit))
+      ..addOval(
+        Rect.fromCircle(
+          center: c.translate(20 * unit, -12 * unit),
+          radius: 32 * unit,
+        ),
+      )
       ..fillType = PathFillType.evenOdd;
-    canvas.drawPath(moon, Paint()..color = Colors.white.withValues(alpha: 0.94));
+    canvas.drawPath(
+      moon,
+      Paint()..color = Colors.white.withValues(alpha: 0.94),
+    );
 
     final star = Paint()..color = soft;
     for (final p in [
