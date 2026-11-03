@@ -25,7 +25,10 @@ class AppConfig {
   );
 
   static const supportUrl = String.fromEnvironment('SUPPORT_URL');
-  static const supportEmail = String.fromEnvironment('SUPPORT_EMAIL');
+  static const supportEmail = String.fromEnvironment(
+    'SUPPORT_EMAIL',
+    defaultValue: 'optsamtz@gmail.com',
+  );
 
   static const releasesApiUrl = String.fromEnvironment(
     'RELEASES_API_URL',

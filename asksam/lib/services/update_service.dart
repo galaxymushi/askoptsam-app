@@ -115,7 +115,7 @@ class UpdateService {
   static final UpdateService instance = UpdateService._();
 
   static const _cacheKey = 'asksam_latest_release_v1';
-  static const _fallbackInstalledVersion = '2.3.0';
+  static const _fallbackInstalledVersion = '2.3.1';
 
   /// Strips leading `v`/`V` and build metadata (`+5`) to return `major.minor.patch`.
   static String normalizeVersion(String raw) {

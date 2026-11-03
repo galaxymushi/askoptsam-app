@@ -9,6 +9,7 @@ import 'screens/app_shell.dart';
 import 'screens/welcome_screen.dart';
 import 'services/auth_service.dart';
 import 'services/chat_store.dart';
+import 'services/local_notifications.dart';
 import 'services/settings_controller.dart';
 import 'theme.dart';
 import 'widgets/gaze.dart';
@@ -26,6 +27,10 @@ Future<void> main() async {
   }
   AppConfig.logMode();
 
+  // Sets up real status-bar notifications (channel + Android 13 permission)
+  // before the first frame so nothing posted later is silently dropped.
+  await LocalNotifications.instance.init();
+
   final prefs = await SharedPreferences.getInstance();
   final settings = SettingsController(prefs);
   final auth = await createAuthService();
@@ -37,6 +42,12 @@ Future<void> main() async {
   state.restoreSession();
 
   runApp(AskOptSamApp(state: state));
+
+  // Ask for the Android 13+ notification permission only once the first
+  // frame is up, so the system dialog never covers a blank window.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    LocalNotifications.instance.requestPermission();
+  });
 }
 
 class AskOptSamApp extends StatelessWidget {

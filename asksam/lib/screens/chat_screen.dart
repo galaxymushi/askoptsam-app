@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app_state.dart';
+import '../content/citations.dart';
 import '../l10n.dart';
 import '../models.dart';
 import '../services/ai_service.dart';
@@ -216,17 +217,20 @@ class ChatScreenState extends State<ChatScreen> {
         buffer.write(chunk);
         if (!mounted) return;
         setState(() {
+          // Source markers (`[S1]`, `[S2]`, …) are stripped while streaming so
+          // they never reach the bubble, even mid-sentence.
+          final visible = stripCitations(buffer.toString());
           if (reply == null) {
             reply = ChatMessage(
               id: _newId(),
               role: 'assistant',
-              text: buffer.toString(),
+              text: visible,
               createdAt: DateTime.now(),
             );
             _session.messages.add(reply!);
             _typing = false;
           } else {
-            reply!.text = buffer.toString();
+            reply!.text = visible;
           }
         });
         _scrollToEnd();

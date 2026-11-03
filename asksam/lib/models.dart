@@ -1,3 +1,5 @@
+import 'content/citations.dart';
+
 class AppUser {
   const AppUser({required this.uid, required this.email, required this.name});
 
@@ -41,7 +43,9 @@ class ChatMessage {
   static ChatMessage fromMap(Map<String, dynamic> map) => ChatMessage(
     id: map['id'] as String,
     role: map['role'] as String,
-    text: map['text'] as String? ?? '',
+    // Chats saved before source markers were filtered keep them in storage;
+    // clean them here so old conversations read cleanly too.
+    text: stripCitations(map['text'] as String? ?? ''),
     createdAt:
         DateTime.tryParse(map['createdAt'] as String? ?? '') ?? DateTime.now(),
     feedback: map['feedback'] as String?,

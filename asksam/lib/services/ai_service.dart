@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
 import '../config.dart';
+import '../content/citations.dart';
 import '../models.dart';
 
 class AiException implements Exception {
@@ -70,7 +71,9 @@ class AiService {
     await for (final chunk in streamReply([turn], lang: lang)) {
       buffer.write(chunk);
     }
-    return buffer.toString().trim();
+    // Source markers (`[S1]`) are stripped so the daily briefing never shows
+    // them either — the JSON parser would otherwise keep them in a value.
+    return stripCitations(buffer.toString()).trim();
   }
 
   /// Hosted AskOptsam assistant (same persona, sources and guardrails as the

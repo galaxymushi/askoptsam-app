@@ -48,6 +48,48 @@ class SettingsScreen extends StatelessWidget {
               title: t.get('notifications'),
               onTap: () => open(const NotificationsScreen()),
             ),
+            SettingsTile(
+              icon: Icons.delete_sweep_rounded,
+              iconColor: AppColors.danger,
+              title: t.get('clearHistory'),
+              titleColor: AppColors.danger,
+              onTap: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    title: Text(t.get('clearHistoryTitle')),
+                    content: Text(t.get('clearHistoryBody')),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text(t.get('cancel')),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: Text(
+                          t.get('delete'),
+                          style: const TextStyle(color: AppColors.danger),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed != true || !context.mounted) return;
+                final app = AppScope.read(context);
+                final uid = app.user?.uid;
+                if (uid != null) {
+                  await app.store.deleteAll(uid);
+                }
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(t.get('historyClearedToast'))),
+                  );
+                }
+              },
+            ),
             SectionLabel(t.get('preferences')),
             SettingsTile(
               icon: Icons.nightlight_round,

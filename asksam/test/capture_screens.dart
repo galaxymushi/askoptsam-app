@@ -39,6 +39,9 @@ class _MemoryChatStore implements ChatStore {
       sessions.removeWhere((s) => s.id == sessionId);
 
   @override
+  Future<void> deleteAll(String uid) async => sessions.clear();
+
+  @override
   Future<void> rename(String uid, String sessionId, String title) async {}
 }
 

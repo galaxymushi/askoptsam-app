@@ -50,6 +50,36 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     await _load();
   }
 
+  Future<void> _clearAll() async {
+    final t = L10nScope.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        title: Text(t.get('clearNotificationsTitle')),
+        content: Text(t.get('clearNotificationsBody')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(t.get('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              t.get('delete'),
+              style: const TextStyle(color: AppColors.danger),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final uid = _uid;
+    if (uid == null) return;
+    await _store.clearAll(uid);
+    await _load();
+  }
+
   Future<void> _open(AppNotice notice) async {
     final uid = _uid;
     if (uid != null && !notice.read) {
@@ -113,6 +143,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       ),
                     ),
                   SectionLabel(t.get('notificationSettings')),
+                  if (_items.isNotEmpty)
+                    SettingsTile(
+                      icon: Icons.delete_sweep_rounded,
+                      iconColor: AppColors.danger,
+                      title: t.get('clearNotifications'),
+                      titleColor: AppColors.danger,
+                      onTap: _clearAll,
+                    ),
                   SettingsTile(
                     icon: Icons.chat_bubble_outline_rounded,
                     title: t.get('replies'),

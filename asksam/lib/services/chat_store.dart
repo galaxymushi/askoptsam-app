@@ -12,6 +12,7 @@ abstract class ChatStore {
   Future<List<ChatSession>> load(String uid);
   Future<void> save(String uid, ChatSession session);
   Future<void> delete(String uid, String sessionId);
+  Future<void> deleteAll(String uid);
   Future<void> rename(String uid, String sessionId, String title);
 }
 
@@ -87,6 +88,9 @@ class LocalChatStore implements ChatStore {
   }
 
   @override
+  Future<void> deleteAll(String uid) => _write(uid, {});
+
+  @override
   Future<void> rename(String uid, String sessionId, String title) async {
     final data = await _read(uid);
     final raw = data[sessionId];
@@ -124,6 +128,16 @@ class FirestoreChatStore implements ChatStore {
   @override
   Future<void> delete(String uid, String sessionId) =>
       _sessions(uid).doc(sessionId).delete();
+
+  @override
+  Future<void> deleteAll(String uid) async {
+    final snap = await _sessions(uid).get();
+    final batch = FirebaseFirestore.instance.batch();
+    for (final doc in snap.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+  }
 
   @override
   Future<void> rename(String uid, String sessionId, String title) =>

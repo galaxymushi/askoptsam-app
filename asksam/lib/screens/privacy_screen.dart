@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config.dart';
@@ -239,6 +240,86 @@ class HelpScreen extends StatelessWidget {
                   color: isDark ? AppColors.darkText : AppColors.ink,
                 ),
               ),
+              if (AppConfig.supportEmail.isNotEmpty) ...[
+                const SizedBox(height: 22),
+                Container(
+                padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurface : Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkBorder : AppColors.border,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.darkSoft
+                            : const Color(0xFFE9F1FE),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.mail_outline_rounded,
+                        size: 20,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.get('helpEmailLabel'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: isDark
+                                  ? AppColors.darkMuted
+                                  : AppColors.muted,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            AppConfig.supportEmail,
+                            style: const TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: t.get('copy'),
+                      icon: Icon(
+                        Icons.copy_rounded,
+                        size: 19,
+                        color: isDark ? AppColors.darkMuted : AppColors.muted,
+                      ),
+                      onPressed: () async {
+                        await Clipboard.setData(
+                          const ClipboardData(text: AppConfig.supportEmail),
+                        );
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(t.get('helpCopiedToast')),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                ),
+              ],
               const Spacer(),
               PrimaryButton(
                 label: t.get('contactSupport'),

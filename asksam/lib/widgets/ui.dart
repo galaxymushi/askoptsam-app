@@ -232,6 +232,8 @@ class SettingsTile extends StatelessWidget {
     this.onTap,
     this.trailing,
     this.subtitle,
+    this.iconColor,
+    this.titleColor,
   });
 
   final IconData icon;
@@ -239,6 +241,8 @@ class SettingsTile extends StatelessWidget {
   final VoidCallback? onTap;
   final Widget? trailing;
   final String? subtitle;
+  final Color? iconColor;
+  final Color? titleColor;
 
   @override
   Widget build(BuildContext context) {
@@ -268,7 +272,11 @@ class SettingsTile extends StatelessWidget {
                     color: isDark ? AppColors.darkSoft : const Color(0xFFE9F1FE),
                     borderRadius: BorderRadius.circular(13),
                   ),
-                  child: Icon(icon, size: 22, color: const Color(0xFF2E6BFF)),
+                  child: Icon(
+                    icon,
+                    size: 22,
+                    color: iconColor ?? const Color(0xFF2E6BFF),
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -277,9 +285,10 @@ class SettingsTile extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16.5,
                           fontWeight: FontWeight.w600,
+                          color: titleColor,
                         ),
                       ),
                       if (subtitle != null) ...[

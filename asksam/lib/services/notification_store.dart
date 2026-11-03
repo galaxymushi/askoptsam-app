@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'local_notifications.dart';
+
 enum NoticeKind { welcome, reply, tip, update }
 
 class AppNotice {
@@ -112,6 +114,14 @@ class NotificationStore {
       ),
     );
     await _write(uid, items.take(_limit).toList());
+
+    // The same entry also lands in the system status bar, so the user sees it
+    // as a real phone notification and not only behind the in-app bell.
+    await LocalNotifications.instance.show(
+      id: id.hashCode,
+      title: title,
+      body: body,
+    );
     return true;
   }
 
@@ -133,4 +143,6 @@ class NotificationStore {
     }
     await _write(uid, items);
   }
+
+  Future<void> clearAll(String uid) => _write(uid, []);
 }
