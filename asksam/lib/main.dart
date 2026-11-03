@@ -14,6 +14,7 @@ import 'services/settings_controller.dart';
 import 'theme.dart';
 import 'widgets/gaze.dart';
 import 'widgets/ui.dart';
+import 'widgets/update_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,8 +71,11 @@ class AskOptSamApp extends StatelessWidget {
               theme: AppTheme.light(),
               darkTheme: AppTheme.dark(),
               themeMode: state.settings.themeMode,
-              builder: (context, child) =>
-                  GazeScope(child: child ?? const SizedBox.shrink()),
+              builder: (context, child) => GazeScope(
+                child: UpdateGate(
+                  child: child ?? const SizedBox.shrink(),
+                ),
+              ),
               home: const RootGate(),
             ),
           );

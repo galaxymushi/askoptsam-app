@@ -214,6 +214,15 @@ class Strings {
     'updateAvailableBadge': 'NEW VERSION {version}',
     'updateAvailableTitle': 'AskOptSam {version} is ready',
     'downloadUpdate': 'Download new version',
+    'updateForceTitle': 'New version {version} is available',
+    'updateForceBody':
+        'To keep using AskOptSam you must download and install the new '
+        'version {version}.',
+    'updateForceDownload': 'Download now',
+    'updateForceHint':
+        'The download opens your browser; reopen the app once it is '
+        'installed.',
+    'updateForceDetails': 'More details',
     'tapToDownloadUpdate': 'Tap to download new version',
     'checkForUpdates': 'Check for updates',
     'upToDateToast': 'You are using the latest version of AskOptSam.',
@@ -430,6 +439,15 @@ class Strings {
     'updateAvailableBadge': 'TOLEO JIPYA {version}',
     'updateAvailableTitle': 'AskOptSam {version} iko tayari',
     'downloadUpdate': 'Pakua toleo jipya',
+    'updateForceTitle': 'Toleo jipya {version} lipo',
+    'updateForceBody':
+        'Ili kuendelea kutumia AskOptSam lazima upakue na usakinishishe '
+        'toleo jipya {version}.',
+    'updateForceDownload': 'Pakua sasa',
+    'updateForceHint':
+        'Upakuaji utafungua kivinjari chako; fungua app tena baada ya '
+        'kusakinisha.',
+    'updateForceDetails': 'Maelezo zaidi',
     'tapToDownloadUpdate': 'Bonyeza kupakua toleo jipya',
     'checkForUpdates': 'Angalia toleo jipya',
     'upToDateToast': 'Unatumia toleo la kisasa zaidi la AskOptSam.',
