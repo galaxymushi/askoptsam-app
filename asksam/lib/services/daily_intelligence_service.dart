@@ -562,5 +562,221 @@ Return ONLY a valid JSON object with these exact keys (both Kiswahili and Englis
         'How often should someone with diabetes or hypertension check their eyes?',
       ],
     ),
+    DailyBriefing(
+      dateKey: '',
+      titleSw: 'Michezo na ulinzi wa macho',
+      titleEn: 'Sports and protecting your eyes',
+      bodySw:
+          'Mpira, kriketi na mikikimiki huweza kugusa jicho kwa nguvu na kusababisha majeraha ya haraka yasiyoonekana mara moja. Glasi za michezo za polycarbonate ni nyepesi na huvunjika kwa shime — ndizo zinazosaidia.',
+      bodyEn:
+          'A ball, a bat or an elbow can hit the eye with force and cause damage you do not notice straight away. Polycarbonate sports goggles are light and resist impact — that is what protects you.',
+      actionSw:
+          'Weka glasi za michezo kwenye mfuko wako wiki hii ukiwa na nia ya kucheza mpira au kukata nyasi.',
+      actionEn:
+          'Pack sports goggles this week if you plan any ball game or garden work.',
+      didYouKnowSw:
+          'Majeraha ya macho ndiyo sababu kuu ya upofu kwa vijana wanaoshiriki michezo bila kinga.',
+      didYouKnowEn:
+          'Eye injuries are a leading cause of blindness in young people who play sport without protection.',
+      questionsSw: [
+        'Glasi gani za michezo zinalinda macho kweli?',
+        'Nifanye nini kama mpira unagusa jicho?',
+        'Je, miwani ya kawaida inatoshea kucheza mpira?',
+      ],
+      questionsEn: [
+        'Which sports goggles actually protect the eyes?',
+        'What should I do if a ball hits me in the eye?',
+        'Are ordinary glasses enough for playing ball?',
+      ],
+    ),
+    DailyBriefing(
+      dateKey: '',
+      titleSw: 'Macho nyesi: msukumo wa allergeni',
+      titleEn: 'Watery eyes: when allergies strike',
+      bodySw:
+          'Vumburi la nyasi, pua za mti na vumbi vya nyumbani huongeza histamine na kuleta macho yenye kuwaka, kusugua na machozi mengi. Kusugua huongeza mzio na kufanya hali kuwa mbaya zaidi.',
+      bodyEn:
+          'Grass pollen, tree pollen and household dust trigger histamine, which makes eyes burn, itch and stream tears. Rubbing raises the histamine load and makes the flare-up worse.',
+      actionSw:
+          'Nawa uso wako na macho kwa maji baridi kabla ya kulala leo ili kupunguza vumbi lililoshika macho yako.',
+      actionEn:
+          'Wash your face and eyes with cool water before bed tonight to clear the dust trapped on them.',
+      didYouKnowSw:
+          'Machozi yanayotiririka ni njia ya asili ya kuosha vumbi kutoka kwenye uso wa jicho.',
+      didYouKnowEn:
+          'Tearing up is the eye\'s own natural way of washing dust off its surface.',
+      questionsSw: [
+        'Kwa nini macho yangu yanajaa machozi wakati wa kupwa?',
+        'Naweza kutumia dawa gani za mzio za macho?',
+        'Je, mzio wa macho unaweza kuharibu uoni?',
+      ],
+      questionsEn: [
+        'Why do my eyes stream during pollen season?',
+        'Which allergy eye drops are safe to use?',
+        'Can eye allergies damage my vision?',
+      ],
+    ),
+    DailyBriefing(
+      dateKey: '',
+      titleSw: 'Usafi wa lenzi za macho',
+      titleEn: 'Contact lens hygiene',
+      bodySw:
+          'Kulala ukiwa na lenzi, kuzioshea kwa maji ya bomba au kuzivaa zaidi ya muda uliopangwa huweza kusababisha maambukizi ya kornea yanayoanza kwa maumivu makali na kuonekana kwa mwanga. Hali hii ni dharura ya macho.',
+      bodyEn:
+          'Sleeping in lenses, rinsing them with tap water or wearing them past their limit can cause a corneal infection that begins with severe pain and light sensitivity. That is an eye emergency.',
+      actionSw:
+          'Chukua lenzi kabla ya kulala usiku huu, ukague tarehe ya kuisha zao na ukae bila hizo kwa saa nane angalau.',
+      actionEn:
+          'Take your lenses off before sleeping tonight, check their expiry date, and keep them out for at least eight hours.',
+      didYouKnowSw:
+          'Maji ya bomba hutoa ameba ndogo zinazoweza kuingia kwenye jicho na kuharibu kornea haraka.',
+      didYouKnowEn:
+          'Tap water carries tiny amoebas that can enter the eye and destroy the cornea quickly.',
+      questionsSw: [
+        'Naweza kulala na lenzi za macho?',
+        'Nawaaje na kuhifadhi lenzi za macho?',
+        'Dalili gani zinamaanisha lazima nitoe lenzi mara moja?',
+      ],
+      questionsEn: [
+        'Can I sleep in my contact lenses?',
+        'How should I clean and store my lenses?',
+        'Which symptoms mean I must remove a lens immediately?',
+      ],
+    ),
+    DailyBriefing(
+      dateKey: '',
+      titleSw: 'Usingizi na skrini kabla ya kulala',
+      titleEn: 'Sleep and screens before bed',
+      bodySw:
+          'Kutazama skrini karibu na muda wa kulala hulazimisha macho kubaki yamefungwa kwa karibu na kupumzika kidogo, huku mwili ukichelewa kutoa melatonin. Hii huleta usingizi dhaifu na macho yaliyokauka asubuhi.',
+      bodyEn:
+          'Looking at a screen close to bedtime keeps the eyes locked in near focus with little rest, while the body delays melatonin. The result is broken sleep and dry, tired eyes in the morning.',
+      actionSw:
+          'Weka simu chini dakika 30 kabla ya kulala leo na tazama kitu kilicho mbali kwa dakika chache badala yake.',
+      actionEn:
+          'Put the phone down 30 minutes before bed tonight and look at something far away instead.',
+      didYouKnowSw:
+          'Kutazama skrini hupunguza kufunga macho mara nne hadi mara tano, jambo linaloongeza ukauka wa macho.',
+      didYouKnowEn:
+          'Screen use cuts your blink rate by four to five times, which is a major cause of dryness.',
+      questionsSw: [
+        'Kwa nini macho yangu ni makavu asubuhi baada ya kusoma simu usiku?',
+        'Je, mwanga wa skrini unaharibu usingizi?',
+        'Ni muda gani mzuri wa kutumia simu kabla ya kulala?',
+      ],
+      questionsEn: [
+        'Why are my eyes dry in the morning after phone use at night?',
+        'Does screen light really damage sleep?',
+        'When is the last sensible time to use a phone before bed?',
+      ],
+    ),
+    DailyBriefing(
+      dateKey: '',
+      titleSw: 'Kuzuia macho kuwa myopia kwa watoto',
+      titleEn: 'Preventing short-sightedness in children',
+      bodySw:
+          'Myopia (kuona mbali kwa vibaya) inaongezeka kwa kasi kwa watoto wanaokaa ndani muda mrefu bila mchezo wa nje. Mwanga wa asili wa nje na kuona mbali mara kwa mara hushusha hatari yake.',
+      bodyEn:
+          'Myopia (difficulty seeing far away) is rising quickly among children who spend long hours indoors. Natural outdoor light and regular distance viewing lower the risk.',
+      actionSw:
+          'Toa mtoto wako dakika 30 za kucheza nje bila skrini leo — mchezo wa nje ndio kinga bora zaidi.',
+      actionEn:
+          'Give your child 30 minutes of screen-free outdoor play today — outdoor time is the best protection we have.',
+      didYouKnowSw:
+          'Myopia isiyo dhibitiwa inaweza kuongezeka hadi hatari ya kutoa retina na glaucoma miaka baadaye.',
+      didYouKnowEn:
+          'Untreated myopia keeps progressing and raises the later risk of retinal detachment and glaucoma.',
+      questionsSw: [
+        'Kwa nini watoto wanaozidi kuwa myopia leo?',
+        'Mwanga wa nje unasaidiaje macho ya mtoto?',
+        'Myopia inadhibitiwaje?',
+      ],
+      questionsEn: [
+        'Why are more children short-sighted today?',
+        'How does outdoor light help a child\'s eyes?',
+        'How is myopia controlled as it progresses?',
+      ],
+    ),
+    DailyBriefing(
+      dateKey: '',
+      titleSw: 'Dalili zinazohitaji daktari mara moja',
+      titleEn: 'Warning signs that need a doctor now',
+      bodySw:
+          'Maumivu ghafla makali, kupoteza kuona ghafu, kivuli kwenye uoni kama kuzuiya dirisha, mabaka yanayotembea mengi yameongezeka au jicho lenye majeraha — dalili hizi si za kusubiri; ni dharura ya macho.',
+      bodyEn:
+          'Sudden severe pain, a sudden drop in vision, a curtain-like shadow across sight, a jump in flashing floaters or an injured eye — these are not things to wait on; they are eye emergencies.',
+      actionSw:
+          'Andika kwenye simu yako leo dalili tatu za dharura: maumivu makali, kupoteza kuona ghafu na kivuli kwenye uoni.',
+      actionEn:
+          'Today, note the three red flags on your phone: severe pain, sudden vision loss and a shadow in the vision.',
+      didYouKnowSw:
+          'Kupoteza kuona kwa glaucoma huanza kwa kupoteza pembe za nje — mtu haatambui kabla si kupoteza makali.',
+      didYouKnowEn:
+          'Glaucoma vision loss starts at the edges, so a person rarely notices until it is advanced.',
+      questionsSw: [
+        'Nini cha kufanya kama najisikia kivuli kwenye uoni?',
+        'Je, mabaka yanayotembea ni hatari?',
+        'Kupoteza kuona ghafu ni dharura kiasi gani?',
+      ],
+      questionsEn: [
+        'What should I do if I see a shadow in my vision?',
+        'Are floating spots dangerous?',
+        'How urgent is sudden vision loss?',
+      ],
+    ),
+    DailyBriefing(
+      dateKey: '',
+      titleSw: 'Kuchagua miwani ya jua',
+      titleEn: 'Choosing sunglasses that work',
+      bodySw:
+          'Miwani ya jua inayozuia UV 100% hulinnda kornea na kuzuia katarakti na makosa ya jua. Rangi nyeusi si alama ya ulinzi — kagua lebo ya UV400, na chagua ile inayofunika pembe za macho.',
+      bodyEn:
+          'Sunglasses that block 100% of UV rays protect the cornea and help prevent cataracts and sun-related eye damage. Dark lenses are not the guarantee — look for the UV400 label and a wraparound fit.',
+      actionSw:
+          'Angalia kasha yako la miwani leo: kuna alama ya UV400 au asiyokuwa na maana yoyote kwako?',
+      actionEn:
+          'Check your sunglass case today: does it carry a real UV400 rating, or is it just dark glass?',
+      didYouKnowSw:
+          'Macho ya mtoto huchukua UV nyingi mara mbili zaidi ya ya mtu mzima kwa sababu kioo chao kina wazi zaidi.',
+      didYouKnowEn:
+          'A child\'s eye takes in roughly twice the UV of an adult eye because the lens is far clearer.',
+      questionsSw: [
+        'Miwani ya jua ya bei nafuu inazuiya UV?',
+        'Watoto wanahitaji miwani ya jua?',
+        'Kiasi gani cha ulinzi wa UV ndicho cha kweli?',
+      ],
+      questionsEn: [
+        'Do cheap sunglasses really block UV?',
+        'Do children need sunglasses too?',
+        'What UV protection level is the real one?',
+      ],
+    ),
+    DailyBriefing(
+      dateKey: '',
+      titleSw: 'Mpangilio wa meza ya kompyuta',
+      titleEn: 'Setting up your desk',
+      bodySw:
+          'Skrini iliyo juu sana au chini sana, umbali mfupi na kuinama mbele hulazimisha shingo na macho kufanya kazi kwa mkazo. Skrini iwe chini kidogo ya macho, umbali wa mkono, na uangalie mbali kila dakika 20.',
+      bodyEn:
+          'A screen that is too high or too low, sitting too close, and leaning forward all strain the neck and eyes together. Keep the screen slightly below eye level, an arm\'s length away, and look far away every 20 minutes.',
+      actionSw:
+          'Rekebisha kiti na skrini yako leo hivi: macho yako yawe juu kidogo ya skrini kwa sentensi chache.',
+      actionEn:
+          'Adjust your chair and screen today: your eyes should sit a few centimetres above the top of the screen.',
+      didYouKnowSw:
+          'Wanadamu hufanya macho yawe na mkazo zaidi ya dakika 20 mfululizo bila kujua, kwa sababu kufanya kazi hulazimisha kupunguza kupiga macho.',
+      didYouKnowEn:
+          'Focused work suppresses blinking, and after about 20 minutes the eye surface starts to dry out without you noticing.',
+      questionsSw: [
+        'Umbali gani sahihi wa skrini kutoka machoni?',
+        'Kwa nini shingo yangu huumu nikifanya kazi na kompyuta?',
+        'Je, miwani ya kompyuta (anti-fatigue) inasaidia?',
+      ],
+      questionsEn: [
+        'What is the right screen distance from my eyes?',
+        'Why does my neck ache at the computer?',
+        'Do computer (anti-fatigue) glasses really help?',
+      ],
+    ),
   ];
 }

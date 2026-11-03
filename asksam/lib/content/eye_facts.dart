@@ -286,5 +286,107 @@ class EyeFacts {
       tipSw: 'Watoto wahitaji mlo wenye rangi ya machungwa na kijani kila siku.',
       tipEn: 'Children need orange and green foods every day.',
     ),
+    EyeFact(
+      id: 'presbyopia',
+      art: FactArt.clock,
+      titleSw: 'Macho ya karibu baada ya miaka 40',
+      titleEn: 'Near vision after 40',
+      bodySw:
+          'Baada ya miaka 40 kiunzi cha ndani cha jicho kigumu na kushindwa kulegeza kwa karibu — maandishi ya simu yanakuwa magumu. Hali hii huitwa presbyopia na si ugonjwa; miwani ya kusoma hutatua.',
+      bodyEn:
+          'After 40 the lens inside the eye stiffens and can no longer focus up close — phone text becomes hard to read. This is presbyopia, not a disease; reading glasses fix it.',
+      tipSw:
+          'Pima macho kabla ya kununua miwani ya kusoma; ile ya sokoni isiopimwa inaweza kuleta maumivu.',
+      tipEn:
+          'Get your eyes tested before buying reading glasses; an untested market pair can cause pain.',
+    ),
+    EyeFact(
+      id: 'spectacles',
+      art: FactArt.eye,
+      titleSw: 'Miwani sahihi, kuoni safi',
+      titleEn: 'The right prescription',
+      bodySw:
+          'Miwani iliyonunuliwa bila kupima inaweza kuharibu macho na kuleta maumivu ya kichwa, kuzungukaza na uchovu. Pima macho kwanza, kisha nunua kwa kiasi sahihi.',
+      bodyEn:
+          'Glasses bought without an eye test can bring headaches, dizziness and strain. Test first, then buy the exact strength you need.',
+      tipSw: 'Kila miaka miwili fanya uchunguzi wa macho hata kama unaona vizuri.',
+      tipEn: 'Have your eyes checked every two years even if you see well.',
+    ),
+    EyeFact(
+      id: 'self-medication',
+      art: FactArt.drop,
+      titleSw: 'Usijitibu dawa za macho',
+      titleEn: 'Never self-medicate your eyes',
+      bodySw:
+          'Dawa za steroid (mfano hydrocortisone) zinapotumika bila daktari zinaweza kupandisha shinikizo la jicho, kusababisha katarakti na maambukizi yanayoharibu kuona bila dalili. Dawa ya macho ni dawa ya daktari.',
+      bodyEn:
+          'Steroid eye drops used without a doctor can raise eye pressure, trigger cataracts and hide an infection that quietly damages sight. Eye medicine is prescription medicine.',
+      tipSw: 'Usitumie dawa ya mtu mwingine au iliyobaki kutoka mwaka uliopita.',
+      tipEn: 'Never use another person\'s eye drops or leftovers from last year.',
+    ),
+    EyeFact(
+      id: 'conjunctivitis',
+      art: FactArt.eye,
+      titleSw: 'Jicho nyekundu (conjunctivitis)',
+      titleEn: 'Red eye (conjunctivitis)',
+      bodySw:
+          'Jicho nyekundu lenye uchafu linaweza kuwa maambukizi yanayoenea kwa mikono na taulo. Nawa mikono mara kwa mara, usiguse macho, usishiriki taulo au vipodozi.',
+      bodyEn:
+          'A red eye with discharge may be an infection that spreads through hands and towels. Wash hands often, don\'t touch your eyes, and never share towels or eye make-up.',
+      tipSw:
+          'Ukiona macho nyekundu yenye maumivu au kuona hafifu, ona daktari haraka badala ya kusubiri.',
+      tipEn:
+          'If redness comes with pain or blurred vision, see a doctor quickly instead of waiting.',
+    ),
+    EyeFact(
+      id: 'swimming',
+      art: FactArt.drop,
+      titleSw: 'Kuogelea na macho',
+      titleEn: 'Swimming and your eyes',
+      bodySw:
+          'Maji ya bwawa na klorini huchoma uso wa jicho na kuleta macho nyekundu. Vaa glasi za kuogelea, na ukiona macho nyekundu kwa siku baada ya kuogelea, ona daktari.',
+      bodyEn:
+          'Pool water and chlorine irritate the surface of the eye and turn it red. Wear goggles, and if the redness lasts for days afterwards, see a doctor.',
+      tipSw: 'Osha macho kwa maji safi baada ya kuogelea na usisugue kwa nguvu.',
+      tipEn: 'Rinse your eyes with clean water after swimming and never rub hard.',
+    ),
+    EyeFact(
+      id: 'safety-goggles',
+      art: FactArt.eye,
+      titleSw: 'Kinga ya macho kwenye kazi',
+      titleEn: 'Eye protection at work',
+      bodySw:
+          'Vumbuli, vipande vya chuma, moshi na kemikali huchoma macho kwa sekunde moja tu. Glasi za kinga za bei ndogo ndizo zinazokuokoa kuoni — kuwa nazo daima, hata kwa kazi fupi.',
+      bodyEn:
+          'Dust, metal chips, smoke and chemicals can injure an eye in a single second. Cheap safety goggles are what stand between you and blindness — keep them on even for short jobs.',
+      tipSw: 'Tumia glasi za kinga hata unapofanya udoka, kusafisha kwa kemikali au kukata nyasi.',
+      tipEn: 'Wear safety goggles even when welding, using chemicals or cutting grass.',
+    ),
+    EyeFact(
+      id: 'reading-distance',
+      art: FactArt.screen,
+      titleSw: 'Umbali wa usomaji',
+      titleEn: 'Reading distance',
+      bodySw:
+          'Kusoma kwa karibu mno hulazimisha misuli ya jicho ikae nyuma muda mrefu na kuleta uchovu. Weka kitabu au simu umbali wa mkono, kisha angalia mbali mara kwa mara.',
+      bodyEn:
+          'Reading too close keeps the focusing muscle tense for too long and tires the eyes. Hold a book or phone about an arm\'s length away, and look into the distance often.',
+      tipSw: 'Watoto wasome kitabu angalau mita moja kutoka uso wao.',
+      tipEn: 'Children should read roughly an arm\'s length from the page.',
+    ),
+    EyeFact(
+      id: 'school-vision',
+      art: FactArt.clock,
+      titleSw: 'Kupima macho shuleni',
+      titleEn: 'Vision screening at school',
+      bodySw:
+          'Mtoto anayeshindwa kusoma ubao mara nyingi si mvivu wa kusoma — anaweza kuhitaji miwani. Upimaji wa macho shuleni hukamata tatizo mapema, kabla halijaharibu masomo yake.',
+      bodyEn:
+          'A child who cannot copy from the board is often not a slow learner — they may simply need glasses. School vision screening catches the problem before it costs them lessons.',
+      tipSw:
+          'Uliza shule ya mtoto wako iwapo ina upimaji wa macho, na ukishuku, muone daktari bila kuchelewa.',
+      tipEn:
+          'Ask your child\'s school about eye screening, and if you suspect a problem, act fast.',
+    ),
   ];
 }

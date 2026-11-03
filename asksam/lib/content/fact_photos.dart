@@ -156,6 +156,57 @@ const Map<String, FactPhoto> factPhotos = {
     license: 'Public domain',
     sourceUrl: 'https://commons.wikimedia.org/wiki/File:Cucurbita_2011_G1.jpg',
   ),
+  'presbyopia': FactPhoto(
+    asset: 'assets/images/facts/presbyopia.jpg',
+    author: 'State Library of Queensland',
+    license: 'Public domain',
+    sourceUrl:
+        'https://commons.wikimedia.org/wiki/File:StateLibQld_1_201763_Elderly_woman_reading_the_newspaper,_1930-1940.jpg',
+  ),
+  'spectacles': FactPhoto(
+    asset: 'assets/images/facts/spectacles.jpg',
+    author: 'Jacek Halicki',
+    license: 'CC BY-SA 4.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:2023_Okulary_korekcyjne.jpg',
+  ),
+  'self-medication': FactPhoto(
+    asset: 'assets/images/facts/self-medication.jpg',
+    author: 'Lars Andreas',
+    license: 'CC BY 2.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Man_taking_eyedrops.jpg',
+  ),
+  'conjunctivitis': FactPhoto(
+    asset: 'assets/images/facts/conjunctivitis.jpg',
+    author: 'WaltFletcher',
+    license: 'CC BY-SA 4.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Bloodshot_Eyes.jpg',
+  ),
+  'swimming': FactPhoto(
+    asset: 'assets/images/facts/swimming.jpg',
+    author: 'Jpogi at Wikipedia',
+    license: 'Public domain',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Swimming_goggles.JPG',
+  ),
+  'safety-goggles': FactPhoto(
+    asset: 'assets/images/facts/safety-goggles.jpg',
+    author: 'Jacek Halicki',
+    license: 'CC BY-SA 4.0',
+    sourceUrl:
+        'https://commons.wikimedia.org/wiki/File:2023_Okulary_ochronne_(1).jpg',
+  ),
+  'reading-distance': FactPhoto(
+    asset: 'assets/images/facts/reading-distance.jpg',
+    author: 'Widad.sirkhotte',
+    license: 'CC BY 4.0',
+    sourceUrl:
+        'https://commons.wikimedia.org/wiki/File:Close-up_of_child_reading_a_book.jpg',
+  ),
+  'school-vision': FactPhoto(
+    asset: 'assets/images/facts/school-vision.jpg',
+    author: 'Creative magnet',
+    license: 'CC BY-SA 4.0',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Snellen_Chart.jpg',
+  ),
 };
 
 FactPhoto? photoFor(EyeFact fact) => factPhotos[fact.id];
