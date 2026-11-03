@@ -115,7 +115,8 @@ class UpdateService {
   static final UpdateService instance = UpdateService._();
 
   static const _cacheKey = 'asksam_latest_release_v1';
-  static const _fallbackInstalledVersion = '2.3.3';
+  static const _downloadedKey = 'asksam_update_downloaded_v1';
+  static const _fallbackInstalledVersion = '2.3.4';
 
   /// Strips leading `v`/`V` and build metadata (`+5`) to return `major.minor.patch`.
   static String normalizeVersion(String raw) {
@@ -255,11 +256,39 @@ class UpdateService {
     return release;
   }
 
+  /// Remembers the release the user already fetched so every download button
+  /// can hide itself until a newer version shows up.
+  Future<void> markDownloaded(String version) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_downloadedKey, version.trim());
+    } catch (_) {
+      // Best effort: the buttons fall back to their visible state.
+    }
+  }
+
+  /// True once [version] has been fetched on this device.
+  Future<bool> hasDownloaded(String version) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_downloadedKey)?.trim() ?? '';
+      return saved.isNotEmpty && saved == version.trim();
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> openDownload(AppRelease release) async {
     final target = release.downloadUrl.isNotEmpty
         ? release.downloadUrl
         : release.pageUrl;
-    return openUrl(target);
+    // Never leave the caller hanging: if the browser does not answer within
+    // a few seconds (no browser installed, odd OEM intent handling) the
+    // button simply returns instead of spinning forever.
+    final opened = await openUrl(target)
+        .timeout(const Duration(seconds: 6), onTimeout: () => false);
+    if (opened) await markDownloaded(release.version);
+    return opened;
   }
 
   Future<bool> openUrl(String url) async {

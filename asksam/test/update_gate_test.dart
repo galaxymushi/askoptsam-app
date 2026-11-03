@@ -3,6 +3,7 @@ import 'package:asksam/services/update_service.dart';
 import 'package:asksam/widgets/update_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const _release = AppRelease(
   version: '9.9.9',
@@ -21,6 +22,8 @@ Widget _wrap(Widget gate) => L10nScope(
 );
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('a newer release blocks the app with a mandatory dialog', (
     tester,
   ) async {
@@ -74,5 +77,61 @@ void main() {
     await tester.pump();
     expect(find.byType(Dialog), findsOneWidget);
     expect(find.text('Toleo jipya 9.9.9 lipo'), findsOneWidget);
+
+    // A browser cannot open in tests: once the safety timeout fires the
+    // button returns (nothing was fetched) and the dialog still blocks.
+    await tester.pump(const Duration(seconds: 7));
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.text('Pakua sasa'), findsOneWidget);
+  });
+
+  testWidgets('the download button disappears once the APK was fetched', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        UpdateGate(
+          check: () async => _release,
+          download: (_) async => true,
+          child: const Text('app'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Pakua sasa'), findsOneWidget);
+
+    await tester.tap(find.text('Pakua sasa'));
+    await tester.pumpAndSettle();
+
+    // The button makes way for a confirmation, but the dialog still blocks
+    // until the new version is installed.
+    expect(find.text('Pakua sasa'), findsNothing);
+    expect(find.text('Imepakuliwa'), findsOneWidget);
+    expect(
+      find.text('Sakinisha APK uliopakua kisha fungua app tena ili kuendelea.'),
+      findsOneWidget,
+    );
+    expect(find.text('Jaribu tena kupakua'), findsOneWidget);
+    expect(find.byType(Dialog), findsOneWidget);
+
+    // A relaunch with the same release must start in the downloaded state.
+    SharedPreferences.setMockInitialValues({
+      'asksam_update_downloaded_v1': '9.9.9',
+    });
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(
+      _wrap(
+        UpdateGate(
+          check: () async => _release,
+          download: (_) async => true,
+          child: const Text('app'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Pakua sasa'), findsNothing);
+    expect(find.text('Imepakuliwa'), findsOneWidget);
+    expect(find.byType(Dialog), findsOneWidget);
   });
 }

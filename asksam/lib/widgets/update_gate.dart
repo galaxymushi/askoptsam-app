@@ -23,13 +23,22 @@ import 'ui.dart';
 /// * the same release also lands in the bell feed and the system status bar
 ///   (deduped by the `update-<version>` id, exactly like Library/Chat).
 class UpdateGate extends StatefulWidget {
-  const UpdateGate({super.key, required this.child, this.check});
+  const UpdateGate({
+    super.key,
+    required this.child,
+    this.check,
+    this.download,
+  });
 
   final Widget child;
 
   /// Overridable so tests can feed a canned release; defaults to a live
   /// GitHub check through [UpdateService].
   final Future<AppRelease?> Function()? check;
+
+  /// Overridable so tests can simulate the browser opening; defaults to the
+  /// real APK download through [UpdateService.openDownload].
+  final Future<bool> Function(AppRelease release)? download;
 
   @override
   State<UpdateGate> createState() => _UpdateGateState();
@@ -82,7 +91,10 @@ class _UpdateGateState extends State<UpdateGate> {
         context: context,
         useRootNavigator: true,
         barrierDismissible: false,
-        builder: (_) => _ForceUpdateDialog(release: release),
+        builder: (_) => _ForceUpdateDialog(
+          release: release,
+          download: widget.download,
+        ),
       );
     } catch (_) {
       // Offline or GitHub unreachable: keep the app usable rather than
@@ -95,9 +107,10 @@ class _UpdateGateState extends State<UpdateGate> {
 }
 
 class _ForceUpdateDialog extends StatefulWidget {
-  const _ForceUpdateDialog({required this.release});
+  const _ForceUpdateDialog({required this.release, this.download});
 
   final AppRelease release;
+  final Future<bool> Function(AppRelease release)? download;
 
   @override
   State<_ForceUpdateDialog> createState() => _ForceUpdateDialogState();
@@ -106,11 +119,40 @@ class _ForceUpdateDialog extends StatefulWidget {
 class _ForceUpdateDialogState extends State<_ForceUpdateDialog> {
   bool _downloading = false;
 
+  /// Set once the user has fetched this release (or already did on a
+  /// previous launch): the big download button then makes way for a
+  /// confirmation and only comes back when a newer release appears.
+  bool _downloaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreDownloaded();
+  }
+
+  Future<void> _restoreDownloaded() async {
+    try {
+      final done = await UpdateService.instance
+          .hasDownloaded(widget.release.version);
+      if (mounted && done) setState(() => _downloaded = true);
+    } catch (_) {
+      // No prefs access: keep the button visible.
+    }
+  }
+
   Future<void> _download() async {
     if (_downloading) return;
     setState(() => _downloading = true);
-    await UpdateService.instance.openDownload(widget.release);
-    if (mounted) setState(() => _downloading = false);
+    final open = widget.download ?? UpdateService.instance.openDownload;
+    final opened = await open(widget.release);
+    if (mounted) {
+      setState(() {
+        _downloading = false;
+        // Only a real hand-off to the browser counts as "downloaded"; on
+        // failure the button simply comes back so they can retry.
+        if (opened) _downloaded = true;
+      });
+    }
   }
 
   @override
@@ -190,13 +232,64 @@ class _ForceUpdateDialogState extends State<_ForceUpdateDialog> {
                 ),
               ],
               const SizedBox(height: 20),
-              PrimaryButton(
-                label: t.get('updateForceDownload'),
-                height: 52,
-                busy: _downloading,
-                onPressed: _download,
-              ),
-              const SizedBox(height: 10),
+              if (_downloaded) ...[
+                Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF16A34A).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        color: Color(0xFF16A34A),
+                        size: 30,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        t.get('updateDownloadedTitle'),
+                        style: const TextStyle(
+                          fontSize: 15.5,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        t.get('updateDownloadedBody'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          height: 1.4,
+                          color: isDark ? AppColors.darkMuted : AppColors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: _downloading ? null : _download,
+                  child: Text(
+                    t.get('updateDownloadedRetry'),
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? AppColors.darkMuted : AppColors.muted,
+                    ),
+                  ),
+                ),
+              ] else ...[
+                PrimaryButton(
+                  label: t.get('updateForceDownload'),
+                  height: 52,
+                  busy: _downloading,
+                  onPressed: _download,
+                ),
+                const SizedBox(height: 10),
+              ],
               TextButton(
                 onPressed: () => UpdateService.instance.openUrl(
                   release.pageUrl.isNotEmpty

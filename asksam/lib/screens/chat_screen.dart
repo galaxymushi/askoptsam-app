@@ -592,32 +592,66 @@ class _ChatGreeting extends StatelessWidget {
   }
 }
 
-class _UpdateStrip extends StatelessWidget {
+class _UpdateStrip extends StatefulWidget {
   const _UpdateStrip({required this.release, required this.onTap});
 
   final AppRelease release;
-  final VoidCallback onTap;
+  final Future<bool> Function() onTap;
+
+  @override
+  State<_UpdateStrip> createState() => _UpdateStripState();
+}
+
+class _UpdateStripState extends State<_UpdateStrip> {
+  bool _downloaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreDownloaded();
+  }
+
+  /// Once this release was fetched the strip stops offering the download; it
+  /// re-arms itself as soon as a newer release appears.
+  Future<void> _restoreDownloaded() async {
+    try {
+      final done = await UpdateService.instance
+          .hasDownloaded(widget.release.version);
+      if (mounted && done) setState(() => _downloaded = true);
+    } catch (_) {
+      // No prefs access: keep the strip tappable.
+    }
+  }
+
+  Future<void> _tap() async {
+    if (_downloaded) return;
+    final opened = await widget.onTap();
+    if (mounted && opened) setState(() => _downloaded = true);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final release = widget.release;
     final t = L10nScope.of(context);
     return Material(
       color: AppColors.primary,
       child: InkWell(
-        onTap: onTap,
+        onTap: _downloaded ? null : _tap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
           child: Row(
             children: [
-              const Icon(
-                Icons.system_update_alt_rounded,
+              Icon(
+                _downloaded
+                    ? Icons.check_circle_rounded
+                    : Icons.system_update_alt_rounded,
                 color: Colors.white,
                 size: 19,
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  '${t.format('noticeUpdateTitle', {'version': release.version})} · ${t.get('downloadUpdate')}',
+                  '${t.format('noticeUpdateTitle', {'version': release.version})} · ${t.get(_downloaded ? 'updateDownloadedShort' : 'downloadUpdate')}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -628,11 +662,12 @@ class _UpdateStrip extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(
-                Icons.download_rounded,
-                color: Colors.white,
-                size: 19,
-              ),
+              if (!_downloaded)
+                const Icon(
+                  Icons.download_rounded,
+                  color: Colors.white,
+                  size: 19,
+                ),
             ],
           ),
         ),

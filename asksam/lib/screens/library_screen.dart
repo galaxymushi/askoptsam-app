@@ -788,14 +788,45 @@ class _EmptyChats extends StatelessWidget {
   }
 }
 
-class _UpdateBanner extends StatelessWidget {
+class _UpdateBanner extends StatefulWidget {
   const _UpdateBanner({required this.release, required this.onDownload});
 
   final AppRelease release;
-  final VoidCallback onDownload;
+  final Future<bool> Function() onDownload;
+
+  @override
+  State<_UpdateBanner> createState() => _UpdateBannerState();
+}
+
+class _UpdateBannerState extends State<_UpdateBanner> {
+  bool _downloaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreDownloaded();
+  }
+
+  /// Hides the download button once this release was already fetched, and it
+  /// comes back automatically when a newer release appears.
+  Future<void> _restoreDownloaded() async {
+    try {
+      final done = await UpdateService.instance
+          .hasDownloaded(widget.release.version);
+      if (mounted && done) setState(() => _downloaded = true);
+    } catch (_) {
+      // No prefs access: keep the button visible.
+    }
+  }
+
+  Future<void> _download() async {
+    final opened = await widget.onDownload();
+    if (mounted && opened) setState(() => _downloaded = true);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final release = widget.release;
     final t = L10nScope.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
@@ -866,29 +897,64 @@ class _UpdateBanner extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            height: 44,
-            child: ElevatedButton.icon(
-              onPressed: onDownload,
-              icon: const Icon(Icons.download_rounded, size: 19),
-              label: Text(
-                t.get('downloadUpdate'),
-                style: const TextStyle(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w700,
-                ),
+          if (_downloaded)
+            Container(
+              width: double.infinity,
+              height: 44,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(999),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppColors.primary,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      t.get('updateDownloadedShort'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton.icon(
+                onPressed: _download,
+                icon: const Icon(Icons.download_rounded, size: 19),
+                label: Text(
+                  t.get('downloadUpdate'),
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppColors.primary,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

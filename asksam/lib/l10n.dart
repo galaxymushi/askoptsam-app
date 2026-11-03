@@ -223,6 +223,11 @@ class Strings {
         'The download opens your browser; reopen the app once it is '
         'installed.',
     'updateForceDetails': 'More details',
+    'updateDownloadedTitle': 'Downloaded',
+    'updateDownloadedBody':
+        'Install the APK you downloaded, then reopen the app to continue.',
+    'updateDownloadedRetry': 'Download again',
+    'updateDownloadedShort': 'Downloaded — install then reopen the app',
     'tapToDownloadUpdate': 'Tap to download new version',
     'checkForUpdates': 'Check for updates',
     'upToDateToast': 'You are using the latest version of AskOptSam.',
@@ -448,6 +453,11 @@ class Strings {
         'Upakuaji utafungua kivinjari chako; fungua app tena baada ya '
         'kusakinisha.',
     'updateForceDetails': 'Maelezo zaidi',
+    'updateDownloadedTitle': 'Imepakuliwa',
+    'updateDownloadedBody':
+        'Sakinisha APK uliopakua kisha fungua app tena ili kuendelea.',
+    'updateDownloadedRetry': 'Jaribu tena kupakua',
+    'updateDownloadedShort': 'Imepakuliwa ✓ — sakinisha kisha fungua app',
     'tapToDownloadUpdate': 'Bonyeza kupakua toleo jipya',
     'checkForUpdates': 'Angalia toleo jipya',
     'upToDateToast': 'Unatumia toleo la kisasa zaidi la AskOptSam.',

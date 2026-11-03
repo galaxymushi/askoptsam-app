@@ -17,6 +17,7 @@ class _AboutScreenState extends State<AboutScreen> {
   String _version = '';
   AppRelease? _update;
   bool _checking = false;
+  bool _downloaded = false;
 
   @override
   void initState() {
@@ -29,8 +30,23 @@ class _AboutScreenState extends State<AboutScreen> {
     UpdateService.instance.cachedUpdate().then((release) {
       if (mounted && release != null) {
         setState(() => _update = release);
+        _restoreDownloaded(release);
       }
     });
+  }
+
+  /// Swaps the download button for a "downloaded" note until a newer release
+  /// shows up.
+  Future<void> _restoreDownloaded(AppRelease release) async {
+    final done = await UpdateService.instance.hasDownloaded(release.version);
+    if (mounted && done) setState(() => _downloaded = true);
+  }
+
+  Future<void> _downloadUpdate() async {
+    final release = _update;
+    if (release == null) return;
+    final opened = await UpdateService.instance.openDownload(release);
+    if (mounted && opened) setState(() => _downloaded = true);
   }
 
   Future<void> _checkUpdates() async {
@@ -41,7 +57,9 @@ class _AboutScreenState extends State<AboutScreen> {
     setState(() {
       _checking = false;
       _update = release;
+      _downloaded = false;
     });
+    if (release != null) _restoreDownloaded(release);
     if (release == null) {
       final t = L10nScope.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -113,13 +131,20 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
               const Spacer(),
               if (_update != null) ...[
-                PrimaryButton(
-                  label:
-                      '${t.get('downloadUpdate')} (${_update!.version})',
-                  height: 50,
-                  onPressed: () =>
-                      UpdateService.instance.openDownload(_update!),
-                ),
+                if (_downloaded)
+                  OutlinePillButton(
+                    label: t.get('updateDownloadedShort'),
+                    height: 48,
+                    icon: Icons.check_circle_outline_rounded,
+                    onPressed: null,
+                  )
+                else
+                  PrimaryButton(
+                    label:
+                        '${t.get('downloadUpdate')} (${_update!.version})',
+                    height: 50,
+                    onPressed: _downloadUpdate,
+                  ),
                 const SizedBox(height: 12),
               ] else ...[
                 OutlinePillButton(
