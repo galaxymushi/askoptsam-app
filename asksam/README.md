@@ -1,17 +1,22 @@
-# asksam
+# asksam — AskOptSam Android app
 
-A new Flutter project.
+Flutter source of **AskOptSam**, the Kiswahili-first eye-health assistant.
 
-## Getting Started
+The full project README (download link, features, build instructions,
+release process and version history) lives at the
+[repository root](../README.md).
 
-This project is a starting point for a Flutter application.
+```powershell
+flutter pub get
+flutter analyze
+flutter test
+flutter build apk --release --obfuscate --split-debug-info=build/symbols
+```
 
-A few resources to get you started if this is your first Flutter project:
+- **Current version:** 2.3.6+12 — see [Releases](https://github.com/galaxymushi/askoptsam-app/releases)
+- **Support:** optsamtz@gmail.com
+- **Founders:** J.M. SAMWEL · J.M. EMANUELI
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+> AskOptSam gives general eye-health information only. It is not a medical
+> device and never asks for a PIN, OTP or card details. The app contains no
+> payment features.
