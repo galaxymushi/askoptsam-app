@@ -45,7 +45,7 @@ android {
         // ~19 MB to every APK download.
         ndk {
             abiFilters.clear()
-            abiFilters.addAll("armeabi-v7a", "arm64-v8a")
+            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a"))
         }
     }
 
