@@ -358,12 +358,6 @@ class ChatScreenState extends State<ChatScreen> {
                 ),
               ],
             ),
-            if (_updateRelease != null)
-              _UpdateStrip(
-                release: _updateRelease!,
-                onTap: () =>
-                    UpdateService.instance.openDownload(_updateRelease!),
-              ),
             if (_offline) _OfflineBanner(text: t.get('offline')),
             Expanded(
               child: _empty
@@ -436,6 +430,14 @@ class ChatScreenState extends State<ChatScreen> {
                       },
                     ),
             ),
+            // Update prompt sits at the bottom (above the composer) so the
+            // top of the chat stays clear for the mascot's eye animation.
+            if (_updateRelease != null)
+              _UpdateStrip(
+                release: _updateRelease!,
+                onTap: () =>
+                    UpdateService.instance.openDownload(_updateRelease!),
+              ),
             if (!_empty)
               _Composer(
                 controller: _input,

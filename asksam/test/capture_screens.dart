@@ -14,7 +14,6 @@ import 'package:asksam/screens/chat_screen.dart';
 import 'package:asksam/screens/fact_screen.dart';
 import 'package:asksam/screens/library_screen.dart';
 import 'package:asksam/screens/notifications_screen.dart';
-import 'package:asksam/screens/pay_screen.dart';
 import 'package:asksam/screens/privacy_screen.dart';
 import 'package:asksam/screens/settings_screen.dart';
 import 'package:asksam/services/auth_service.dart';
@@ -187,12 +186,6 @@ void main() {
     await tester.pumpWidget(_shot(state, const NotificationsScreen()));
     await _settle(tester);
     await _capture(tester, 'notifications');
-
-    await tester.pumpWidget(
-      _shot(state, const PayScreen(amount: 2000, purpose: 'donation')),
-    );
-    await _settle(tester);
-    await _capture(tester, 'payments');
 
     await tester.pumpWidget(_shot(state, const SettingsScreen()));
     await _settle(tester);

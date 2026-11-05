@@ -336,8 +336,8 @@ class AppBottomNav extends StatelessWidget {
     final t = L10nScope.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final items = [
-      (Icons.grid_view_rounded, t.get('library')),
       (Icons.chat_bubble_outline_rounded, 'AskOptSam'),
+      (Icons.grid_view_rounded, t.get('library')),
       (Icons.settings_outlined, t.get('settings')),
     ];
     return Container(

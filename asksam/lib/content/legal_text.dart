@@ -40,14 +40,13 @@ class LegalText {
       bodySw:
           'Jina na barua pepe unazotoa ukitengeneza akaunti, au akaunti ya '
           'kifaa hiki ikiwa hukutumia barua pepe. Pia huhifadhi mazungumzo '
-          'yako, lugha, mpangilio wa arifa na kumbukumbu ya malipo pale '
-          'unapotuma risiti. Hatuombi namba yako ya siri (PIN), OTP wala '
-          'taarifa za kadi.',
+          'yako, lugha na mpangilio wa arifa. Hatuombi namba yako ya siri '
+          '(PIN), OTP wala taarifa za kadi.',
       bodyEn:
           'The name and email you give when creating an account, or a '
           'device account if you did not use email. We also store your chats, '
-          'language, notification choices and a payment reference when you '
-          'send a receipt. We never ask for your PIN, OTP or card details.',
+          'language and notification choices. We never ask for your PIN, OTP '
+          'or card details.',
     ),
     LegalSection(
       titleSw: 'Kwa nini tunazitumia',
@@ -92,21 +91,6 @@ class LegalText {
           'account they are synced so you can reach them on another phone. '
           'Someone else could read them if they use your phone without signing '
           'out, so keep a PIN or screen lock on the device.',
-    ),
-    LegalSection(
-      titleSw: 'Malipo',
-      titleEn: 'Payments',
-      bodySw:
-          'Malipo hufanywa wewe mwenyewe kwa Airtel Money au M-Pesa kwa '
-          'namba zinazoonekana kwenye programu. Hatuoni PIN yako. Tunapokea '
-          'kumbukumbu ya muamala na risiti unayotuma ili kuthibitisha malipo. '
-          'Michango ni ya hiari isipokuwa huduma maalum zinazoelezwa wazi.',
-      bodyEn:
-          'You make payments yourself with Airtel Money or M-Pesa to the '
-          'numbers shown in the app. We never see your PIN. We receive the '
-          'transaction reference and the receipt you send so we can verify the '
-          'payment. Contributions are voluntary unless a specific service is '
-          'clearly described otherwise.',
     ),
     LegalSection(
       titleSw: 'Kushiriki taarifa',
@@ -251,18 +235,6 @@ class LegalText {
           'Content you send stays yours. You give us permission to process '
           'and store it to answer you and run the service. Do not send illegal '
           'or hateful content, or another person\'s content without permission.',
-    ),
-    LegalSection(
-      titleSw: 'Malipo ya hiari',
-      titleEn: 'Voluntary payments',
-      bodySw:
-          'Michango na kahawa ni ya hiari na haibadilishi huduma ya msingi. '
-          'Malipo huthibitishwa kwa risiti unayotuma. Kama umelipa mara mbili '
-          'kwa hitilafu, tuandikie na tutakagua marejesho.',
-      bodyEn:
-          'Contributions and coffee are voluntary and do not change the '
-          'core service. Payments are verified with the receipt you send. If '
-          'you paid twice by mistake, write to us and we will review a refund.',
     ),
     LegalSection(
       titleSw: 'Mali miliki',

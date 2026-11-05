@@ -9,7 +9,6 @@ import 'language_screen.dart';
 import 'notifications_screen.dart';
 import 'privacy_screen.dart';
 import 'profile_screen.dart';
-import 'support_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -123,17 +122,6 @@ class SettingsScreen extends StatelessWidget {
               icon: Icons.info_outline_rounded,
               title: t.get('about'),
               onTap: () => open(const AboutScreen()),
-            ),
-            SectionLabel(t.get('supportSection')),
-            SettingsTile(
-              icon: Icons.coffee_outlined,
-              title: t.get('buyCoffee'),
-              onTap: () => open(const SupportScreen()),
-            ),
-            SettingsTile(
-              icon: Icons.favorite_border_rounded,
-              title: t.get('donateLonger'),
-              onTap: () => open(const SupportScreen()),
             ),
             const SizedBox(height: 18),
             OutlinePillButton(

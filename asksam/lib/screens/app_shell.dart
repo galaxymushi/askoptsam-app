@@ -14,7 +14,7 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  int _index = 1;
+  int _index = 0;
   final _libraryKey = GlobalKey<LibraryScreenState>();
   final _chatKey = GlobalKey<ChatScreenState>();
 
@@ -24,11 +24,11 @@ class _AppShellState extends State<AppShell> {
       body: IndexedStack(
         index: _index,
         children: [
+          ChatScreen(key: _chatKey, embedded: true),
           LibraryScreen(
             key: _libraryKey,
-            onStartChat: () => setState(() => _index = 1),
+            onStartChat: () => setState(() => _index = 0),
           ),
-          ChatScreen(key: _chatKey, embedded: true),
           const SettingsScreen(),
         ],
       ),
@@ -36,7 +36,7 @@ class _AppShellState extends State<AppShell> {
         index: _index,
         onSelect: (index) {
           setState(() => _index = index);
-          if (index == 0) _libraryKey.currentState?.reload();
+          if (index == 1) _libraryKey.currentState?.reload();
         },
       ),
       backgroundColor: AppColors.page,

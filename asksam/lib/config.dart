@@ -46,21 +46,6 @@ class AppConfig {
         'https://github.com/galaxymushi/askoptsam-app/releases/latest',
   );
 
-  // Payment details (Tanzania). These are the receiving numbers the operator
-  // owns; overriding them at build time replaces the defaults.
-  static const payAccountName = String.fromEnvironment(
-    'PAY_ACCOUNT_NAME',
-    defaultValue: 'AskOptSam',
-  );
-  static const payAirtel = String.fromEnvironment(
-    'PAY_AIRTEL',
-    defaultValue: '0698383923',
-  );
-  static const payMpesa = String.fromEnvironment(
-    'PAY_MPESA',
-    defaultValue: '0726460872',
-  );
-
   static const fbApiKey = String.fromEnvironment('FIREBASE_API_KEY');
   static const fbAppId = String.fromEnvironment('FIREBASE_APP_ID');
   static const fbMessagingSenderId = String.fromEnvironment('FIREBASE_SENDER_ID');

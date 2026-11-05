@@ -120,13 +120,13 @@ class _AboutScreenState extends State<AboutScreen> {
               const SizedBox(height: 26),
               _PersonCard(
                 initials: 'JS',
-                name: 'J.M. Samuel',
+                name: 'J.M. SAMWEL',
                 role: t.get('founder'),
               ),
               const SizedBox(height: 12),
               _PersonCard(
                 initials: 'JE',
-                name: 'J.M. Emanuel',
+                name: 'J.M. EMANUELI',
                 role: t.get('coFounder'),
               ),
               const Spacer(),

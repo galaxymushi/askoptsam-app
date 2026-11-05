@@ -16,14 +16,12 @@ import 'package:asksam/models.dart';
 import 'package:asksam/screens/chat_screen.dart';
 import 'package:asksam/screens/library_screen.dart';
 import 'package:asksam/screens/notifications_screen.dart';
-import 'package:asksam/screens/pay_screen.dart';
 import 'package:asksam/screens/privacy_screen.dart';
 import 'package:asksam/screens/settings_screen.dart';
 import 'package:asksam/services/auth_service.dart';
 import 'package:asksam/services/chat_store.dart';
 import 'package:asksam/services/daily_intelligence_service.dart';
 import 'package:asksam/services/notification_store.dart';
-import 'package:asksam/services/payment_service.dart';
 import 'package:asksam/services/settings_controller.dart';
 import 'package:asksam/services/update_service.dart';
 
@@ -135,13 +133,6 @@ void main() {
     expect(await store.unread('tester'), 0);
   });
 
-  test('only the two real mobile-money channels are offered', () {
-    final channels = PaymentService.channels();
-    expect(channels.map((c) => c.id).toList(), ['airtel', 'mpesa']);
-    expect(channels[0].account, '0698383923');
-    expect(channels[1].account, '0726460872');
-  });
-
   test('settings persist and start in Kiswahili with tips on', () async {
     final first = SettingsController(await SharedPreferences.getInstance());
     expect(first.language, 'sw');
@@ -201,23 +192,6 @@ void main() {
     await _settle(tester);
     expect(await store.unread('tester'), 0);
     expect(find.text('Soma zote'), findsNothing);
-  });
-
-  testWidgets('payment screen offers Airtel and M-Pesa numbers only', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _app(await _state(), const PayScreen(amount: 2000, purpose: 'donation')),
-    );
-    await _settle(tester);
-
-    expect(find.text('Airtel Money'), findsOneWidget);
-    expect(find.text('M-Pesa (Vodacom)'), findsOneWidget);
-    expect(find.text('0698383923'), findsOneWidget);
-    expect(find.text('0726460872'), findsOneWidget);
-    expect(find.textContaining('CRDB'), findsNothing);
-    expect(find.textContaining('Tigo'), findsNothing);
-    expect(find.textContaining('Halopesa'), findsNothing);
   });
 
   testWidgets('settings dark-mode switch really flips and persists', (
