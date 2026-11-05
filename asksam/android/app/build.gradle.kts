@@ -41,6 +41,12 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Real phones only run arm ABIs; x86_64 is for emulators and added
+        // ~19 MB to every APK download.
+        ndk {
+            abiFilters.clear()
+            abiFilters.addAll("armeabi-v7a", "arm64-v8a")
+        }
     }
 
     buildTypes {

@@ -691,11 +691,15 @@ class _SuggestionChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = L10nScope.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // One daily briefing question when available, plus three common eye
+    // questions that rotate by day so the suggestions stay on topic.
+    final eyeQuestions = List.generate(
+      8,
+      (i) => t.get('sugEye${(DateTime.now().day + i) % 8 + 1}'),
+    );
     final chips = [
-      ...dailyQuestions.take(3),
-      t.get('chipExplain'),
-      t.get('chipWrite'),
-      t.get('chipSummarize'),
+      if (dailyQuestions.isNotEmpty) dailyQuestions.first,
+      ...eyeQuestions.take(3),
     ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(22, 6, 22, 10),
