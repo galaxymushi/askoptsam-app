@@ -781,7 +781,7 @@ class EyeAssistantScreenState extends State<EyeAssistantScreen>
   }
 
   void _showEyeSettingsDialog(BuildContext context, Strings t, bool isDark) async {
-    final currentKey = await EyeVisionService.instance.getSavedGeminiKey() ?? '';
+    final currentKey = await EyeVisionService.instance.getSavedGeminiKey();
     final keyController = TextEditingController(text: currentKey);
 
     if (!context.mounted) return;

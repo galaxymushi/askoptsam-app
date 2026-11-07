@@ -5,6 +5,7 @@ import '../l10n.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
+import 'privacy_screen.dart';
 import 'welcome_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -109,15 +110,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
             onSubmitted: (_) => _submit(),
           ),
           const SizedBox(height: 16),
-          InkWell(
-            onTap: () => setState(() => _agreed = !_agreed),
-            borderRadius: BorderRadius.circular(10),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AnimatedContainer(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                InkWell(
+                  onTap: () => setState(() => _agreed = !_agreed),
+                  borderRadius: BorderRadius.circular(6),
+                  child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     width: 24,
                     height: 24,
@@ -138,18 +139,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             size: 17, color: Colors.white)
                         : null,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        t.get('agreeTerms'),
-                        style: const TextStyle(fontSize: 15.5, height: 1.35),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => setState(() => _agreed = !_agreed),
+                        child: Text(
+                          t.language == 'sw' ? 'Nakubaliana na ' : 'I agree to the ',
+                          style: const TextStyle(fontSize: 15, height: 1.35),
+                        ),
                       ),
-                    ),
+                      InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+                          );
+                        },
+                        child: Text(
+                          t.language == 'sw'
+                              ? 'Sera ya Faragha na Masharti'
+                              : 'Privacy Policy & Terms',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            height: 1.35,
+                            color: Color(0xFF0A5FF2),
+                            fontWeight: FontWeight.w700,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           if (_error != null) ...[

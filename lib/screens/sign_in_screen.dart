@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 import 'forgot_password_screen.dart';
+import 'privacy_screen.dart';
 import 'sign_up_screen.dart';
 import 'welcome_screen.dart';
 
@@ -166,6 +167,26 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: InkWell(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+              ),
+              child: Text(
+                t.language == 'sw'
+                    ? 'Sera ya Faragha na Masharti ya Matumizi'
+                    : 'Privacy Policy & Terms of Service',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.darkMuted
+                      : AppColors.muted,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 4),
         ],

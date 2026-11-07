@@ -8,8 +8,8 @@ import 'gaze.dart';
 /// An ultra-clean, vector-drawn friendly robot assistant featuring:
 /// - Smooth blue headset with dual rounded earcups
 /// - Pure white spherical head with sleek gloss
-/// - Dual expressive, beautifully proportioned robotic eyes that gaze smoothly
-/// - Natural, lively periodic blinking (with occasional double-blinks)
+/// - ONE SINGLE BIG, expressive, high-tech glowing robotic eye in the center
+/// - Natural, lively periodic blinking (with occasional cute double-blinks)
 /// - Interactive tap reaction (hops, happy squint/wink, waves arms, and triggers [onTap])
 /// - Zero jagged/dusty lines, fully anti-aliased with precision vector paths.
 class Mascot extends StatelessWidget {
@@ -158,7 +158,7 @@ class _MascotViewState extends State<_MascotView>
           final hop = -math.sin(math.pi * _hop.value) * 22.0;
           final wink = _tapCount.isOdd && _hop.isAnimating;
 
-          // Blink progress: 0.0 (fully open) -> 1.0 (fully closed) -> 0.0 (reopened)
+          // Blink progress: 0.0 (open) -> 1.0 (closed) -> 0.0 (reopened)
           final blinkVal = math.sin(_blinkController.value * math.pi);
 
           final pointer = gaze?.value ?? Offset.zero;
@@ -225,7 +225,7 @@ class _CleanMascotPainter extends CustomPainter {
   final bool thinking;
 
   static const _blue = Color(0xFF0057FF);
-  static const _cyan = Color(0xFF2CA9F2);
+  static const _cyan = Color(0xFF00E5FF);
   static const _navy = Color(0xFF08102F);
   static const _deepEye = Color(0xFF0A2E8A);
 
@@ -249,7 +249,7 @@ class _CleanMascotPainter extends CustomPainter {
     canvas.translate(-140, -340);
 
     final bluePaint = Paint()..color = _blue;
-    final cyanPaint = Paint()..color = _cyan;
+    final cyanPaint = Paint()..color = const Color(0xFF2CA9F2);
 
     // 1. Animated Arms
     void drawArm(double cx, double cy, double angle) {
@@ -331,96 +331,97 @@ class _CleanMascotPainter extends CustomPainter {
 
     // Soft Cute Rosy Cheeks
     final cheekPaint = Paint()..color = const Color(0x28FF6B8B);
-    canvas.drawCircle(const Offset(82, 185), 14, cheekPaint);
-    canvas.drawCircle(const Offset(198, 185), 14, cheekPaint);
+    canvas.drawCircle(const Offset(80, 175), 14, cheekPaint);
+    canvas.drawCircle(const Offset(200, 175), 14, cheekPaint);
 
-    // 5. Dual Beautiful Robotic Eyes (Expressive, Gaze-tracking, and Natural Blinking)
-    final gazeShift = Offset(gaze.dx * 8, gaze.dy * 6);
-    const leftEyeBase = Offset(104, 142);
-    const rightEyeBase = Offset(176, 142);
+    // 5. ONE SINGLE BIG EYE (Centered, Expressive, Gaze-tracking & Natural Blinking)
+    const eyeCenter = Offset(140, 142);
+    final gazeShift = Offset(gaze.dx * 12, gaze.dy * 9);
 
-    void drawEye(Offset center, bool isWinking) {
-      if (isWinking) {
-        // Cute smiling wink arc
-        final winkPaint = Paint()
-          ..color = _blue
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 6.5
-          ..strokeCap = StrokeCap.round;
-        canvas.drawArc(
-          Rect.fromCenter(center: center, width: 34, height: 22),
-          0.2,
-          2.74,
-          false,
-          winkPaint,
-        );
-        return;
-      }
+    if (wink) {
+      // Happy smiling squint arc when tapped
+      final winkPaint = Paint()
+        ..color = _blue
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 7.5
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(
+        Rect.fromCenter(center: eyeCenter, width: 56, height: 32),
+        0.2,
+        2.74,
+        false,
+        winkPaint,
+      );
+    } else {
+      final blinkScale = (1.0 - blinkProgress).clamp(0.04, 1.0);
 
-      final blinkScale = (1.0 - blinkProgress).clamp(0.06, 1.0);
-
-      if (blinkScale < 0.18) {
+      if (blinkScale < 0.16) {
         // Completely closed blink line
         canvas.drawLine(
-          Offset(center.dx - 18, center.dy),
-          Offset(center.dx + 18, center.dy),
+          Offset(eyeCenter.dx - 28, eyeCenter.dy),
+          Offset(eyeCenter.dx + 28, eyeCenter.dy),
           Paint()
             ..color = _blue
-            ..strokeWidth = 5.5
+            ..strokeWidth = 6.5
             ..strokeCap = StrokeCap.round,
         );
-        return;
+      } else {
+        canvas.save();
+        // Scale vertically for natural blink animation
+        canvas.translate(eyeCenter.dx, eyeCenter.dy);
+        canvas.scale(1.0, blinkScale);
+        canvas.translate(-eyeCenter.dx, -eyeCenter.dy);
+
+        // Big Outer Eye Socket with sleek blue border
+        final eyeOuterRect = Rect.fromCenter(
+          center: eyeCenter,
+          width: 72,
+          height: 68,
+        );
+        final eyeRRect = RRect.fromRectAndRadius(
+          eyeOuterRect,
+          const Radius.circular(34),
+        );
+
+        // Gradient Iris Fill (Cyan to Deep Sapphire Blue)
+        final eyeGradient = Paint()
+          ..shader = const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [_cyan, _deepEye],
+          ).createShader(eyeOuterRect);
+        canvas.drawRRect(eyeRRect, eyeGradient);
+
+        // Sleek outer accent rim
+        final rimPaint = Paint()
+          ..color = _blue
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3.5;
+        canvas.drawRRect(eyeRRect, rimPaint);
+
+        // Big Inner Pupil with smooth gaze tracking
+        final pupilCenter = eyeCenter + gazeShift;
+        canvas.drawCircle(
+          pupilCenter,
+          18,
+          Paint()..color = _navy,
+        );
+
+        // Specular Light Glints (Gives the single big eye vivid life and charm!)
+        canvas.drawCircle(
+          pupilCenter + const Offset(7, -7),
+          7.0,
+          Paint()..color = Colors.white,
+        );
+        canvas.drawCircle(
+          pupilCenter + const Offset(-7, 6),
+          4.0,
+          Paint()..color = const Color(0xDDFFFFFF),
+        );
+
+        canvas.restore();
       }
-
-      canvas.save();
-      // Scale vertically for blink animation
-      canvas.translate(center.dx, center.dy);
-      canvas.scale(1.0, blinkScale);
-      canvas.translate(-center.dx, -center.dy);
-
-      // Eye Outer Socket / Iris
-      final eyeRect = Rect.fromCenter(
-        center: center,
-        width: 38,
-        height: 48,
-      );
-      final rrect = RRect.fromRectAndRadius(eyeRect, const Radius.circular(19));
-      
-      // Eye Glow Gradient
-      final eyeGradient = Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [_cyan, _deepEye],
-        ).createShader(eyeRect);
-      canvas.drawRRect(rrect, eyeGradient);
-
-      // Darker Inner Pupil with gaze tracking
-      final pupilCenter = center + gazeShift;
-      canvas.drawCircle(
-        pupilCenter,
-        10,
-        Paint()..color = _navy,
-      );
-
-      // Specular Light Glints (Gives eyes vivid life!)
-      canvas.drawCircle(
-        pupilCenter + const Offset(4, -4),
-        4.0,
-        Paint()..color = Colors.white,
-      );
-      canvas.drawCircle(
-        pupilCenter + const Offset(-4, 3),
-        2.2,
-        Paint()..color = const Color(0xD0FFFFFF),
-      );
-
-      canvas.restore();
     }
-
-    // Draw Left & Right Eyes
-    drawEye(leftEyeBase, false);
-    drawEye(rightEyeBase, wink);
 
     // 6. Cute Smile Curve
     final smilePaint = Paint()
@@ -429,7 +430,7 @@ class _CleanMascotPainter extends CustomPainter {
       ..strokeWidth = 5.0
       ..strokeCap = StrokeCap.round;
     canvas.drawArc(
-      Rect.fromCenter(center: const Offset(140, 192), width: 36, height: 18),
+      Rect.fromCenter(center: const Offset(140, 196), width: 38, height: 18),
       0.15,
       2.84,
       false,
