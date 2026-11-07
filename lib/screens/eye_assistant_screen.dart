@@ -209,7 +209,7 @@ class EyeAssistantScreenState extends State<EyeAssistantScreen>
 
           const SizedBox(height: 16),
 
-          // Smart Glasses / LifeOS Hardware Connection Strip
+          // Smart Glasses Hardware Connection Strip
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
@@ -645,7 +645,7 @@ class EyeAssistantScreenState extends State<EyeAssistantScreen>
             ),
             const SizedBox(height: 4),
             Text(
-              'Msaidizi wa maono kwa Kiswahili na Kiingereza. Imeunganishwa na OptSam Smart Glasses na mfumo wa LifeOS.',
+              'Msaidizi wa maono kwa Kiswahili na Kiingereza. Imeunganishwa na OptSam Smart Glasses.',
               style: TextStyle(
                 fontSize: 12,
                 color: isDark ? AppColors.darkMuted : AppColors.muted,

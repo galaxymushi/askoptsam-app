@@ -7,12 +7,12 @@
 <p align="center">
   <b>Seeing Is Believing.</b><br />
   A Kiswahili-first AI optometry & vision assistant for Android — chat, daily eye facts,
-  and native vision assistant <b>Eye · Msaidizi wa Maono</b> with Smart Glasses (BLE) and LifeOS integration.
+  and native vision assistant <b>Eye · Msaidizi wa Maono</b> with Smart Glasses (Bluetooth BLE) integration.
 </p>
 
 <p align="center">
-  <a href="https://github.com/galaxymushi/askoptsam-app/releases/latest"><img src="https://img.shields.io/github/v/release/galaxymushi/askoptsam-app?label=release&color=2E6BFF" alt="Latest release" /></a>
-  <a href="https://github.com/galaxymushi/askoptsam-app/releases/latest/download/app-release.apk"><img src="https://img.shields.io/badge/download-APK-2E6BFF" alt="Download APK" /></a>
+  <a href="https://github.com/galaxymushi/askoptsam-eye/releases/latest"><img src="https://img.shields.io/github/v/release/galaxymushi/askoptsam-eye?label=release&color=2E6BFF" alt="Latest release" /></a>
+  <a href="https://github.com/galaxymushi/askoptsam-eye/releases/latest/download/app-release.apk"><img src="https://img.shields.io/badge/download-APK-2E6BFF" alt="Download APK" /></a>
   <img src="https://img.shields.io/badge/platform-Android%206.0%2B-3DDC84" alt="Android" />
   <img src="https://img.shields.io/badge/language-Flutter%20%7C%20Dart-02569B" alt="Flutter" />
   <img src="https://img.shields.io/badge/lugha-Kiswahili%20%7C%20English-111827" alt="Languages" />
@@ -23,7 +23,7 @@
   <a href="#download">Download</a> ·
   <a href="#features">Features</a> ·
   <a href="#eye--msaidizi-wa-maono">Eye Msaidizi</a> ·
-  <a href="#smart-glasses--lifeos">Smart Glasses & LifeOS</a> ·
+  <a href="#smart-glasses-integration">Smart Glasses</a> ·
   <a href="#the-mascot">Interactive Mascot</a> ·
   <a href="#build-it-yourself">Build</a> ·
   <a href="#release-process">Releases</a> ·
@@ -36,8 +36,7 @@ AskOptSam is a Flutter Android application built for Optsam Eye Care. It answers
 everyday eye-health questions in **Kiswahili or English**, teaches with
 **28 daily eye facts** (each with a real, openly-licensed photograph), provides
 an **autonomous daily AI briefing**, and features **Eye · Msaidizi wa Maono** —
-a live camera and audio vision companion ready for **Smart Glasses (Bluetooth BLE)**
-and **LifeOS** accessibility integration.
+a live camera and audio vision companion ready for **Smart Glasses (Bluetooth BLE)**.
 
 > **Not a medical device.** AskOptSam gives general eye-health information
 > only. It does not diagnose, prescribe or replace an optometrist. For an
@@ -118,12 +117,11 @@ Integrated directly into AskOptSam as the 2nd tab and accessible via the chat qu
 
 ---
 
-## Smart Glasses & LifeOS Integration
+## Smart Glasses Integration
 
 AskOptSam v2.4.0 is engineered with hardware abstraction ready for wearable computing:
 
 - **Bluetooth Low Energy (BLE) Bridge**: Connects to smart eyewear peripherals (e.g. Ray-Ban Meta, Monocle, custom ESP32/Nordic BLE smart frames) to stream camera snapshots and receive push-to-talk triggers.
-- **LifeOS System Service Readiness**: Provides an accessibility service bridge that allows Eye to run headlessly in the background, waking on frame taps or voice commands.
 - **Offline TTS & Audio Synthesis**: Fallback audio synthesis pipeline ensures speech cues function even when cellular connectivity drops.
 
 ---
@@ -143,7 +141,7 @@ OptSam's interactive cyborg mascot is drawn via `CustomPainter` with 100% vector
 | --- | --- |
 | Framework | Flutter (Dart SDK ^3.13.7) — Android only |
 | Vision & Speech | Eye · Msaidizi wa Maono (Camera viewfinder, OCR & TTS pipeline) |
-| Hardware Link | Bluetooth BLE Peripheral Bridge + LifeOS Background Service API |
+| Hardware Link | Bluetooth BLE Peripheral Bridge |
 | AI | Hosted AskOptsam assistant (`askoptsam` protocol) or OpenAI-compatible backend |
 | Backend | Firebase Auth + Cloud Firestore (optional; app works fully offline without them) |
 | Notifications | `flutter_local_notifications` (real status-bar notifications) |
@@ -211,7 +209,7 @@ flutter test             # Result: "All tests passed!" (27 tests)
 
 | Version | Highlights |
 | --- | --- |
-| **2.4.0** | **Unified Release**: AskOptSam mother app integrates **Eye · Msaidizi wa Maono** (Soma, Uliza, Elezea); Smart Glasses BLE & LifeOS readiness; redesigned smooth interactive Mascot with hop & wink; 27 automated tests. |
+| **2.4.0** | **Unified Release**: AskOptSam mother app integrates **Eye · Msaidizi wa Maono** (Soma, Uliza, Elezea); Smart Glasses BLE readiness; redesigned smooth interactive Mascot with hop & wink; 27 automated tests. |
 | 2.3.6 | APK shrunk 59 MB → 38 MB (arm-only ABIs); on-topic eye-question suggestion chips |
 | 2.3.5 | Payments removed entirely; founders' names fixed; chat update bar moved to the bottom; tabs reordered |
 | 2.3.4 | Download button retires per version after fetching |
@@ -243,8 +241,8 @@ AskOptSam ni programu kuu inayochanganya ushauri wa AI wa afya ya macho na **Eye
    - **Soma:** Inasoma maandishi yoyote mbele yako (mabango, chupa za dawa, menyu).
    - **Uliza:** Uliza swali lolote kwa kutumia picha ya moja kwa moja.
    - **Elezea:** Maelezo ya kina ya sauti kuhusu mazingira unamoishi.
-2. **Uunganishaji wa Miwani Janja (Smart Glasses) & LifeOS:**
-   - Tayari kuunganishwa na miwani ya kidijitali kupitia Bluetooth (BLE) na huduma ya usuli ya LifeOS.
+2. **Uunganishaji wa Miwani Janja (Smart Glasses):**
+   - Tayari kuunganishwa na miwani ya kidijitali kupitia Bluetooth (BLE).
 3. **Mascot Mpya na Mahiri:**
    - Mistari safi ya vector bila mikwaruzo wala vumbi.
    - Hufuata kidole cha mtumiaji (`GazeScope`), inaruka na kukonyeza jicho unapogusa (`Interactive Tap`).

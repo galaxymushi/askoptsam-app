@@ -226,7 +226,6 @@ class Strings {
     'smartGlasses': 'Smart Glasses',
     'smartGlassesReady': 'Glasses Ready',
     'smartGlassesConnected': 'Connected via Bluetooth (BLE)',
-    'lifeOsBridge': 'LifeOS Bridge Active',
   };
 
   static const _sw = <String, String>{
@@ -441,7 +440,6 @@ class Strings {
     'smartGlasses': 'Miwani Janja',
     'smartGlassesReady': 'Miwani Tayari',
     'smartGlassesConnected': 'Imeunganishwa kwa Bluetooth (BLE)',
-    'lifeOsBridge': 'Mfumo wa LifeOS Upo Tayari',
   };
 
   static const _all = {'en': _en, 'sw': _sw};
