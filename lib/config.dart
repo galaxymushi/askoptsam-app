@@ -33,17 +33,17 @@ class AppConfig {
   static const releasesApiUrl = String.fromEnvironment(
     'RELEASES_API_URL',
     defaultValue:
-        'https://api.github.com/repos/galaxymushi/askoptsam-app/releases/latest',
+        'https://api.github.com/repos/galaxymushi/askoptsam-eye/releases/latest',
   );
   static const latestApkDownloadUrl = String.fromEnvironment(
     'LATEST_APK_URL',
     defaultValue:
-        'https://github.com/galaxymushi/askoptsam-app/releases/latest/download/app-release.apk',
+        'https://github.com/galaxymushi/askoptsam-eye/releases/latest/download/app-release.apk',
   );
   static const releasesPageUrl = String.fromEnvironment(
     'RELEASES_PAGE_URL',
     defaultValue:
-        'https://github.com/galaxymushi/askoptsam-app/releases/latest',
+        'https://github.com/galaxymushi/askoptsam-eye/releases/latest',
   );
 
   static const fbApiKey = String.fromEnvironment('FIREBASE_API_KEY');
