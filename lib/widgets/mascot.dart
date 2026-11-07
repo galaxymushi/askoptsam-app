@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 
 import 'gaze.dart';
 
-/// AskOptSam's living, interactive mascot:
+/// AskOptSam's living, interactive companion mascot:
 /// An ultra-clean, vector-drawn friendly robot assistant featuring:
 /// - Smooth blue headset with dual rounded earcups
 /// - Pure white spherical head with sleek gloss
-/// - Expressive center eye/visor that tracks gaze, blinks smoothly, and pulses when thinking
-/// - Interactive tap reaction (hops, winks, waves arms, and triggers [onTap])
+/// - Dual expressive, beautifully proportioned robotic eyes that gaze smoothly
+/// - Natural, lively periodic blinking (with occasional double-blinks)
+/// - Interactive tap reaction (hops, happy squint/wink, waves arms, and triggers [onTap])
 /// - Zero jagged/dusty lines, fully anti-aliased with precision vector paths.
 class Mascot extends StatelessWidget {
   const Mascot({
@@ -63,28 +64,56 @@ class _MascotViewState extends State<_MascotView>
   );
   late final AnimationController _hop = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 520),
+    duration: const Duration(milliseconds: 550),
+  );
+  late final AnimationController _blinkController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 280),
   );
 
   Offset _smoothed = Offset.zero;
   int _tapCount = 0;
+  final math.Random _random = math.Random();
 
   @override
   void initState() {
     super.initState();
-    if (!widget.frozen) _clock.repeat();
+    if (!widget.frozen) {
+      _clock.repeat();
+      _scheduleNextBlink();
+    }
+  }
+
+  void _scheduleNextBlink() {
+    if (!mounted || widget.frozen) return;
+    // Natural interval: between 2.2 and 4.0 seconds
+    final delayMs = 2200 + _random.nextInt(1800);
+    Future.delayed(Duration(milliseconds: delayMs), () {
+      if (!mounted) return;
+      _blinkController.forward(from: 0).then((_) {
+        // 25% chance of a cute double-blink!
+        if (_random.nextDouble() < 0.25) {
+          Future.delayed(const Duration(milliseconds: 90), () {
+            if (mounted) _blinkController.forward(from: 0);
+          });
+        }
+        _scheduleNextBlink();
+      });
+    });
   }
 
   @override
   void dispose() {
     _clock.dispose();
     _hop.dispose();
+    _blinkController.dispose();
     super.dispose();
   }
 
   void _handleTap() {
     _tapCount++;
     _hop.forward(from: 0);
+    _blinkController.forward(from: 0);
     widget.onTap?.call();
   }
 
@@ -101,7 +130,7 @@ class _MascotViewState extends State<_MascotView>
             tilt: 0,
             armWave: 0,
             breathe: 1,
-            blink: 0,
+            blinkProgress: 0,
             gaze: Offset.zero,
             hop: 0,
             wink: false,
@@ -117,17 +146,20 @@ class _MascotViewState extends State<_MascotView>
       behavior: HitTestBehavior.opaque,
       onTap: _handleTap,
       child: AnimatedBuilder(
-        animation: Listenable.merge([_clock, _hop]),
+        animation: Listenable.merge([_clock, _hop, _blinkController]),
         builder: (context, _) {
           final s = _clock.value * 12.0;
 
           final bob = math.sin(s * 1.9) * 4.5 + math.sin(s * 0.8) * 1.8;
           final sway = math.sin(s * 1.05) * 4.2;
           final tilt = math.sin(s * 1.05 + 0.4) * 0.025;
-          final armWave = math.sin(s * 2.8) * 0.22 + (_hop.isAnimating ? 0.4 : 0.0);
+          final armWave = math.sin(s * 2.8) * 0.22 + (_hop.isAnimating ? 0.45 : 0.0);
           final breathe = 1.0 + math.sin(s * 2.0) * 0.015;
           final hop = -math.sin(math.pi * _hop.value) * 22.0;
           final wink = _tapCount.isOdd && _hop.isAnimating;
+
+          // Blink progress: 0.0 (fully open) -> 1.0 (fully closed) -> 0.0 (reopened)
+          final blinkVal = math.sin(_blinkController.value * math.pi);
 
           final pointer = gaze?.value ?? Offset.zero;
           Offset target;
@@ -154,7 +186,7 @@ class _MascotViewState extends State<_MascotView>
               tilt: tilt,
               armWave: armWave,
               breathe: breathe,
-              blink: _blinkAt(s),
+              blinkProgress: blinkVal,
               gaze: _smoothed,
               hop: hop,
               wink: wink,
@@ -165,13 +197,6 @@ class _MascotViewState extends State<_MascotView>
       ),
     );
   }
-
-  static double _blinkAt(double seconds) {
-    final cycle = (seconds + 0.8) % 4.6;
-    const length = 0.20;
-    if (cycle >= length) return 0;
-    return math.sin((cycle / length) * math.pi);
-  }
 }
 
 class _CleanMascotPainter extends CustomPainter {
@@ -181,7 +206,7 @@ class _CleanMascotPainter extends CustomPainter {
     required this.tilt,
     required this.armWave,
     required this.breathe,
-    required this.blink,
+    required this.blinkProgress,
     required this.gaze,
     required this.hop,
     required this.wink,
@@ -193,7 +218,7 @@ class _CleanMascotPainter extends CustomPainter {
   final double tilt;
   final double armWave;
   final double breathe;
-  final double blink;
+  final double blinkProgress;
   final Offset gaze;
   final double hop;
   final bool wink;
@@ -202,6 +227,7 @@ class _CleanMascotPainter extends CustomPainter {
   static const _blue = Color(0xFF0057FF);
   static const _cyan = Color(0xFF2CA9F2);
   static const _navy = Color(0xFF08102F);
+  static const _deepEye = Color(0xFF0A2E8A);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -225,7 +251,7 @@ class _CleanMascotPainter extends CustomPainter {
     final bluePaint = Paint()..color = _blue;
     final cyanPaint = Paint()..color = _cyan;
 
-    // 1. Draw smooth animated arms
+    // 1. Animated Arms
     void drawArm(double cx, double cy, double angle) {
       canvas.save();
       canvas.translate(cx, cy);
@@ -243,7 +269,7 @@ class _CleanMascotPainter extends CustomPainter {
     drawArm(42, 290, 0.36 + armWave);
     drawArm(238, 290, -0.36 - armWave);
 
-    // 2. Draw clean body
+    // 2. Clean Body
     canvas.save();
     canvas.translate(140, 295);
     canvas.scale(1.0, breathe);
@@ -257,7 +283,7 @@ class _CleanMascotPainter extends CustomPainter {
     );
     canvas.restore();
 
-    // 3. Draw sleek headset halo (Smooth, no floating dusty hair arc!)
+    // 3. Headset Halo (Smooth, precision arc)
     final headsetPaint = Paint()
       ..color = _blue
       ..style = PaintingStyle.stroke
@@ -288,113 +314,129 @@ class _CleanMascotPainter extends CustomPainter {
       bluePaint,
     );
 
-    // 4. White Spherical Head with pristine anti-aliasing
+    // 4. White Spherical Head with soft shadow
     const headCenter = Offset(140, 150);
     const headRadius = 110.0;
-    
-    // Soft shadow behind head
+
     canvas.drawCircle(
       headCenter.translate(0, 4),
       headRadius,
       Paint()..color = const Color(0x15000000),
     );
-    // Pure White Head
     canvas.drawCircle(
       headCenter,
       headRadius,
       Paint()..color = Colors.white,
     );
 
-    // 5. Smiling Center Eye / High-Tech Visor (Authentic & Powerfully Expressive)
-    final eyeCenter = headCenter + Offset(gaze.dx * 16, gaze.dy * 12);
+    // Soft Cute Rosy Cheeks
+    final cheekPaint = Paint()..color = const Color(0x28FF6B8B);
+    canvas.drawCircle(const Offset(82, 185), 14, cheekPaint);
+    canvas.drawCircle(const Offset(198, 185), 14, cheekPaint);
 
-    if (wink) {
-      // Winking curved arc when tapped
-      final winkPaint = Paint()
-        ..color = _blue
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 8
-        ..strokeCap = StrokeCap.round;
-      canvas.drawArc(
-        Rect.fromCenter(center: eyeCenter, width: 68, height: 38),
-        0.2,
-        2.74,
-        false,
-        winkPaint,
-      );
-    } else {
-      // Clean smooth eye visor
-      canvas.save();
-      final effectiveBlink = blink.clamp(0.0, 1.0);
-      final eyeHeight = math.max(6.0, 48.0 * (1.0 - effectiveBlink));
-      
-      final eyeRect = Rect.fromCenter(
-        center: eyeCenter,
-        width: 82,
-        height: eyeHeight,
-      );
+    // 5. Dual Beautiful Robotic Eyes (Expressive, Gaze-tracking, and Natural Blinking)
+    final gazeShift = Offset(gaze.dx * 8, gaze.dy * 6);
+    const leftEyeBase = Offset(104, 142);
+    const rightEyeBase = Offset(176, 142);
 
-      // Smiling curved eye path
-      final eyePath = Path();
-      if (effectiveBlink > 0.8) {
-        // Closed / Blinking line
+    void drawEye(Offset center, bool isWinking) {
+      if (isWinking) {
+        // Cute smiling wink arc
+        final winkPaint = Paint()
+          ..color = _blue
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 6.5
+          ..strokeCap = StrokeCap.round;
+        canvas.drawArc(
+          Rect.fromCenter(center: center, width: 34, height: 22),
+          0.2,
+          2.74,
+          false,
+          winkPaint,
+        );
+        return;
+      }
+
+      final blinkScale = (1.0 - blinkProgress).clamp(0.06, 1.0);
+
+      if (blinkScale < 0.18) {
+        // Completely closed blink line
         canvas.drawLine(
-          Offset(eyeCenter.dx - 36, eyeCenter.dy),
-          Offset(eyeCenter.dx + 36, eyeCenter.dy),
+          Offset(center.dx - 18, center.dy),
+          Offset(center.dx + 18, center.dy),
           Paint()
             ..color = _blue
-            ..strokeWidth = 6
+            ..strokeWidth = 5.5
             ..strokeCap = StrokeCap.round,
         );
-      } else {
-        eyePath.moveTo(eyeRect.left, eyeCenter.dy);
-        eyePath.quadraticBezierTo(
-          eyeCenter.dx,
-          eyeCenter.dy + eyeHeight * 0.9,
-          eyeRect.right,
-          eyeCenter.dy,
-        );
-        eyePath.quadraticBezierTo(
-          eyeCenter.dx,
-          eyeCenter.dy - eyeHeight * 0.25,
-          eyeRect.left,
-          eyeCenter.dy,
-        );
-        eyePath.close();
-
-        // Eye Fill
-        canvas.drawPath(eyePath, Paint()..color = _blue);
-
-        // Pupil Specular Glow (Glint)
-        canvas.drawCircle(
-          eyeCenter + const Offset(10, -6),
-          6.5,
-          Paint()..color = Colors.white,
-        );
-        canvas.drawCircle(
-          eyeCenter + const Offset(-12, 4),
-          3.5,
-          Paint()..color = const Color(0xCCFFFFFF),
-        );
+        return;
       }
+
+      canvas.save();
+      // Scale vertically for blink animation
+      canvas.translate(center.dx, center.dy);
+      canvas.scale(1.0, blinkScale);
+      canvas.translate(-center.dx, -center.dy);
+
+      // Eye Outer Socket / Iris
+      final eyeRect = Rect.fromCenter(
+        center: center,
+        width: 38,
+        height: 48,
+      );
+      final rrect = RRect.fromRectAndRadius(eyeRect, const Radius.circular(19));
+      
+      // Eye Glow Gradient
+      final eyeGradient = Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [_cyan, _deepEye],
+        ).createShader(eyeRect);
+      canvas.drawRRect(rrect, eyeGradient);
+
+      // Darker Inner Pupil with gaze tracking
+      final pupilCenter = center + gazeShift;
+      canvas.drawCircle(
+        pupilCenter,
+        10,
+        Paint()..color = _navy,
+      );
+
+      // Specular Light Glints (Gives eyes vivid life!)
+      canvas.drawCircle(
+        pupilCenter + const Offset(4, -4),
+        4.0,
+        Paint()..color = Colors.white,
+      );
+      canvas.drawCircle(
+        pupilCenter + const Offset(-4, 3),
+        2.2,
+        Paint()..color = const Color(0xD0FFFFFF),
+      );
+
       canvas.restore();
     }
+
+    // Draw Left & Right Eyes
+    drawEye(leftEyeBase, false);
+    drawEye(rightEyeBase, wink);
 
     // 6. Cute Smile Curve
     final smilePaint = Paint()
       ..color = _navy
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 5.5
+      ..strokeWidth = 5.0
       ..strokeCap = StrokeCap.round;
     canvas.drawArc(
-      Rect.fromCenter(center: const Offset(140, 204), width: 44, height: 24),
-      0.2,
-      2.74,
+      Rect.fromCenter(center: const Offset(140, 192), width: 36, height: 18),
+      0.15,
+      2.84,
       false,
       smilePaint,
     );
 
-    // 7. Thinking indicator ring when AI is reasoning
+    // 7. Thinking Halo Ring
     if (thinking) {
       final ringPaint = Paint()
         ..color = _cyan.withValues(alpha: 0.6)
