@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_state.dart';
 import 'config.dart';
+import 'eye/services/app_settings.dart';
+import 'eye/services/speech_service.dart';
 import 'l10n.dart';
 import 'screens/app_shell.dart';
 import 'screens/welcome_screen.dart';
@@ -27,6 +29,11 @@ Future<void> main() async {
     }
   }
   AppConfig.logMode();
+
+  // Initialize Eye 0.3.3 settings and voice engine.
+  await AppSettings.instance.load();
+  await SpeechService.instance.init();
+  await SpeechService.instance.setRate(AppSettings.instance.speechRate);
 
   // Sets up real status-bar notifications (channel + Android 13 permission)
   // before the first frame so nothing posted later is silently dropped.

@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 
 import '../config.dart';
 import '../content/citations.dart';
+import '../eye/services/app_settings.dart';
 import '../models.dart';
 
 class AiException implements Exception {
@@ -53,10 +54,93 @@ class AiService {
       throw const AiException('offline');
     }
     if (AppConfig.aiProtocol == 'askoptsam') {
-      yield* _streamAskOptsam(history, lang);
+      try {
+        yield* _streamAskOptsam(history, lang);
+      } catch (e) {
+        if (AppSettings.instance.isConfigured) {
+          yield* _streamGeminiFallback(history, lang);
+        } else {
+          rethrow;
+        }
+      }
     } else {
       yield* _streamOpenAi(history);
     }
+  }
+
+  Stream<String> _streamGeminiFallback(
+    List<ChatMessage> history,
+    String lang,
+  ) async* {
+    final turns = history.where((m) => m.text.trim().isNotEmpty).toList();
+    if (turns.isEmpty) throw const AiException('server', 'no user message');
+    final contents = <Map<String, dynamic>>[];
+    for (final m in turns) {
+      contents.add({
+        'role': m.isUser ? 'user' : 'model',
+        'parts': [
+          {'text': m.text.trim()},
+        ],
+      });
+    }
+    final systemPrompt = lang == 'en'
+        ? 'You are AskOptSam, the friendly optometry and eye-health assistant for Optsam Eye Care in Dar es Salaam. Reply clearly and concisely in English.'
+        : 'Wewe ni AskOptSam, msaidizi rafiki wa afya ya macho wa kliniki ya Optsam Eye Care, Dar es Salaam. Jibu kwa ufupi na kwa ufasaha kwa Kiswahili.';
+
+    for (final model in const ['gemini-3.5-flash', 'gemini-3-flash-preview']) {
+      try {
+        final uri = Uri.https(
+          'generativelanguage.googleapis.com',
+          '/v1beta/models/$model:generateContent',
+        );
+        final response = await http
+            .post(
+              uri,
+              headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': AppSettings.instance.apiKey,
+              },
+              body: jsonEncode({
+                'systemInstruction': {
+                  'parts': [
+                    {'text': systemPrompt},
+                  ],
+                },
+                'contents': contents,
+                'generationConfig': {
+                  'temperature': 0.5,
+                  'maxOutputTokens': 600,
+                },
+              }),
+            )
+            .timeout(const Duration(seconds: 25));
+
+        if (response.statusCode == 200) {
+          final data =
+              jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+          final candidates = data['candidates'];
+          if (candidates is List && candidates.isNotEmpty) {
+            final parts = (candidates.first as Map?)?['content']?['parts'];
+            if (parts is List) {
+              final buf = StringBuffer();
+              for (final part in parts) {
+                if (part is Map &&
+                    part['thought'] != true &&
+                    part['text'] is String) {
+                  buf.write(part['text']);
+                }
+              }
+              final reply = buf.toString().trim();
+              if (reply.isNotEmpty) {
+                yield reply;
+                return;
+              }
+            }
+          }
+        }
+      } catch (_) {}
+    }
+    throw const AiException('server', 'gemini fallback failed');
   }
 
   /// Collects a complete single-turn response from AskOptSam's AI brain.
