@@ -1,8 +1,8 @@
 {
-  "version": "2.4.10",
-  "tagName": "v2.4.10",
-  "title": "AskOptSam v2.4.10 (Eye · Msaidizi wa Maono)",
-  "notes": "Kipengele cha Eye sasa kinakaa kimya kabisa hadi mtumiaji afike kwenye tab yake, ukaguzi wa masasisho wa papo hapo chini kabisa ya kioo, na sauti safi bila mikwanguo.",
-  "downloadUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.10/app-release.apk",
+  "version": "2.4.11",
+  "tagName": "v2.4.11",
+  "title": "AskOptSam v2.4.11 (Eye · Msaidizi wa Maono)",
+  "notes": "Sauti halisi ya asili ya Gemini AI (Flash-Lite / Pro) bila kutumia sauti ya mashine ya simu, na icon mpya ya app iliyoboreshwa kwa ukali na unadhifu wa kisasa (Adaptive Icon).",
+  "downloadUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.11/app-release.apk",
   "pageUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/latest"
 }
