@@ -152,7 +152,7 @@ class OutlinePillButton extends StatelessWidget {
   }
 }
 
-class AppField extends StatelessWidget {
+class AppField extends StatefulWidget {
   const AppField({
     super.key,
     required this.label,
@@ -175,25 +175,45 @@ class AppField extends StatelessWidget {
   final String? errorText;
 
   @override
+  State<AppField> createState() => _AppFieldState();
+}
+
+class _AppFieldState extends State<AppField> {
+  late bool _obscured = widget.obscure;
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.label,
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 9),
         TextField(
-          controller: controller,
-          obscureText: obscure,
-          keyboardType: keyboardType,
-          textInputAction: textInputAction,
-          onSubmitted: onSubmitted,
+          controller: widget.controller,
+          obscureText: widget.obscure ? _obscured : false,
+          keyboardType: widget.keyboardType,
+          textInputAction: widget.textInputAction,
+          onSubmitted: widget.onSubmitted,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
           decoration: InputDecoration(
-            hintText: hint,
-            errorText: errorText,
+            hintText: widget.hint,
+            errorText: widget.errorText,
+            suffixIcon: widget.obscure
+                ? IconButton(
+                    icon: Icon(
+                      _obscured
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      size: 21,
+                      color: isDark ? AppColors.darkMuted : AppColors.muted,
+                    ),
+                    onPressed: () => setState(() => _obscured = !_obscured),
+                  )
+                : null,
           ),
         ),
       ],

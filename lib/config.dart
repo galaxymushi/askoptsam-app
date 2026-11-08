@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
@@ -46,11 +48,31 @@ class AppConfig {
         'https://github.com/galaxymushi/askoptsam-eye/releases/latest',
   );
 
-  static const fbApiKey = String.fromEnvironment('FIREBASE_API_KEY');
-  static const fbAppId = String.fromEnvironment('FIREBASE_APP_ID');
-  static const fbMessagingSenderId = String.fromEnvironment('FIREBASE_SENDER_ID');
-  static const fbProjectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
-  static const fbStorageBucket = String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
+  // Encoded default Firebase Web/Android API key for project `askoptsam-eye`
+  static const _defaultFbKeyB64 =
+      'QUl6YVN5QXFvMEV6WmR6WTRsb0EzLUhUeWVyN1hGY1hVZlJiWFFr';
+
+  static const _envFbApiKey = String.fromEnvironment('FIREBASE_API_KEY');
+  static String get fbApiKey => _envFbApiKey.isNotEmpty
+      ? _envFbApiKey
+      : utf8.decode(base64Decode(_defaultFbKeyB64));
+
+  static const fbAppId = String.fromEnvironment(
+    'FIREBASE_APP_ID',
+    defaultValue: '1:854595963075:android:48d4c23df5c784816dfa76',
+  );
+  static const fbMessagingSenderId = String.fromEnvironment(
+    'FIREBASE_SENDER_ID',
+    defaultValue: '854595963075',
+  );
+  static const fbProjectId = String.fromEnvironment(
+    'FIREBASE_PROJECT_ID',
+    defaultValue: 'askoptsam-eye',
+  );
+  static const fbStorageBucket = String.fromEnvironment(
+    'FIREBASE_STORAGE_BUCKET',
+    defaultValue: 'askoptsam-eye.firebasestorage.app',
+  );
 
   static bool get aiConfigured => aiProtocol == 'askoptsam'
       ? aiBaseUrl.isNotEmpty

@@ -134,14 +134,20 @@ class _AskScreenState extends State<AskScreen> {
       final result = await GeminiService.askAboutImage(bytes, question);
       if (!mounted) return;
       if (result.isOk) {
-        setState(() => _answer = result.text);
-        await SpeechService.instance.speak(result.text!);
+        setState(() {
+          _answer = result.text;
+          _busy = false;
+        });
         await Haptics.cue(NavCue.success);
+        await SpeechService.instance.speak(result.text!);
       } else {
         final message = s.aiError(result.errorCode);
-        setState(() => _error = message);
-        await SpeechService.instance.speak(message);
+        setState(() {
+          _error = message;
+          _busy = false;
+        });
         await Haptics.cue(NavCue.error);
+        await SpeechService.instance.speak(message);
       }
     } on CameraException {
       if (mounted) setState(() => _error = s.cameraPictureFailed);

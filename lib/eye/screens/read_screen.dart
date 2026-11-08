@@ -48,14 +48,20 @@ class _ReadScreenState extends State<ReadScreen> {
         final raw = result.text!;
         final none = raw.toLowerCase().contains('no text found');
         final text = none ? s.noTextFound : raw;
-        setState(() => _text = text);
-        await SpeechService.instance.speak(text);
+        setState(() {
+          _text = text;
+          _busy = false;
+        });
         await Haptics.cue(none ? NavCue.error : NavCue.success);
+        await SpeechService.instance.speak(text);
       } else {
         final message = s.aiError(result.errorCode);
-        setState(() => _error = message);
-        await SpeechService.instance.speak(message);
+        setState(() {
+          _error = message;
+          _busy = false;
+        });
         await Haptics.cue(NavCue.error);
+        await SpeechService.instance.speak(message);
       }
     } on CameraException {
       if (mounted) setState(() => _error = s.cameraPictureFailed);

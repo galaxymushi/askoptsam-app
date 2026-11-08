@@ -55,14 +55,20 @@ class _DescribeScreenState extends State<DescribeScreen> {
       final result = await GeminiService.describeScene(bytes);
       if (!mounted) return;
       if (result.isOk) {
-        setState(() => _description = result.text);
-        await SpeechService.instance.speak(result.text!);
+        setState(() {
+          _description = result.text;
+          _busy = false;
+        });
         await Haptics.cue(NavCue.success);
+        await SpeechService.instance.speak(result.text!);
       } else {
         final message = s.aiError(result.errorCode);
-        setState(() => _error = message);
-        await SpeechService.instance.speak(message);
+        setState(() {
+          _error = message;
+          _busy = false;
+        });
         await Haptics.cue(NavCue.error);
+        await SpeechService.instance.speak(message);
       }
     } on CameraException {
       if (mounted) setState(() => _error = s.cameraPictureFailed);
@@ -97,7 +103,11 @@ class _DescribeScreenState extends State<DescribeScreen> {
       SpeechService.instance.speak(s.autoStarted);
       _autoTimer = Timer.periodic(
         const Duration(seconds: 6),
-        (_) => _describe(),
+        (_) {
+          if (!_busy && !SpeechService.instance.isSpeaking.value) {
+            _describe();
+          }
+        },
       );
     } else {
       SpeechService.instance.speak(s.autoStopped);

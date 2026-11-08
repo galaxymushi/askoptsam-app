@@ -12,6 +12,8 @@ build/
 .shots/
 .pdfpages/
 *.log
+.firebase/
+android/app/google-services.json
 
 # OS noise
 .DS_Store

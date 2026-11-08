@@ -54,6 +54,12 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> sendReset(String email) => auth.sendReset(email);
+
+  Future<void> resetLocalPassword(String email, String newPassword) =>
+      auth.resetLocalPassword(email, newPassword);
+
+  Future<void> changePassword(String currentPassword, String newPassword) =>
+      auth.changePassword(currentPassword, newPassword);
 }
 
 class AppScope extends InheritedNotifier<AppState> {

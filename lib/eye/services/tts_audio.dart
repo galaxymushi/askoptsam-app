@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 /// Wraps raw 16-bit PCM in a WAV container so audio players can play the
@@ -39,7 +40,7 @@ Uint8List wavFromPcm16(
   return wav;
 }
 
-/// Reads the base64 audio payload from a Gemini TTS generateContent response.
+/// Reads the first base64 audio payload from a Gemini TTS generateContent response.
 String? ttsAudioBase64(Map<String, dynamic> data) {
   final candidates = data['candidates'];
   if (candidates is! List || candidates.isEmpty) return null;
@@ -58,6 +59,35 @@ String? ttsAudioBase64(Map<String, dynamic> data) {
     }
   }
   return null;
+}
+
+/// Extracts and concatenates all PCM audio parts from a Gemini TTS response
+/// so multi-part audio responses are never truncated.
+Uint8List? ttsExtractAllPcm(Map<String, dynamic> data) {
+  final candidates = data['candidates'];
+  if (candidates is! List || candidates.isEmpty) return null;
+  final candidate = candidates.first;
+  if (candidate is! Map) return null;
+  final content = candidate['content'];
+  if (content is! Map) return null;
+  final parts = content['parts'];
+  if (parts is! List) return null;
+
+  final builder = BytesBuilder(copy: false);
+  for (final part in parts) {
+    if (part is! Map) continue;
+    final inline = part['inlineData'] ?? part['inline_data'];
+    if (inline is Map && inline['data'] is String) {
+      final encoded = (inline['data'] as String).trim();
+      if (encoded.isNotEmpty) {
+        try {
+          builder.add(base64Decode(encoded));
+        } catch (_) {}
+      }
+    }
+  }
+  if (builder.isEmpty) return null;
+  return builder.takeBytes();
 }
 
 /// Reads the sample rate from a TTS mime type such as

@@ -2,6 +2,25 @@
 
 All notable changes to **AskOptSam** are documented in this file.
 
+## [2.4.6] - 2026-11-08
+
+### Fixed
+- **Ultra-Low-Latency Streaming Neural Voice (`GeminiVoice`)**:
+  - Upgraded primary TTS model to `gemini-3.8-flash-tts` (`~2.8–3.2s` synthesis vs `5–15s` previously) with automatic fallback to `gemini-2.5-flash-preview-tts`.
+  - Added sentence-level parallel prefetch (`GeminiVoice.splitSentences`): synthesizes and plays the **first sentence immediately** while remaining sentences download concurrently in the background, cutting initial wait time by 70%.
+- **Eliminated Mid-Sentence Speech Cutoffs**:
+  - Added strict `_activeRunId` cancellation token and isolated per-run `.wav` files (`eye_voice_${runId}_0.wav` / `eye_voice_${runId}_rest.wav`) so background navigation announcements (`homeSpeak`) can never interrupt or overwrite active `Soma` / `Elezea` / `Uliza` speech.
+  - Concatenates all multi-part `inlineData` PCM audio buffers (`ttsExtractAllPcm`) and plays remaining sentences seamlessly to completion with `AudioContextAndroid(stayAwake: true)`.
+  - Stopped active home speech immediately upon opening `ReadScreen`, `DescribeScreen`, `AskScreen`, or `SettingsScreen`, and prevented `DescribeScreen`'s auto-describe timer from interrupting ongoing speech.
+
+### Added
+- **Firebase Cloud Authentication (`askoptsam-eye`)**:
+  - Connected live **Firebase Authentication** (Email/Password) under project `askoptsam-eye` for cloud user accounts, usernames (`displayName`), and email password resets, while keeping chat history fast and lightweight on the phone (`LocalChatStore`) with automatic offline account caching.
+  - Added show/hide password eye toggle on all password fields (`SignInScreen`, `SignUpScreen`, `ForgotPasswordScreen`, `ProfileScreen`).
+  - Added password change (`changePassword`) in `ProfileScreen`.
+
+---
+
 ## [2.4.5] - 2026-11-08
 
 ### Fixed

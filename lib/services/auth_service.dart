@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter/foundation.dart';
@@ -25,6 +24,8 @@ abstract class AuthService {
   Future<AppUser> signIn(String email, String password);
   Future<AppUser> signUp(String name, String email, String password);
   Future<void> sendReset(String email);
+  Future<void> resetLocalPassword(String email, String newPassword);
+  Future<void> changePassword(String currentPassword, String newPassword);
   Future<void> updateName(String name);
   Future<void> signOut();
 }
@@ -32,7 +33,7 @@ abstract class AuthService {
 Future<AuthService> createAuthService() async {
   if (AppConfig.firebaseConfigured) {
     try {
-      return FirebaseAuthService();
+      return FirebaseAuthService(fallback: LocalAuthService());
     } catch (error) {
       debugPrint('Cloud sign-in unavailable, using on-device accounts: $error');
     }
@@ -40,7 +41,7 @@ Future<AuthService> createAuthService() async {
   return LocalAuthService();
 }
 
-/// On-device accounts used when no Firebase project is configured.
+/// On-device accounts used when offline or when no Firebase project is configured.
 /// Passwords are salted and hashed; nothing leaves the phone.
 class LocalAuthService implements AuthService {
   static const _accountsKey = 'local_accounts';
@@ -93,6 +94,25 @@ class LocalAuthService implements AuthService {
     }
   }
 
+  /// Mirrors a verified cloud login locally so the account also works offline.
+  Future<void> cacheVerifiedAccount({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    await _ensureLoaded();
+    final key = email.trim().toLowerCase();
+    final salt = _salt();
+    final existingName = _accounts[key]?['name'] ?? '';
+    _accounts[key] = {
+      'name': name.trim().isNotEmpty ? name.trim() : existingName,
+      'salt': salt,
+      'password': _hash(password, salt),
+    };
+    _user = _userFrom(key);
+    await _persist();
+  }
+
   @override
   Future<AppUser?> restore() async {
     await _ensureLoaded();
@@ -138,10 +158,46 @@ class LocalAuthService implements AuthService {
   }
 
   @override
+  Future<void> resetLocalPassword(String email, String newPassword) async {
+    await _ensureLoaded();
+    final key = email.trim().toLowerCase();
+    final record = _accounts[key];
+    if (record == null) {
+      throw const AuthException('user-not-found');
+    }
+    final salt = _salt();
+    record['salt'] = salt;
+    record['password'] = _hash(newPassword, salt);
+    await _persist();
+  }
+
+  @override
+  Future<void> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    await _ensureLoaded();
+    final user = _user;
+    if (user == null) throw const AuthException('user-not-found');
+    final record = _accounts[user.email];
+    if (record == null) throw const AuthException('user-not-found');
+    if (_hash(currentPassword, record['salt']!) != record['password']) {
+      throw const AuthException('wrong-password');
+    }
+    final salt = _salt();
+    record['salt'] = salt;
+    record['password'] = _hash(newPassword, salt);
+    await _persist();
+  }
+
+  @override
   Future<void> updateName(String name) async {
+    await _ensureLoaded();
     final user = _user;
     if (user == null) return;
-    _accounts[user.email]!['name'] = name.trim();
+    if (_accounts.containsKey(user.email)) {
+      _accounts[user.email]!['name'] = name.trim();
+    }
     _user = user.copyWith(name: name.trim());
     await _persist();
   }
@@ -153,31 +209,32 @@ class LocalAuthService implements AuthService {
   }
 }
 
+/// Firebase Authentication service storing only accounts, usernames
+/// (`displayName`), and passwords in Firebase Auth, with local caching for
+/// instant offline access.
 class FirebaseAuthService implements AuthService {
+  FirebaseAuthService({LocalAuthService? fallback})
+      : _fallback = fallback ?? LocalAuthService();
+
   final fb.FirebaseAuth _auth = fb.FirebaseAuth.instance;
+  final LocalAuthService _fallback;
   AppUser? _user;
 
   @override
   bool get isCloud => true;
 
-  Future<String> _nameFor(fb.User user) async {
-    final stored = user.displayName;
-    if (stored != null && stored.isNotEmpty) return stored;
-    try {
-      final doc =
-          await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      return doc.data()?['name'] as String? ?? '';
-    } catch (_) {
-      return '';
-    }
-  }
-
   @override
   Future<AppUser?> restore() async {
     final user = _auth.currentUser;
-    if (user == null) return null;
-    final name = await _nameFor(user);
-    return _user = AppUser(uid: user.uid, email: user.email ?? '', name: name);
+    if (user != null) {
+      final name = user.displayName ?? '';
+      return _user = AppUser(
+        uid: user.uid,
+        email: user.email ?? '',
+        name: name,
+      );
+    }
+    return _fallback.restore();
   }
 
   @override
@@ -188,9 +245,24 @@ class FirebaseAuthService implements AuthService {
         password: password,
       );
       final user = cred.user!;
-      final name = await _nameFor(user);
-      return _user = AppUser(uid: user.uid, email: user.email!, name: name);
+      final name = user.displayName ?? '';
+      await _fallback.cacheVerifiedAccount(
+        name: name,
+        email: user.email ?? email.trim(),
+        password: password,
+      );
+      return _user = AppUser(
+        uid: user.uid,
+        email: user.email ?? email.trim(),
+        name: name,
+      );
     } on fb.FirebaseAuthException catch (e) {
+      if (e.code == 'network-request-failed') {
+        return _fallback.signIn(email, password);
+      }
+      if (e.code == 'invalid-credential') {
+        throw const AuthException('wrong-password');
+      }
       throw AuthException(e.code);
     }
   }
@@ -204,10 +276,20 @@ class FirebaseAuthService implements AuthService {
       );
       final user = cred.user!;
       await user.updateDisplayName(name.trim());
-      await _saveProfile(user.uid, name.trim());
-      return _user =
-          AppUser(uid: user.uid, email: user.email!, name: name.trim());
+      await _fallback.cacheVerifiedAccount(
+        name: name.trim(),
+        email: user.email ?? email.trim(),
+        password: password,
+      );
+      return _user = AppUser(
+        uid: user.uid,
+        email: user.email ?? email.trim(),
+        name: name.trim(),
+      );
     } on fb.FirebaseAuthException catch (e) {
+      if (e.code == 'network-request-failed') {
+        return _fallback.signUp(name, email, password);
+      }
       throw AuthException(e.code);
     }
   }
@@ -222,26 +304,55 @@ class FirebaseAuthService implements AuthService {
   }
 
   @override
+  Future<void> resetLocalPassword(String email, String newPassword) =>
+      _fallback.resetLocalPassword(email, newPassword);
+
+  @override
+  Future<void> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    final user = _auth.currentUser;
+    if (user == null || user.email == null) {
+      await _fallback.changePassword(currentPassword, newPassword);
+      return;
+    }
+    try {
+      final cred = fb.EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(cred);
+      await user.updatePassword(newPassword);
+      await _fallback.cacheVerifiedAccount(
+        name: user.displayName ?? '',
+        email: user.email!,
+        password: newPassword,
+      );
+    } on fb.FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-credential') {
+        throw const AuthException('wrong-password');
+      }
+      throw AuthException(e.code);
+    }
+  }
+
+  @override
   Future<void> updateName(String name) async {
     final user = _auth.currentUser;
-    if (user == null) return;
-    await user.updateDisplayName(name.trim());
-    await _saveProfile(user.uid, name.trim());
+    if (user != null) {
+      await user.updateDisplayName(name.trim());
+    }
+    await _fallback.updateName(name);
     _user = _user?.copyWith(name: name.trim());
   }
 
   @override
   Future<void> signOut() async {
     _user = null;
-    await _auth.signOut();
+    await _fallback.signOut();
+    try {
+      await _auth.signOut();
+    } catch (_) {}
   }
-
-  Future<void> _saveProfile(String uid, String name) => FirebaseFirestore
-      .instance
-      .collection('users')
-      .doc(uid)
-      .set(
-        {'name': name, 'updatedAt': DateTime.now().toIso8601String()},
-        SetOptions(merge: true),
-      );
 }
