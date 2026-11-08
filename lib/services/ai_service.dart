@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import '../config.dart';
 import '../content/citations.dart';
 import '../eye/services/app_settings.dart';
+import '../eye/services/gemini_http.dart';
 import '../models.dart';
 
 class AiException implements Exception {
@@ -103,7 +104,7 @@ class AiService {
           if (model.startsWith('gemini-2.5'))
             'thinkingConfig': {'thinkingBudget': 0},
         };
-        final response = await http
+        final response = await GeminiHttp.client
             .post(
               uri,
               headers: {

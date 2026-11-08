@@ -4,10 +4,10 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
 import 'app_settings.dart';
+import 'gemini_http.dart';
 import 'tts_audio.dart';
 
 /// Speech through Google's Gemini text-to-speech preview model.
@@ -72,14 +72,21 @@ class GeminiVoice {
         _cache[cacheKey] = wav;
       }
       await _player.stop();
-      try {
-        await _player.play(BytesSource(wav));
-      } catch (_) {
-        final dir = await getTemporaryDirectory();
-        final file = File('${dir.path}/eye_voice_clip.wav');
-        await file.writeAsBytes(wav, flush: true);
-        await _player.play(DeviceFileSource(file.path));
+      if (!kIsWeb) {
+        try {
+          final dir = await getTemporaryDirectory();
+          final file = File('${dir.path}/eye_voice_clip.wav');
+          await file.writeAsBytes(wav, flush: true);
+          debugPrint(
+            'GeminiVoice: playing ${wav.length} bytes from ${file.path} (voice=${settings.geminiVoice})',
+          );
+          await _player.play(DeviceFileSource(file.path));
+          return true;
+        } catch (fileErr) {
+          debugPrint('GeminiVoice: file playback fallback to BytesSource: $fileErr');
+        }
       }
+      await _player.play(BytesSource(wav));
       return true;
     } catch (error) {
       debugPrint('Gemini voice failed: $error');
@@ -132,7 +139,8 @@ class GeminiVoice {
             },
           });
 
-          final response = await http
+          final sw = Stopwatch()..start();
+          final response = await GeminiHttp.client
               .post(
                 uri,
                 headers: {
@@ -142,11 +150,12 @@ class GeminiVoice {
                 body: body,
               )
               .timeout(const Duration(seconds: 45));
+          sw.stop();
+          debugPrint(
+            'GeminiVoice ($ttsModel, voice=$voice): HTTP ${response.statusCode} in ${sw.elapsedMilliseconds}ms (${response.bodyBytes.length} bytes)',
+          );
 
           if (response.statusCode != 200) {
-            debugPrint(
-              'Gemini voice ($ttsModel) returned HTTP ${response.statusCode}',
-            );
             continue;
           }
 

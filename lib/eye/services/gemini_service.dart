@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
-
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../l10n/strings.dart';
 import 'app_settings.dart';
+import 'gemini_http.dart';
 
 class AiResult {
   const AiResult.ok(this.text) : errorCode = null;
@@ -161,6 +161,7 @@ class GeminiService {
     };
 
     try {
+      final sw = Stopwatch()..start();
       var response = await _post(apiKey, model, body);
       if (response.statusCode == 400) {
         // Some models reject thinkingConfig; retry without it.
@@ -168,6 +169,10 @@ class GeminiService {
             .remove('thinkingConfig');
         response = await _post(apiKey, model, body);
       }
+      sw.stop();
+      debugPrint(
+        'GeminiService ($model): HTTP ${response.statusCode} in ${sw.elapsedMilliseconds}ms',
+      );
 
       if (response.statusCode != 200) {
         return AiResult.fail(_errorCode(response.statusCode));
@@ -203,7 +208,7 @@ class GeminiService {
       'generativelanguage.googleapis.com',
       '/v1beta/models/$model:generateContent',
     );
-    return http
+    return GeminiHttp.client
         .post(
           uri,
           headers: {
