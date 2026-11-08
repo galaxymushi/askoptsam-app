@@ -117,7 +117,7 @@ class UpdateService {
 
   static const _cacheKey = 'asksam_latest_release_v1';
   static const _downloadedKey = 'asksam_update_downloaded_v1';
-  static const _fallbackInstalledVersion = '2.4.9';
+  static const _fallbackInstalledVersion = '2.4.10';
 
   /// Live notifier holding the latest available update if newer than the installed app.
   /// Listened to by [AppShell] to render the persistent bottom update notification bar.

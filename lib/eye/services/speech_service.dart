@@ -16,6 +16,12 @@ class SpeechService {
   final ValueNotifier<bool> isSpeaking = ValueNotifier<bool>(false);
   StreamSubscription<void>? _geminiCompletion;
   bool _ready = false;
+  int _speechRunId = 0;
+
+  /// True ONLY when the Eye tab is currently open and visible to the user.
+  /// Prevents Eye from speaking or playing audio while the user is on other
+  /// tabs (Chat, Library, Settings) or while the app is in the background.
+  bool isEyeTabActive = false;
 
   Future<void> init() async {
     try {
@@ -65,6 +71,7 @@ class SpeechService {
   /// Speaks [text]. Automatic speech is skipped when the user turned it off
   /// unless [force] is true (used by explicit Repeat buttons).
   ///
+  /// Speech is strictly blocked unless [isEyeTabActive] is true.
   /// Uses the assistant voice when a key is set, falling back to the phone's
   /// engine on any failure. [urgent] speech (navigation cues) always uses the
   /// phone engine so it is instant and works offline.
@@ -75,39 +82,54 @@ class SpeechService {
   }) async {
     if (text.trim().isEmpty) return;
     if (!force && !AppSettings.instance.autoSpeak) return;
+    if (!isEyeTabActive) {
+      debugPrint('SpeechService: speak blocked because Eye tab is not active.');
+      return;
+    }
 
     await stop();
+    final runId = ++_speechRunId;
     isSpeaking.value = true;
 
     final settings = AppSettings.instance;
     if (!urgent && settings.isConfigured) {
       final started = await GeminiVoice.instance.speak(text);
+      if (runId != _speechRunId || !isEyeTabActive) {
+        return;
+      }
       if (started) {
         _geminiCompletion =
-            GeminiVoice.instance.onComplete.listen((_) => isSpeaking.value = false);
+            GeminiVoice.instance.onComplete.listen((_) {
+          if (runId == _speechRunId) {
+            isSpeaking.value = false;
+          }
+        });
         return;
       }
     }
 
-    await _speakWithDevice(text);
+    if (runId != _speechRunId || !isEyeTabActive) return;
+    await _speakWithDevice(text, runId);
   }
 
-  Future<void> _speakWithDevice(String text) async {
-    if (!_ready) {
-      isSpeaking.value = false;
+  Future<void> _speakWithDevice(String text, int runId) async {
+    if (!_ready || runId != _speechRunId || !isEyeTabActive) {
+      if (runId == _speechRunId) isSpeaking.value = false;
       return;
     }
     try {
       await _tts.stop();
+      if (runId != _speechRunId || !isEyeTabActive) return;
       isSpeaking.value = true;
       await _tts.speak(text);
     } catch (error) {
       debugPrint('Text to speech failed: $error');
-      isSpeaking.value = false;
+      if (runId == _speechRunId) isSpeaking.value = false;
     }
   }
 
   Future<void> stop() async {
+    _speechRunId++;
     try {
       await _tts.stop();
     } catch (error) {

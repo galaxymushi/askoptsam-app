@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:asksam/eye/l10n/strings.dart';
 import 'package:asksam/eye/services/app_settings.dart';
 import 'package:asksam/eye/services/gemini_voice.dart';
+import 'package:asksam/eye/services/speech_service.dart';
 import 'package:asksam/l10n.dart';
 import 'package:asksam/screens/eye_assistant_screen.dart';
 import 'package:asksam/widgets/mascot.dart';
@@ -107,5 +108,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(tapped, isTrue);
+  });
+
+  test('SpeechService stays strictly silent when Eye tab is not active', () async {
+    SpeechService.instance.isEyeTabActive = false;
+    await SpeechService.instance.speak('Eye msaidizi wa maono');
+    expect(SpeechService.instance.isSpeaking.value, isFalse);
   });
 }

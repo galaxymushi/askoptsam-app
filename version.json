@@ -1,8 +1,8 @@
 {
-  "version": "2.4.9",
-  "tagName": "v2.4.9",
-  "title": "AskOptSam v2.4.9 (Eye · Msaidizi wa Maono)",
-  "notes": "Taarifa ya moja kwa moja ya toleo jipya chini kabisa ya programu (Persistent Update Bar), uboreshaji wa ukaguzi wa masasisho bila kukwama, na uondoshaji wa mlio wa redio kwenye sauti.",
-  "downloadUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.9/app-release.apk",
+  "version": "2.4.10",
+  "tagName": "v2.4.10",
+  "title": "AskOptSam v2.4.10 (Eye · Msaidizi wa Maono)",
+  "notes": "Kipengele cha Eye sasa kinakaa kimya kabisa hadi mtumiaji afike kwenye tab yake, ukaguzi wa masasisho wa papo hapo chini kabisa ya kioo, na sauti safi bila mikwanguo.",
+  "downloadUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.10/app-release.apk",
   "pageUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/latest"
 }

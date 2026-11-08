@@ -17,7 +17,7 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => AppShellState();
 }
 
-class AppShellState extends State<AppShell> {
+class AppShellState extends State<AppShell> with WidgetsBindingObserver {
   int _index = 0;
   final _libraryKey = GlobalKey<LibraryScreenState>();
   final _chatKey = GlobalKey<ChatScreenState>();
@@ -26,20 +26,53 @@ class AppShellState extends State<AppShell> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Eye speech stays strictly silent until the user specifically switches to the Eye tab
+    SpeechService.instance.isEyeTabActive = false;
+    SpeechService.instance.stop();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       UpdateService.instance.checkForUpdate();
     });
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    SpeechService.instance.isEyeTabActive = false;
+    SpeechService.instance.stop();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      SpeechService.instance.stop();
+    }
+  }
+
   void setTab(int index) {
     final previous = _index;
     setState(() => _index = index);
-    if (previous == 1 && index != 1) {
-      SpeechService.instance.stop();
+
+    if (index == 1) {
+      // User entered Eye tab
+      SpeechService.instance.isEyeTabActive = true;
+      if (previous != 1) {
+        _eyeKey.currentState?.onTabActivated();
+      }
+    } else {
+      // User is on another tab (Chat, Library, Settings)
+      SpeechService.instance.isEyeTabActive = false;
+      if (previous == 1) {
+        _eyeKey.currentState?.onTabDeactivated();
+        SpeechService.instance.stop();
+      }
     }
-    if (index == 1 && previous != 1) {
-      _eyeKey.currentState?.onTabActivated();
-    }
+
     if (index == 2) _libraryKey.currentState?.reload();
   }
 

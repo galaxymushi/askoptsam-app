@@ -35,7 +35,13 @@ class EyeAssistantScreenState extends State<EyeAssistantScreen> {
   }
 
   void onTabActivated() {
+    if (!SpeechService.instance.isEyeTabActive) return;
     SpeechService.instance.speak(_settings.strings.homeSpeak);
+  }
+
+  void onTabDeactivated() {
+    stopSpeaking();
+    _navKey.currentState?.popUntil((route) => route.isFirst);
   }
 
   void openCamera(EyeCameraAction action) {
