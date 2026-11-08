@@ -110,8 +110,65 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         builder: (context) => AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          title: Text(t.get('resetSent')),
-          content: Text(t.format('resetSentBody', {'email': email})),
+          title: Row(
+            children: [
+              const Icon(
+                Icons.mark_email_read_outlined,
+                color: AppColors.primary,
+                size: 26,
+              ),
+              const SizedBox(width: 10),
+              Expanded(child: Text(t.get('resetSent'))),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isSw
+                    ? 'Tumetuma kiungo cha kuweka upya nenosiri kwenye barua pepe:'
+                    : 'A password reset link has been sent to:',
+                style: const TextStyle(fontSize: 14.5),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  email,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                isSw
+                    ? '⚠️ Kama huioni kwenye Kikasha Kikuu (Inbox):\n'
+                        '• Kagua folda ya Barua Taka (Spam / Junk) au Matangazo.\n'
+                        '• Ujumbe unatumwa na: noreply@askoptsam-eye.firebaseapp.com\n'
+                        '• Bofya kiungo kilichopo kwenye barua pepe hiyo kuweka nenosiri jipya.'
+                    : '⚠️ If you don\'t see it in your Inbox:\n'
+                        '• Check your Spam / Junk or Promotions folder.\n'
+                        '• Sent from: noreply@askoptsam-eye.firebaseapp.com\n'
+                        '• Tap the link in that email to choose a new password.',
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.4,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.darkMuted
+                      : AppColors.muted,
+                ),
+              ),
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -170,6 +227,46 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 app.isCloud ? TextInputAction.done : TextInputAction.next,
             onSubmitted: app.isCloud ? (_) => _submit() : null,
           ),
+          if (app.isCloud) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHighest
+                    .withAlpha(100),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    size: 18,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      isSw
+                          ? 'Kidokezo: Kiungo hutumwa kutoka noreply@askoptsam-eye.firebaseapp.com. '
+                              'Ukikosa kwenye Kikasha Kikuu, angalia pia folda ya Barua Taka (Spam).'
+                          : 'Tip: Reset link is sent from noreply@askoptsam-eye.firebaseapp.com. '
+                              'If not in your Inbox, please check your Spam/Junk folder.',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.35,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkMuted
+                            : AppColors.muted,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (!app.isCloud) ...[
             const SizedBox(height: 18),
             AppField(

@@ -1,5 +1,70 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
+
+/// Strips RIFF containers if present, applies a smooth cosine fade-out on the tail,
+/// and appends silence padding so mobile audio codecs/speakers never click, pop,
+/// or emit radio static ("mkwanguo") when playback ends.
+Uint8List cleanAndFadePcm(
+  Uint8List rawPcm, {
+  int sampleRate = 24000,
+  int fadeMs = 60,
+  int trailingSilenceMs = 120,
+}) {
+  if (rawPcm.length < 4) return rawPcm;
+
+  // 1. If buffer has a RIFF WAVE container, extract the pure PCM payload
+  Uint8List pcm = rawPcm;
+  if (pcm.length >= 44 &&
+      pcm[0] == 0x52 &&
+      pcm[1] == 0x49 &&
+      pcm[2] == 0x46 &&
+      pcm[3] == 0x46 &&
+      pcm[8] == 0x57 &&
+      pcm[9] == 0x41 &&
+      pcm[10] == 0x56 &&
+      pcm[11] == 0x45) {
+    var offset = 12;
+    while (offset + 8 <= pcm.length) {
+      final chunkId = String.fromCharCodes(pcm.sublist(offset, offset + 4));
+      final chunkSize =
+          ByteData.sublistView(pcm).getUint32(offset + 4, Endian.little);
+      if (chunkId == 'data') {
+        final start = offset + 8;
+        final end = (start + chunkSize).clamp(start, pcm.length);
+        pcm = pcm.sublist(start, end);
+        break;
+      }
+      offset += 8 + chunkSize;
+    }
+  }
+
+  // 2. Ensure even number of bytes for 16-bit samples
+  final sampleBytes = pcm.length - (pcm.length % 2);
+  final totalSamples = sampleBytes ~/ 2;
+  if (totalSamples == 0) return pcm;
+
+  final bd = ByteData.sublistView(pcm, 0, sampleBytes);
+  final fadeSamples = ((sampleRate * fadeMs) ~/ 1000).clamp(1, totalSamples);
+  final fadeStart = totalSamples - fadeSamples;
+
+  // 3. Smooth cosine fade-out on the tail so amplitude smoothly reaches zero
+  for (var i = 0; i < fadeSamples; i++) {
+    final sampleIndex = fadeStart + i;
+    final original = bd.getInt16(sampleIndex * 2, Endian.little);
+    final progress = i / fadeSamples;
+    final factor = 0.5 * (1.0 + math.cos(math.pi * progress));
+    final smoothed = (original * factor).round().clamp(-32768, 32767);
+    bd.setInt16(sampleIndex * 2, smoothed, Endian.little);
+  }
+
+  // 4. Add trailing silence padding (prevents DAC cutoff pop/radio scratch)
+  final silenceSamples = (sampleRate * trailingSilenceMs) ~/ 1000;
+  final silenceBytes = silenceSamples * 2;
+  final out = Uint8List(sampleBytes + silenceBytes);
+  out.setRange(0, sampleBytes, pcm.sublist(0, sampleBytes));
+  return out;
+}
 
 /// Wraps raw 16-bit PCM in a WAV container so audio players can play the
 /// bytes Gemini TTS returns. Gemini sends mono little-endian samples.
@@ -7,11 +72,15 @@ Uint8List wavFromPcm16(
   Uint8List pcm, {
   int sampleRate = 24000,
   int channels = 1,
+  bool applyFadeAndPadding = true,
 }) {
+  final cleanPcm = applyFadeAndPadding
+      ? cleanAndFadePcm(pcm, sampleRate: sampleRate)
+      : pcm;
   const bitsPerSample = 16;
   final blockAlign = channels * bitsPerSample ~/ 8;
   final byteRate = sampleRate * blockAlign;
-  final dataLength = pcm.length;
+  final dataLength = cleanPcm.length;
 
   final header = ByteData(44);
   void tag(int offset, String value) {
@@ -36,7 +105,7 @@ Uint8List wavFromPcm16(
 
   final wav = Uint8List(44 + dataLength);
   wav.setRange(0, 44, header.buffer.asUint8List());
-  wav.setRange(44, 44 + dataLength, pcm);
+  wav.setRange(44, 44 + dataLength, cleanPcm);
   return wav;
 }
 
@@ -81,7 +150,36 @@ Uint8List? ttsExtractAllPcm(Map<String, dynamic> data) {
       final encoded = (inline['data'] as String).trim();
       if (encoded.isNotEmpty) {
         try {
-          builder.add(base64Decode(encoded));
+          final decoded = base64Decode(encoded);
+          if (decoded.length >= 44 &&
+              decoded[0] == 0x52 &&
+              decoded[1] == 0x49 &&
+              decoded[2] == 0x46 &&
+              decoded[3] == 0x46 &&
+              decoded[8] == 0x57 &&
+              decoded[9] == 0x41 &&
+              decoded[10] == 0x56 &&
+              decoded[11] == 0x45) {
+            var offset = 12;
+            var found = false;
+            while (offset + 8 <= decoded.length) {
+              final chunkId =
+                  String.fromCharCodes(decoded.sublist(offset, offset + 4));
+              final chunkSize = ByteData.sublistView(decoded)
+                  .getUint32(offset + 4, Endian.little);
+              if (chunkId == 'data') {
+                final start = offset + 8;
+                final end = (start + chunkSize).clamp(start, decoded.length);
+                builder.add(decoded.sublist(start, end));
+                found = true;
+                break;
+              }
+              offset += 8 + chunkSize;
+            }
+            if (!found) builder.add(decoded);
+          } else {
+            builder.add(decoded);
+          }
         } catch (_) {}
       }
     }

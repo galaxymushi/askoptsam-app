@@ -25,11 +25,11 @@ class GeminiVoice {
 
   static final GeminiVoice instance = GeminiVoice._();
 
-  static const String model = 'gemini-3.8-flash-tts';
+  static const String model = 'gemini-2.5-flash-preview-tts';
 
   static const List<String> fallbackTtsModels = [
-    'gemini-3.8-flash-tts',
     'gemini-2.5-flash-preview-tts',
+    'gemini-3.8-flash-tts',
   ];
 
   /// Prebuilt voices supported by the Gemini TTS models.
