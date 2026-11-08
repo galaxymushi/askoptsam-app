@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter/foundation.dart';
@@ -226,15 +227,17 @@ class FirebaseAuthService implements AuthService {
   @override
   Future<AppUser?> restore() async {
     final user = _auth.currentUser;
-    if (user != null) {
-      final name = user.displayName ?? '';
-      return _user = AppUser(
-        uid: user.uid,
-        email: user.email ?? '',
-        name: name,
-      );
-    }
-    return _fallback.restore();
+    if (user == null) return null;
+    try {
+      await user.reload();
+    } catch (_) {}
+    final refreshed = _auth.currentUser ?? user;
+    final name = refreshed.displayName ?? '';
+    return _user = AppUser(
+      uid: refreshed.uid,
+      email: refreshed.email ?? '',
+      name: name,
+    );
   }
 
   @override
@@ -276,6 +279,7 @@ class FirebaseAuthService implements AuthService {
       );
       final user = cred.user!;
       await user.updateDisplayName(name.trim());
+      await _saveProfile(user.uid, name.trim());
       await _fallback.cacheVerifiedAccount(
         name: name.trim(),
         email: user.email ?? email.trim(),
@@ -342,9 +346,21 @@ class FirebaseAuthService implements AuthService {
     final user = _auth.currentUser;
     if (user != null) {
       await user.updateDisplayName(name.trim());
+      await _saveProfile(user.uid, name.trim());
     }
     await _fallback.updateName(name);
     _user = _user?.copyWith(name: name.trim());
+  }
+
+  Future<void> _saveProfile(String uid, String name) async {
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).set(
+        {'name': name, 'updatedAt': DateTime.now().toIso8601String()},
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      debugPrint('Profile cloud sync skipped: $e');
+    }
   }
 
   @override

@@ -15,8 +15,8 @@
   <a href="https://github.com/galaxymushi/askoptsam-eye/releases/latest">
     <img src="https://img.shields.io/github/v/release/galaxymushi/askoptsam-eye?style=for-the-badge&label=Latest%20Release&color=0B5FF2" alt="Latest Release" />
   </a>
-  <a href="https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.6/app-release.apk">
-    <img src="https://img.shields.io/badge/Download_APK-v2.4.6-00C853?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" />
+  <a href="https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.7/app-release.apk">
+    <img src="https://img.shields.io/badge/Download_APK-v2.4.7-00C853?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" />
   </a>
   <img src="https://img.shields.io/badge/Flutter-3.47-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter" />
   <img src="https://img.shields.io/badge/Gemini_AI-2.5_Flash_%2B_TTS-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini 2.5 Flash" />
@@ -52,10 +52,10 @@
 
 | Resource | Link / Details |
 | :--- | :--- |
-| **Direct APK (Primary)** | [**Download `app-release.apk` (v2.4.6)**](https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.6/app-release.apk) |
-| **Direct APK (Mirror)** | [**Download from `askoptsam-app` (v2.4.6)**](https://github.com/galaxymushi/askoptsam-app/releases/download/v2.4.6/app-release.apk) |
+| **Direct APK (Primary)** | [**Download `app-release.apk` (v2.4.7)**](https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.7/app-release.apk) |
+| **Direct APK (Mirror)** | [**Download from `askoptsam-app` (v2.4.7)**](https://github.com/galaxymushi/askoptsam-app/releases/download/v2.4.7/app-release.apk) |
 | **All Releases** | [GitHub Releases Page](https://github.com/galaxymushi/askoptsam-eye/releases) |
-| **Latest Version** | `2.4.6` (`versionCode 19`) &bull; Universal Android APK (`arm64-v8a`, `armeabi-v7a`, `x86_64`) |
+| **Latest Version** | `2.4.7` (`versionCode 20`) &bull; Universal Android APK (`arm64-v8a`, `armeabi-v7a`, `x86_64`) |
 | **Minimum Android** | Android 7.0+ (API 24+) |
 | **Support & Clinic** | [optsamtz@gmail.com](mailto:optsamtz@gmail.com) |
 

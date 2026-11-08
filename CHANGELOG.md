@@ -2,6 +2,16 @@
 
 All notable changes to **AskOptSam** are documented in this file.
 
+## [2.4.7] - 2026-11-08
+
+### Added
+- **Cloud Firestore Chat History Synchronization (`FirestoreChatStore` + `LocalChatStore` Hybrid)**:
+  - Provisioned **Cloud Firestore** in project `askoptsam-eye` with strict owner-scoped security rules (`firestore.rules`) so each user's saved optometry conversations (`users/{uid}/sessions/{sessionId}`) and profile (`users/{uid}`) sync automatically across devices while remaining accessible offline.
+- **Comprehensive Legal & Data-Protection Policy (`LegalText` — Tanzania PDPA 2022 & International Standards)**:
+  - Expanded bilingual (Kiswahili & English) **Privacy Policy & Terms of Service** (`Sera na Masharti`) with 10 privacy sections and 9 legal terms sections: strict data minimization, zero retention of Eye camera images/voice audio, strict no-sale/no-ad-tracking guarantee, right to instant erasure (`Delete all chats`), clinical non-diagnosis disclaimer, low-vision mobility safety disclaimer, limitation of liability, indemnification, and governing law of Tanzania.
+
+---
+
 ## [2.4.6] - 2026-11-08
 
 ### Fixed

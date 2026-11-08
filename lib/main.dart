@@ -45,7 +45,7 @@ Future<void> main() async {
   final state = AppState(
     settings: settings,
     auth: auth,
-    store: createChatStore(cloud: false),
+    store: createChatStore(cloud: auth.isCloud),
   );
   state.restoreSession();
 

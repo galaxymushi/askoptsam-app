@@ -21,271 +21,341 @@ class LegalText {
   LegalText._();
 
   static String updated(String lang) =>
-      lang == 'sw' ? '1 Novemba 2026' : '1 November 2026';
+      lang == 'sw' ? '8 Novemba 2026' : '8 November 2026';
 
   static String intro(String lang) => lang == 'sw'
-      ? 'AskOptSam ni msaidizi wa afya ya macho. Hati hii inaeleza taarifa '
-            'gani tunahifadhi, kwa nini tunazihifadhi, na masharti ya kutumia '
-            'programu. Tumejaribu kuandika kwa lugha rahisi. Jambo lisiloeleweka? '
-            'Tuandikie kupitia Msaada na maoni.'
-      : 'AskOptSam is an eye-health assistant. This document explains what '
-            'information we keep, why we keep it, and the rules for using the '
-            'app. We have tried to write it in plain language. If something is '
-            'unclear, write to us through Help and feedback.';
+      ? 'AskOptSam (ikiwemo Eye · Msaidizi wa Maono) ni msaidizi wa elimu ya '
+            'afya ya macho na uoni uliojengwa kwa kuzingatia Sheria ya Ulinzi '
+            'wa Taarifa Binafsi ya Tanzania (Personal Data Protection Act, '
+            '2022) na viwango vya kimataifa vya faragha. Hati hii inaeleza kwa '
+            'uwazi taarifa tunazokusanya, jinsi tunavyozilinda kwenye simu na '
+            'kwenye wingu, mipaka ya uwajibikaji wa kitabibu na kisheria, na '
+            'haki zako kamili juu ya data yako.'
+      : 'AskOptSam (including Eye · Vision Assistant) is an eye-health '
+            'education and low-vision accessibility assistant built in '
+            'accordance with the Tanzania Personal Data Protection Act, 2022 '
+            '(PDPA) and international privacy standards. This document '
+            'explains what data we collect, how we protect it on-device and in '
+            'the cloud, medical and legal disclaimers, and your full rights '
+            'over your personal data.';
 
   static const privacy = <LegalSection>[
     LegalSection(
       titleSw: 'Taarifa tunazohifadhi',
       titleEn: 'Information we keep',
       bodySw:
-          'Jina na barua pepe unazotoa ukitengeneza akaunti, au akaunti ya '
-          'kifaa hiki ikiwa hukutumia barua pepe. Pia huhifadhi mazungumzo '
-          'yako, lugha na mpangilio wa arifa. Hatuombi namba yako ya siri '
-          '(PIN), OTP wala taarifa za kadi.',
+          'Tunafuata kanuni ya ukusanyaji mdogo wa data: tunahifadhi tu jina '
+          'na barua pepe unayotoa ukitengeneza akaunti, nywila iliyosimbwa '
+          'kwa usalama (hashed/encrypted), mazungumzo yako ya maandishi kwenye '
+          'Maktaba, lugha uliyochagua, na mipangilio ya arifa. Hatuombi wala '
+          'kuhifadhi namba ya kitambulisho cha taifa (NIDA), PIN za benki, '
+          'OTP, alama za kibayometria za macho (iris scan), wala eneo lako '
+          '(GPS).',
       bodyEn:
-          'The name and email you give when creating an account, or a '
-          'device account if you did not use email. We also store your chats, '
-          'language and notification choices. We never ask for your PIN, OTP '
-          'or card details.',
+          'We practice strict data minimization: we store only the name and '
+          'email address you provide when creating an account, your securely '
+          'hashed password, your saved text chats in the Library, your chosen '
+          'language, and notification preferences. We never ask for or store '
+          'national ID numbers, bank PINs, OTPs, biometric iris scans, or GPS '
+          'location data.',
     ),
     LegalSection(
-      titleSw: 'Kwa nini tunazitumia',
-      titleEn: 'Why we use it',
+      titleSw: 'Picha za Kamera na Sauti kwenye Eye (Hazihifadhiwi)',
+      titleEn: 'Eye Camera Images and Voice Audio (Zero Retention)',
       bodySw:
-          'Taarifa hizi hutumika kukujibu, kuhifadhi mazungumzo kwenye '
-          'Maktaba, kutuma arifa ulizoziamua, kukusaidia ukipata tatizo, na '
-          'kuboresha huduma. Hatuzitumii kukutambua kwa matangazo ya watu '
-          'wengine wala kuziuza.',
+          'Unapotumia sehemu ya Eye (Soma, Uliza, au Elezea), picha inayopigwa '
+          'na kamera na sauti ya swali lako vinatumwa kwa muda mfupi tu '
+          '(transient processing) kupitia muunganisho uliosimbwa (HTTPS/TLS) '
+          'kwenda kwenye injini ya AI ili kusomwa au kuelezwa papo hapo. '
+          'AskOptSam HAIHIFADHI picha za kamera yako wala rekodi za sauti yako '
+          'kwenye hifadhidata yetu ya wingu, na faili za sauti za muda kwenye '
+          'simu hufutwa moja kwa moja.',
       bodyEn:
-          'We use this information to answer you, save chats in the '
-          'Library, send the notifications you enabled, help when something '
-          'goes wrong, and improve the service. We do not use it for other '
-          'people\'s advertising and we do not sell it.',
+          'When you use the Eye module (Read, Ask, or Describe), camera frames '
+          'and spoken questions are transmitted transiently over encrypted '
+          'HTTPS/TLS solely to generate an immediate reading or scene '
+          'description. AskOptSam DOES NOT store your camera photos or voice '
+          'recordings in our cloud database, and temporary audio cache files '
+          'on your phone are automatically overwritten and purged.',
     ),
     LegalSection(
-      titleSw: 'Majibu ya AI',
-      titleEn: 'AI answers',
+      titleSw: 'Kwa nini tunatumia taarifa na Marufuku ya Kuuza Data',
+      titleEn: 'Why we use data & Strict No-Sale Guarantee',
       bodySw:
-          'Swali lako, pamoja na sehemu fupi ya mazungumzo ya awali, '
-          'hutumwa kwa huduma ya AI ili kupata jibu. Usiandike taarifa nyeti '
-          'kama namba ya kitambulisho, namba ya benki au historia ya matibabu. '
-          'Majibu yanaweza kuwa si sahihi kabisa — hakikisha na mtaalamu wa '
-          'macho kwa maamuzi ya afya.',
+          'Taarifa zako hutumika pekee kukuwezesha kuingia kwenye akaunti '
+          'yako, kukujibu maswali yako, kusawazisha mazungumzo yako kwenye '
+          'Maktaba, na kukutumia kiungo cha kubadili nywila ukisahau. '
+          'HATUUZI, hatukodishi, wala kubadilishana taarifa zako binafsi au '
+          'historia ya mazungumzo yako na makampuni ya matangazo, madalali wa '
+          'data (data brokers), au bima za afya.',
       bodyEn:
-          'Your question, together with a short part of the earlier '
-          'conversation, is sent to an AI service to produce an answer. Do not '
-          'type sensitive details such as ID numbers, bank numbers or medical '
-          'records. Answers can be incomplete or wrong — confirm health '
-          'decisions with an eye specialist.',
+          'Your information is used strictly to authenticate your account, '
+          'answer your questions, sync your saved Library chats, and send '
+          'password-reset links when requested. We NEVER sell, rent, or trade '
+          'your personal data or chat history to advertisers, data brokers, or '
+          'insurance companies.',
     ),
     LegalSection(
-      titleSw: 'Hifadhi kwenye simu',
-      titleEn: 'Storage on your phone',
+      titleSw: 'Majibu ya AI na Tahadhari ya Taarifa Nyeti',
+      titleEn: 'AI Processing and Sensitive Information Warning',
       bodySw:
-          'Mazungumzo huhifadhiwa kwenye simu hii. Ukiingia kwa akaunti ya '
-          'wingu, yanasawazishwa ili uyapate ukipata simu nyingine. Mtu '
-          'mwingine anaweza kuyaona ikiwa atatumia simu yako bila kufunga '
-          'akaunti, kwa hivyo tumia PIN au alama ya kufungua simu.',
+          'Swali lako pamoja na muktadha mfupi wa mazungumzo hutumwa kwa '
+          'huduma ya AI ili kutengeneza jibu. Usiandike taarifa za siri kama '
+          'namba za kadi za malipo, nywila, au majina na namba za simu za '
+          'watu wengine ndani ya kisanduku cha mazungumzo. Majibu ya AI ni ya '
+          'kielimu na yanaweza kukosea — lazima yahakikiwe na daktari au '
+          'mtaalamu wa macho (Optometrist/Ophthalmologist).',
       bodyEn:
-          'Chats are stored on this phone. If you sign in with a cloud '
-          'account they are synced so you can reach them on another phone. '
-          'Someone else could read them if they use your phone without signing '
-          'out, so keep a PIN or screen lock on the device.',
+          'Your question and recent conversation context are sent to our AI '
+          'service to generate a reply. Do not enter confidential data such as '
+          'payment card numbers, passwords, or third-party personal details in '
+          'chat prompts. AI outputs are educational and may contain errors — '
+          'always verify clinical decisions with a licensed eye specialist.',
     ),
     LegalSection(
-      titleSw: 'Kushiriki taarifa',
-      titleEn: 'Sharing',
+      titleSw: 'Hifadhi kwenye Simu na Usawazishaji wa Wingu (Cloud Sync)',
+      titleEn: 'On-Device Storage and Cloud Synchronization',
       bodySw:
-          'Hatuuzi taarifa zako. Tunashiriki kiasi kinachohitajika tu na '
-          'watoa huduma wanaotusaidia kuendesha programu, kama seva na huduma '
-          'ya AI, au pale sheria inahitaji. Watoa huduma hao wanapaswa '
-          'kulinda taarifa hizo.',
+          'Mazungumzo yako yanahifadhiwa kwenye simu yako na pia '
+          'yanasawazishwa kwenye hifadhidata salama ya wingu (Google Firebase '
+          'Authentication & Cloud Firestore) chini ya kitambulisho chako '
+          'maalum (UID). Sheria za usalama za seva zinahakikisha kuwa ni '
+          'akaunti yako pekee inayoweza kusoma au kufuta mazungumzo yako. '
+          'Weka PIN au alama ya kidole kwenye simu yako kuzuia mtu mwingine '
+          'asiyekuwa na ruhusa kufungua programu.',
       bodyEn:
-          'We do not sell your information. We share only what is needed '
-          'with providers who help run the app, such as hosting and the AI '
-          'service, or where the law requires it. Those providers are expected '
-          'to protect the information.',
+          'Your chats are saved locally on your phone and synchronized to '
+          'secure cloud storage (Google Firebase Authentication & Cloud '
+          'Firestore) isolated under your unique user ID (UID). Strict '
+          'server-side security rules ensure only your authenticated account '
+          'can read or delete your chats. Keep a PIN or biometric lock on your '
+          'phone to prevent unauthorized physical access.',
     ),
     LegalSection(
-      titleSw: 'Kuhifadhi na kufuta',
-      titleEn: 'Retention and deletion',
+      titleSw: 'Kushiriki Taarifa na Watoa Huduma wa Kiufundi',
+      titleEn: 'Third-Party Infrastructure Processors',
       bodySw:
-          'Mazungumzo hubaki hadi uyafute kwenye Maktaba. Kufuta '
-          'mazungumzo huyafutia mbali na simu yako. Kufuta programu kunaondoa '
-          'nakala ya simu; kama unatumia akaunti ya wingu, tuandikie ili '
-          'tufute akaunti na data yake.',
+          'Tunashirikisha tu kiasi kidogo kinachohitajika cha data na watoa '
+          'huduma wa miundombinu wanaoaminika (Google Cloud / Firebase kwa '
+          'uthibitishaji na hifadhi ya wingu, na Google Gemini / Vercel kwa '
+          'uchakataji wa AI) chini ya mikataba mikali ya ulinzi wa data. '
+          'Hatuna vifuatiliaji vya matangazo (ad trackers) ndani ya programu.',
       bodyEn:
-          'Chats stay until you delete them in the Library. Deleting a chat '
-          'removes it from your phone. Uninstalling the app removes the phone '
-          'copy; if you use a cloud account, write to us so we can delete the '
-          'account and its data.',
+          'We share only the minimum technical data required with trusted '
+          'infrastructure processors (Google Cloud / Firebase for '
+          'authentication and cloud storage, and Google Gemini / Vercel for AI '
+          'inference) under strict data-processing terms. The app contains '
+          'zero third-party advertising SDKs or trackers.',
     ),
     LegalSection(
-      titleSw: 'Usalama',
-      titleEn: 'Security',
+      titleSw: 'Kuhifadhi na Kufuta Data Moja kwa Moja (Right to Erasure)',
+      titleEn: 'Data Retention and Instant Deletion (Right to Erasure)',
       bodySw:
-          'Tunatumia hatua za kawaida kulinda data, lakini hakuna mfumo '
-          'unaoweza kuahidi usalama kamili. Linda simu yako kwa PIN au alama, '
-          'na usishiriki nenosiri lako na mtu yeyote.',
+          'Una udhibiti kamili wa data yako: ukifuta mazungumzo moja au '
+          'ukibonyeza "Futa historia ya mazungumzo" kwenye Mipangilio, '
+          'mazungumzo hayo yanafutwa mara moja kwenye simu yako na kwenye '
+          'wingu (Cloud Firestore). Unaweza pia kuomba akaunti yako yote '
+          'ifutwe kabisa wakati wowote kupitia sehemu ya Msaada na maoni.',
       bodyEn:
-          'We use standard safeguards to protect data, but no system can '
-          'promise complete security. Lock your phone with a PIN or pattern '
-          'and never share your password with anyone.',
+          'You have full control over your data: deleting a chat or tapping '
+          '"Delete all chats" in Settings permanently deletes those records '
+          'both from your phone and from Cloud Firestore. You may also request '
+          'complete account deletion at any time via Help and feedback.',
     ),
     LegalSection(
-      titleSw: 'Watoto',
-      titleEn: 'Children',
+      titleSw: 'Usalama wa Mtandao na Taarifa ya Uvunjifu wa Usalama',
+      titleEn: 'Cybersecurity and Breach Notification',
       bodySw:
-          'Programu hii ni kwa watu wa miaka 13 na zaidi. Mtoto chini ya '
-          'umri huo anapaswa kuitumia akiwa na mzazi au mlezi. Maswali kuhusu '
-          'macho ya mtoto yajibiwe na mtu mzima, na matibabu yafanywe na '
-          'mtaalamu.',
+          'Mawasiliano yote kati ya programu na seva zetu husimbwa kwa '
+          'TLS/HTTPS na nywila hazihifadhiwi kama maandishi wazi (plaintext). '
+          'Endapo kutatokea uvunjifu wowote wa usalama wa data unaoathiri '
+          'taarifa zako, tutachukua hatua za haraka na kutoa taarifa kwa '
+          'mujibu wa Sheria ya Ulinzi wa Taarifa Binafsi ya Tanzania (PDPA).',
       bodyEn:
-          'The app is for people aged 13 and over. A younger child should '
-          'use it with a parent or guardian. Questions about a child\'s eyes '
-          'should be handled by an adult, and treatment by a professional.',
+          'All communication between the app and our servers is encrypted via '
+          'TLS/HTTPS and passwords are never stored in plaintext. In the '
+          'unlikely event of a data breach affecting your personal data, we '
+          'will take immediate containment steps and notify affected users in '
+          'accordance with the Tanzania Personal Data Protection Act (PDPA).',
     ),
     LegalSection(
-      titleSw: 'Haki zako',
-      titleEn: 'Your rights',
+      titleSw: 'Ulinzi wa Watoto (Umri wa Miaka 13+)',
+      titleEn: 'Children\'s Privacy (Age 13+)',
       bodySw:
-          'Unaweza kuona na kufuta mazungumzo yako, kubadilisha lugha au '
-          'kuzima arifa, na kuomba nakala au kufutwa kwa akaunti kwa kuandikia '
-          'kupitia Msaada na maoni. Tutajibu ombi lako ndani ya muda mfupi '
-          'iwezekanavyo.',
+          'Programu hii imekusudiwa watu wenye umri wa miaka 13 na kuendelea. '
+          'Hatukusanyi kwa makusudi taarifa binafsi za watoto walio chini ya '
+          'miaka 13 bila ridhaa ya mzazi au mlezi. Ikiwa mzazi atagundua mtoto '
+          'amefungua akaunti bila ruhusa, anaweza kuwasiliana nasi na '
+          'tutaifuta mara moja.',
       bodyEn:
-          'You can view and delete your chats, change the language or turn '
-          'notifications off, and ask for a copy or deletion of your account by '
-          'writing through Help and feedback. We will answer as soon as we can.',
+          'The app is intended for users aged 13 and older. We do not '
+          'knowingly collect personal data from children under 13 without '
+          'parental consent. If a parent or guardian learns that a child has '
+          'created an account without consent, contact us and we will delete '
+          'it promptly.',
     ),
     LegalSection(
-      titleSw: 'Mabadiliko ya sera',
-      titleEn: 'Changes to this policy',
+      titleSw: 'Haki Zako za Kisheria na Mawasiliano ya Afisa Faragha',
+      titleEn: 'Your Legal Data Rights and Privacy Contact',
       bodySw:
-          'Tunaweza kusasisha hati hii kadri huduma inavyobadilika. Toleo '
-          'jipya litaonekana hapa na tarehe mpya juu ya ukurasa. Kuendelea '
-          'kutumia programu baada ya mabadiliko kunamaanisha unakubali hati '
-          'mpya.',
+          'Chini ya sheria za ulinzi wa data, una haki ya: (a) kujua data '
+          'tuliyo nayo kukuhusu, (b) kusahihisha jina au taarifa zako kwenye '
+          'Wasifu, (c) kuondoa ridhaa yako wakati wowote kwa kufuta mazungumzo '
+          'au akaunti, na (d) kuwasilisha malalamiko au maulizo kupitia '
+          'optsamtz@gmail.com au sehemu ya Msaada na maoni.',
       bodyEn:
-          'We may update this document as the service changes. The new '
-          'version will appear here with a new date at the top. Continuing to '
-          'use the app after a change means you accept the updated document.',
+          'Under applicable data-protection law, you have the right to: (a) '
+          'access the personal data we hold about you, (b) rectify your name '
+          'or profile details, (c) withdraw consent at any time by deleting '
+          'your chats or account, and (d) contact our privacy team at '
+          'optsamtz@gmail.com or via Help and feedback.',
     ),
   ];
 
   static const terms = <LegalSection>[
     LegalSection(
-      titleSw: 'Matumizi ya programu',
-      titleEn: 'Using the app',
+      titleSw: 'Kukubali Masharti na Leseni ya Matumizi',
+      titleEn: 'Acceptance of Terms and Limited License',
       bodySw:
-          'Programu hii ni kwa matumizi yako binafsi ya kujifunza na '
-          'kupata mwongozo kuhusu afya ya macho. Usitumie kuharibu, kudukua, '
-          'kunakili kwa faida ya biashara, au kusambaza maudhui yasiyofaa.',
+          'Kwa kufungua akaunti au kutumia AskOptSam na Eye, unakubali '
+          'kufungwa na masharti haya. Tunakupa leseni binafsi, isiyo ya '
+          'kibiashara, inayoweza kubatilishwa ya kutumia programu hii kwa '
+          'elimu ya afya ya macho na usaidizi wa kuona. Marufuku kufanya '
+          'udukuzi, uhandisi wa kinyume (reverse engineering), au kuitumia '
+          'kwa shughuli haramu.',
       bodyEn:
-          'The app is for your own learning and eye-health guidance. Do '
-          'not use it to damage, hack, copy for commercial gain, or spread '
-          'harmful content.',
+          'By creating an account or using AskOptSam and Eye, you agree to be '
+          'bound by these terms. We grant you a personal, non-commercial, '
+          'revocable license to use the app for eye-health education and '
+          'visual assistance. Reverse engineering, scraping, automated abuse, '
+          'or unlawful use is strictly prohibited.',
     ),
     LegalSection(
-      titleSw: 'Akaunti yako',
-      titleEn: 'Your account',
+      titleSw: 'Kanusho la Kitabibu — Si Daktari wala Uchunguzi wa Kliniki',
+      titleEn: 'Medical Disclaimer — Not Medical Advice or Diagnosis',
       bodySw:
-          'Wewe unahusika na usiri wa nenosiri lako na shughuli '
-          'zinazofanyika kwenye akaunti yako. Akaunti ni ya mtu mmoja; '
-          'usishiriki kifaa na wengine bila kufunga akaunti.',
+          'AskOptSam si kifaa cha kitabibu kilichoidhinishwa kutoa utambuzi wa '
+          'magonjwa (medical diagnostic device) wala haichukui nafasi ya '
+          'daktari wa macho. Matumizi ya programu hii hayatengenezi uhusiano '
+          'wa daktari na mgonjwa. Endapo una maumivu makali ya jicho, kemikali '
+          'imeingia jichoni, uoni umepotea ghafla, au jicho limejeruhiwa, '
+          'NENDA HOSPITALINI MARA MOJA bila kusubiri jibu la programu.',
       bodyEn:
-          'You are responsible for keeping your password private and for '
-          'activity on your account. An account belongs to one person; do not '
-          'share a device without signing out.',
+          'AskOptSam is NOT a certified medical diagnostic device and does not '
+          'replace a licensed optometrist or ophthalmologist. Using the app '
+          'does not create a doctor-patient relationship. If you experience '
+          'severe eye pain, chemical exposure, sudden vision loss, or ocular '
+          'trauma, SEEK EMERGENCY MEDICAL CARE IMMEDIATELY.',
     ),
     LegalSection(
-      titleSw: 'Elimu, si utambuzi',
-      titleEn: 'Education, not diagnosis',
+      titleSw: 'Usalama wa Kutembea kwa Watumiaji wa Eye (Msaidizi wa Maono)',
+      titleEn: 'Mobility & Physical Safety Disclaimer for Eye Users',
       bodySw:
-          'Taarifa zote kuhusu macho ni elimu ya jumla, si utambuzi wa '
-          'ugonjwa wala mapishi ya dawa. Kama una maumivu makali, uoni '
-          'unapotea ghafla, au jicho limeumia, nenda hospitalini mara moja. '
-          'Usisubiri jibu la programu.',
+          'Sehemu ya Eye (Soma, Uliza, Elezea, na Endelea) ni chombo cha '
+          'kusaidia tu. Kamera na AI vinaweza kukosa kuona ngazi, mashimo, '
+          'magari yanayokuja kwa kasi, nyaya, au vikwazo kutokana na mwanga '
+          'hafifu au ucheleweshaji wa mtandao. KAMWE usitegemee Eye pekee '
+          'unapotembea barabarani au sehemu hatarishi — endelea kutumia fimbo '
+          'nyeupe (white cane), mbwa mwongoza, au msaidizi wa binadamu.',
       bodyEn:
-          'All eye information is general education, not a diagnosis or a '
-          'prescription. If you have severe pain, sudden loss of sight or an '
-          'injured eye, go to hospital at once. Do not wait for an app reply.',
+          'The Eye module (Read, Ask, Describe, and Continuous mode) is a '
+          'supplementary aid only. Camera vision and AI may fail to detect '
+          'stairs, drop-offs, moving vehicles, overhead obstacles, or hazards '
+          'due to lighting, camera angle, or network latency. NEVER rely '
+          'solely on Eye for navigation or street crossing — always use a '
+          'white cane, guide dog, or human sighted guide.',
     ),
     LegalSection(
-      titleSw: 'Majibu ya AI',
-      titleEn: 'AI answers',
+      titleSw: 'Mipaka ya Usahihi wa AI (Hallucinations & OCR Errors)',
+      titleEn: 'AI & OCR Accuracy Limitations',
       bodySw:
-          'AI inaweza kukosea, kukosa taarifa, au kuelewa vibaya swali '
-          'lako. Hakikisha taarifa muhimu na mtaalamu wa macho. Usitumie jibu '
-          'la AI kama badala ya kipimo cha macho au ushauri wa daktari.',
+          'Teknolojia ya AI inaweza kusoma maandishi vibaya (hasa kwenye '
+          'chupa za dawa, risiti zilizofifia, au mwandiko wa mkono) au kutoa '
+          'maelezo yasiyo sahihi. Mtumiaji ana jukumu la kuhakiki majina na '
+          'vipimo vya dawa kwa mfamasia, daktari, au mtu anayeona vizuri '
+          'kabla ya kumeza au kuweka dawa yoyote machoni.',
       bodyEn:
-          'AI can be wrong, leave things out or misunderstand your '
-          'question. Check important information with an eye specialist. Do '
-          'not use an AI answer in place of an eye test or a doctor\'s advice.',
+          'AI and optical character recognition (OCR) can misread text '
+          '(especially on medicine labels, faded print, or handwriting) or '
+          'produce inaccurate descriptions. You must verify medication names '
+          'and dosages with a pharmacist, physician, or sighted person before '
+          'taking or applying any medication.',
     ),
     LegalSection(
-      titleSw: 'Maudhui unayotuma',
-      titleEn: 'Content you send',
+      titleSw: 'Usalama wa Akaunti Yako',
+      titleEn: 'Account Responsibility',
       bodySw:
-          'Maudhui unayotuma yanabaki mali yako. Unatupa ruhusa ya '
-          'kuyachakata na kuyahifadhi kwa ajili ya kukujibu na kuendesha '
-          'huduma. Usitume maudhui haramu, ya ubaguzi, au ya mtu mwingine bila '
-          'ruhusa.',
+          'Una jukumu la kutunza siri ya nywila yako na shughuli zote '
+          'zinazofanyika kupitia akaunti yako. Toa taarifa za kweli wakati wa '
+          'kujisajili na utoke kwenye akaunti (Log out) ukitumia kifaa '
+          'cha kushirikiana.',
       bodyEn:
-          'Content you send stays yours. You give us permission to process '
-          'and store it to answer you and run the service. Do not send illegal '
-          'or hateful content, or another person\'s content without permission.',
+          'You are responsible for maintaining the confidentiality of your '
+          'password and for all activity under your account. Provide accurate '
+          'registration details and sign out when using a shared device.',
     ),
     LegalSection(
-      titleSw: 'Mali miliki',
-      titleEn: 'Ownership',
+      titleSw: 'Maudhui Unayotuma na Marufuku ya Matumizi Mabaya',
+      titleEn: 'User Content and Acceptable Use',
       bodySw:
-          'Jina AskOptSam, alama, michoro na maudhui ya programu ni mali ya '
-          'wamiliki wake. Huruhusiwi kuzinakili au kuzitumia kwa biashara bila '
-          'idhini ya maandishi.',
+          'Maudhui unayouliza yanabaki kuwa yako, na unatupa ruhusa ndogo ya '
+          'kuyachakata ili kukupa jibu na kuyahifadhi kwenye Maktaba yako. '
+          'Ni marufuku kutumia programu kupiga picha za kuingilia faragha ya '
+          'watu wengine bila ridhaa yao au kutuma maudhui yanayokiuka sheria.',
       bodyEn:
-          'The AskOptSam name, logo, artwork and app content belong to '
-          'their owners. You may not copy or use them commercially without '
-          'written permission.',
+          'Your prompts remain yours, and you grant us a limited license to '
+          'process them to deliver answers and store your Library history. You '
+          'must not use the app to capture images that violate others\' '
+          'privacy or to transmit unlawful content.',
     ),
     LegalSection(
-      titleSw: 'Uwajibikaji',
-      titleEn: 'Liability',
+      titleSw: 'Haki Miliki (Intellectual Property)',
+      titleEn: 'Intellectual Property',
       bodySw:
-          'Huduma hutolewa kama ilivyo. Tunafanya bidii kufanya majibu '
-          'yawe sahihi, lakini hatuwajibiki kwa maamuzi unayofanya kutokana na '
-          'majibu hayo, kwa kadri sheria inavyoruhusu. Hii haiondoi haki zako '
-          'za kisheria.',
+          'Jina AskOptSam, Optsam Eye Care, Eye (Msaidizi wa Maono), nembo, '
+          'msimbo wa programu, na muundo wake ni mali miliki inayolindwa '
+          'kisheria. Picha za elimu kwenye Maktaba zinatoka Wikimedia Commons '
+          'chini ya leseni husika za waandishi wake.',
       bodyEn:
-          'The service is provided as it is. We work hard to keep answers '
-          'accurate, but we are not liable for decisions you make from those '
-          'answers, as far as the law allows. This does not remove your legal '
-          'rights.',
+          'The AskOptSam, Optsam Eye Care, and Eye names, logos, software '
+          'code, and interface designs are protected intellectual property. '
+          'Educational photographs in the Library are sourced from Wikimedia '
+          'Commons under their respective open licenses.',
     ),
     LegalSection(
-      titleSw: 'Kusimamisha matumizi',
-      titleEn: 'Suspending use',
+      titleSw: 'Ukomo wa Uwajibikaji wa Kisheria na Fidia (Limitation of Liability)',
+      titleEn: 'Limitation of Liability and Indemnification',
       bodySw:
-          'Tunaweza kuzuia au kusimamisha akaunti inayotumika kwa madhara, '
-          'udukuzi au kukiuka masharti haya. Utapata taarifa pale '
-          'inapowezekana.',
+          'Kwa kiwango cha juu kinachoruhusiwa na sheria, AskOptSam, Optsam '
+          'Eye Care, waanzilishi, na washirika wake HAWATAWAJIBIKA kwa madhara '
+          'yoyote ya moja kwa moja au yasiyo ya moja kwa moja, ajali, jeraha '
+          'la mwili au macho, au hasara inayotokana na kutegemea majibu ya AI, '
+          'ucheleweshaji wa mtandao, au kushindwa kufuata ushauri wa daktari. '
+          'Unakubali kutetea na kuondoa hatia (indemnify) AskOptSam dhidi ya '
+          'madai yanayotokana na ukiukaji wako wa masharti haya.',
       bodyEn:
-          'We may block or suspend an account used to cause harm, to hack, '
-          'or to break these terms. We will tell you where possible.',
+          'To the fullest extent permitted by law, AskOptSam, Optsam Eye Care, '
+          'its founders, and affiliates SHALL NOT BE LIABLE for any direct, '
+          'indirect, incidental, or consequential damages, personal or ocular '
+          'injury, or loss arising from reliance on AI outputs, network '
+          'delays, or failure to seek professional medical care. You agree to '
+          'indemnify and hold AskOptSam harmless from claims arising out of '
+          'your misuse of the app or violation of these terms.',
     ),
     LegalSection(
-      titleSw: 'Sheria na mabadiliko',
-      titleEn: 'Law and changes',
+      titleSw: 'Sheria Inayoongoza na Utatuzi wa Migogoro',
+      titleEn: 'Governing Law and Dispute Resolution',
       bodySw:
-          'Masharti haya yanaongozwa na sheria za Jamhuri ya Muungano wa '
-          'Tanzania. Tunaweza kuyabadilisha; toleo jipya litaonekana hapa na '
-          'tarehe mpya. Kuendelea kutumia programu kunamaanisha unakubali '
-          'masharti mapya.',
+          'Sera na Masharti haya yanaongozwa na kutafsiriwa kwa mujibu wa '
+          'sheria za Jamhuri ya Muungano wa Tanzania. Mgogoro wowote '
+          'utakaotokea utatatuliwa kwanza kwa majadiliano ya amani kupitia '
+          'optsamtz@gmail.com, na ikishindikana utawasilishwa kwenye mahakama '
+          'zenye mamlaka nchini Tanzania.',
       bodyEn:
-          'These terms are governed by the laws of the United Republic of '
-          'Tanzania. We may change them; the new version will appear here with '
-          'a new date. Continuing to use the app means you accept the new '
-          'terms.',
+          'These Privacy Policy and Terms are governed by the laws of the '
+          'United Republic of Tanzania. Any dispute shall first be addressed '
+          'through good-faith resolution via optsamtz@gmail.com, and if '
+          'unresolved, submitted to the competent courts of Tanzania.',
     ),
   ];
 }
