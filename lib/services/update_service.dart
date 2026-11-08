@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show ValueNotifier, debugPrint, kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -116,7 +117,17 @@ class UpdateService {
 
   static const _cacheKey = 'asksam_latest_release_v1';
   static const _downloadedKey = 'asksam_update_downloaded_v1';
-  static const _fallbackInstalledVersion = '2.4.8';
+  static const _fallbackInstalledVersion = '2.4.9';
+
+  /// Live notifier holding the latest available update if newer than the installed app.
+  /// Listened to by [AppShell] to render the persistent bottom update notification bar.
+  final ValueNotifier<AppRelease?> updateNotifier =
+      ValueNotifier<AppRelease?>(null);
+
+  /// Dismisses the persistent update bar for the current session.
+  void dismissUpdate() {
+    updateNotifier.value = null;
+  }
 
   /// Strips leading `v`/`V` and build metadata (`+5`) to return `major.minor.patch`.
   static String normalizeVersion(String raw) {
@@ -187,42 +198,95 @@ class UpdateService {
   }) async {
     final current = installedVersion ?? await currentVersion();
     if (_isFlutterTest && client == null) {
-      return cachedUpdate(installedVersion: current);
+      final cached = await cachedUpdate(installedVersion: current);
+      if (cached != null) updateNotifier.value = cached;
+      return cached;
     }
     final httpClient = client ?? http.Client();
     final shouldClose = client == null;
+
+    // 1. Fast CDN check (version.json on raw.githubusercontent.com)
+    // Does NOT hit GitHub REST API rate limits (60/hr) and never 504s.
     try {
-      final response = await httpClient
-          .get(
-            Uri.parse(AppConfig.releasesApiUrl),
-            headers: const {
-              'Accept': 'application/vnd.github+json',
-              'X-GitHub-Api-Version': '2022-11-28',
-            },
-          )
-          .timeout(const Duration(seconds: 8));
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final decoded = jsonDecode(response.body);
+      final cdnUri = Uri.parse(
+        'https://raw.githubusercontent.com/galaxymushi/askoptsam-eye/main/version.json',
+      );
+      final cdnRes = await httpClient.get(
+        cdnUri,
+        headers: const {'User-Agent': 'AskOptSam-App'},
+      ).timeout(const Duration(seconds: 5));
+
+      if (cdnRes.statusCode >= 200 && cdnRes.statusCode < 300) {
+        final decoded = jsonDecode(cdnRes.body);
         if (decoded is Map) {
-          final release = AppRelease.fromGitHubJson(
-            Map<String, dynamic>.from(decoded),
-          );
-          if (release != null) {
+          final release =
+              AppRelease.fromMap(Map<String, dynamic>.from(decoded));
+          if (release.version.isNotEmpty) {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString(_cacheKey, jsonEncode(release.toMap()));
             if (isNewerVersion(release.version, current)) {
+              final done = await hasDownloaded(release.version);
+              if (!done) updateNotifier.value = release;
               return release;
             }
             return null;
           }
         }
       }
-    } catch (_) {
-      // Offline or rate-limited: fall back to cached release metadata.
-    } finally {
-      if (shouldClose) httpClient.close();
+    } catch (e) {
+      debugPrint('UpdateService CDN check error: $e');
     }
-    return cachedUpdate(installedVersion: current);
+
+    // 2. Primary and mirror GitHub Releases API endpoints with User-Agent header
+    final apiUrls = [
+      AppConfig.releasesApiUrl,
+      'https://api.github.com/repos/galaxymushi/askoptsam-app/releases/latest',
+    ];
+
+    for (final url in apiUrls) {
+      try {
+        final response = await httpClient
+            .get(
+              Uri.parse(url),
+              headers: const {
+                'Accept': 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28',
+                'User-Agent': 'AskOptSam-App',
+              },
+            )
+            .timeout(const Duration(seconds: 8));
+
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map) {
+            final release = AppRelease.fromGitHubJson(
+              Map<String, dynamic>.from(decoded),
+            );
+            if (release != null) {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString(_cacheKey, jsonEncode(release.toMap()));
+              if (isNewerVersion(release.version, current)) {
+                final done = await hasDownloaded(release.version);
+                if (!done) updateNotifier.value = release;
+                return release;
+              }
+              return null;
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('UpdateService API check error for $url: $e');
+      }
+    }
+
+    if (shouldClose) httpClient.close();
+
+    final cached = await cachedUpdate(installedVersion: current);
+    if (cached != null) {
+      final done = await hasDownloaded(cached.version);
+      if (!done) updateNotifier.value = cached;
+    }
+    return cached;
   }
 
   /// Checks for a newer version and, if found, posts an in-app notification
@@ -262,6 +326,9 @@ class UpdateService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_downloadedKey, version.trim());
+      if (updateNotifier.value?.version == version.trim()) {
+        updateNotifier.value = null;
+      }
     } catch (_) {
       // Best effort: the buttons fall back to their visible state.
     }
