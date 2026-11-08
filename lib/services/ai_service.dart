@@ -87,12 +87,22 @@ class AiService {
         ? 'You are AskOptSam, the friendly optometry and eye-health assistant for Optsam Eye Care in Dar es Salaam. Reply clearly and concisely in English.'
         : 'Wewe ni AskOptSam, msaidizi rafiki wa afya ya macho wa kliniki ya Optsam Eye Care, Dar es Salaam. Jibu kwa ufupi na kwa ufasaha kwa Kiswahili.';
 
-    for (final model in const ['gemini-3.5-flash', 'gemini-3-flash-preview']) {
+    for (final model in const [
+      'gemini-2.5-flash',
+      'gemini-3.5-flash',
+      'gemini-3-flash-preview',
+    ]) {
       try {
         final uri = Uri.https(
           'generativelanguage.googleapis.com',
           '/v1beta/models/$model:generateContent',
         );
+        final genConfig = <String, dynamic>{
+          'temperature': 0.5,
+          'maxOutputTokens': 600,
+          if (model.startsWith('gemini-2.5'))
+            'thinkingConfig': {'thinkingBudget': 0},
+        };
         final response = await http
             .post(
               uri,
@@ -107,10 +117,7 @@ class AiService {
                   ],
                 },
                 'contents': contents,
-                'generationConfig': {
-                  'temperature': 0.5,
-                  'maxOutputTokens': 600,
-                },
+                'generationConfig': genConfig,
               }),
             )
             .timeout(const Duration(seconds: 25));

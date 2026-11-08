@@ -43,9 +43,9 @@ class GeminiService {
       'If the image does not show the answer, say so plainly.';
 
   static const List<String> models = [
+    'gemini-2.5-flash',
     'gemini-3.5-flash',
     'gemini-3-flash-preview',
-    'gemini-3.8-flash',
   ];
 
   static String get _languageRule {
@@ -111,32 +111,36 @@ class GeminiService {
     List<Map<String, dynamic>> parts, {
     int maxTokens = 500,
   }) async {
-    final candidatesToTry = <String>[
+    // First try the primary model (gemini-2.5-flash) with the configured key
+    final primary = await _generateSingle(
+      apiKey,
       model,
-      for (final m in models)
-        if (m != model) m,
-    ];
+      parts,
+      maxTokens: maxTokens,
+    );
+    if (primary.isOk) return primary;
 
-    String? lastError;
-    for (final candidateModel in candidatesToTry) {
-      final result = await _generateWithModel(
+    // Fallback to secondary key / fallback models if needed
+    for (final fallbackModel in models) {
+      for (final candidateKey in <String>{
         apiKey,
-        candidateModel,
-        parts,
-        maxTokens: maxTokens,
-      );
-      if (result.isOk) {
-        return result;
-      }
-      lastError = result.errorCode;
-      if (lastError == 'auth' || lastError == 'no_key') {
-        return result;
+        AppSettings.builtInApiKey,
+        AppSettings.secondaryApiKey,
+      }) {
+        if (candidateKey == apiKey && fallbackModel == model) continue;
+        final res = await _generateSingle(
+          candidateKey,
+          fallbackModel,
+          parts,
+          maxTokens: maxTokens,
+        );
+        if (res.isOk) return res;
       }
     }
-    return AiResult.fail(lastError ?? 'unknown');
+    return primary;
   }
 
-  static Future<AiResult> _generateWithModel(
+  static Future<AiResult> _generateSingle(
     String apiKey,
     String model,
     List<Map<String, dynamic>> parts, {
@@ -152,11 +156,19 @@ class GeminiService {
       'generationConfig': {
         'temperature': 0.2,
         'maxOutputTokens': maxTokens,
+        'thinkingConfig': {'thinkingBudget': 0},
       },
     };
 
     try {
-      final response = await _post(apiKey, model, body);
+      var response = await _post(apiKey, model, body);
+      if (response.statusCode == 400) {
+        // Some models reject thinkingConfig; retry without it.
+        (body['generationConfig'] as Map<String, dynamic>)
+            .remove('thinkingConfig');
+        response = await _post(apiKey, model, body);
+      }
+
       if (response.statusCode != 200) {
         return AiResult.fail(_errorCode(response.statusCode));
       }
@@ -200,7 +212,7 @@ class GeminiService {
           },
           body: jsonEncode(body),
         )
-        .timeout(const Duration(seconds: 25));
+        .timeout(const Duration(seconds: 40));
   }
 
   static String? _extractText(Map<String, dynamic> data) {

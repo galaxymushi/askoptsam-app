@@ -1,14 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 import 'app_settings.dart';
 import 'tts_audio.dart';
 
-/// Speech through Google's Gemini text-to-speech models.
+/// Speech through Google's Gemini text-to-speech preview model.
 ///
 /// Returns `false` (never throws) so the caller can fall back to the phone's
 /// own voice when the model is unavailable, offline, or over quota.
@@ -17,16 +19,18 @@ class GeminiVoice {
 
   static final GeminiVoice instance = GeminiVoice._();
 
-  static const List<String> ttsModels = [
+  static const String model = 'gemini-2.5-flash-preview-tts';
+
+  static const List<String> fallbackTtsModels = [
     'gemini-2.5-flash-preview-tts',
     'gemini-3.8-flash-tts',
   ];
 
   /// Prebuilt voices supported by the Gemini TTS models.
   static const List<String> voices = [
-    'Charon',
     'Kore',
     'Puck',
+    'Charon',
     'Aoede',
     'Fenrir',
     'Zephyr',
@@ -68,7 +72,14 @@ class GeminiVoice {
         _cache[cacheKey] = wav;
       }
       await _player.stop();
-      await _player.play(BytesSource(wav));
+      try {
+        await _player.play(BytesSource(wav));
+      } catch (_) {
+        final dir = await getTemporaryDirectory();
+        final file = File('${dir.path}/eye_voice_clip.wav');
+        await file.writeAsBytes(wav, flush: true);
+        await _player.play(DeviceFileSource(file.path));
+      }
       return true;
     } catch (error) {
       debugPrint('Gemini voice failed: $error');
@@ -89,56 +100,67 @@ class GeminiVoice {
     String text,
     String voice,
   ) async {
-    for (final ttsModel in ttsModels) {
-      try {
-        final uri = Uri.https(
-          'generativelanguage.googleapis.com',
-          '/v1beta/models/$ttsModel:generateContent',
-        );
-        final body = jsonEncode({
-          'contents': [
-            {
-              'parts': [
-                {'text': text},
-              ],
-            },
-          ],
-          'generationConfig': {
-            'responseModalities': ['AUDIO'],
-            'speechConfig': {
-              'voiceConfig': {
-                'prebuiltVoiceConfig': {'voiceName': voice},
+    final keysToTry = <String>{
+      apiKey,
+      AppSettings.builtInApiKey,
+      AppSettings.secondaryApiKey,
+    };
+
+    for (final ttsModel in fallbackTtsModels) {
+      for (final key in keysToTry) {
+        if (key.trim().isEmpty) continue;
+        try {
+          final uri = Uri.https(
+            'generativelanguage.googleapis.com',
+            '/v1beta/models/$ttsModel:generateContent',
+          );
+          final body = jsonEncode({
+            'contents': [
+              {
+                'parts': [
+                  {'text': text},
+                ],
+              },
+            ],
+            'generationConfig': {
+              'responseModalities': ['AUDIO'],
+              'speechConfig': {
+                'voiceConfig': {
+                  'prebuiltVoiceConfig': {'voiceName': voice},
+                },
               },
             },
-          },
-        });
+          });
 
-        final response = await http
-            .post(
-              uri,
-              headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': apiKey,
-              },
-              body: body,
-            )
-            .timeout(const Duration(seconds: 20));
+          final response = await http
+              .post(
+                uri,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-goog-api-key': key,
+                },
+                body: body,
+              )
+              .timeout(const Duration(seconds: 45));
 
-        if (response.statusCode != 200) {
-          debugPrint('Gemini voice ($ttsModel) returned HTTP ${response.statusCode}');
-          continue;
+          if (response.statusCode != 200) {
+            debugPrint(
+              'Gemini voice ($ttsModel) returned HTTP ${response.statusCode}',
+            );
+            continue;
+          }
+
+          final data = jsonDecode(utf8.decode(response.bodyBytes));
+          if (data is! Map<String, dynamic>) continue;
+          final encoded = ttsAudioBase64(data);
+          if (encoded == null) continue;
+          final pcm = base64Decode(encoded);
+          if (pcm.isEmpty) continue;
+          final sampleRate = sampleRateFromMime(ttsMimeType(data));
+          return wavFromPcm16(pcm, sampleRate: sampleRate);
+        } catch (e) {
+          debugPrint('Gemini voice ($ttsModel) error: $e');
         }
-
-        final data = jsonDecode(utf8.decode(response.bodyBytes));
-        if (data is! Map<String, dynamic>) continue;
-        final encoded = ttsAudioBase64(data);
-        if (encoded == null) continue;
-        final pcm = base64Decode(encoded);
-        if (pcm.isEmpty) continue;
-        final sampleRate = sampleRateFromMime(ttsMimeType(data));
-        return wavFromPcm16(pcm, sampleRate: sampleRate);
-      } catch (e) {
-        debugPrint('Gemini voice ($ttsModel) error: $e');
       }
     }
     return null;
