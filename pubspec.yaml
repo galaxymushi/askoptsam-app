@@ -71,6 +71,7 @@ flutter:
   assets:
     - assets/branding/
     - assets/images/facts/
+    - assets/images/founders/
 
   fonts:
     - family: Inter
