@@ -139,6 +139,7 @@ class _AskScreenState extends State<AskScreen> {
           _answer = result.text;
           _busy = false;
         });
+        SpeechService.instance.isEyeTabActive = true;
         await Haptics.cue(NavCue.success);
         await SpeechService.instance.speak(result.text!);
       } else {
@@ -147,6 +148,7 @@ class _AskScreenState extends State<AskScreen> {
           _error = message;
           _busy = false;
         });
+        SpeechService.instance.isEyeTabActive = true;
         await Haptics.cue(NavCue.error);
         await SpeechService.instance.speak(message);
       }

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../app_state.dart';
 import '../content/citations.dart';
+import '../eye/services/speech_service.dart';
 import '../l10n.dart';
 import '../models.dart';
 import '../services/ai_service.dart';
@@ -46,7 +47,6 @@ class ChatScreenState extends State<ChatScreen> {
   DailyBriefing _dailyBriefing = DailyIntelligenceService.seedForDay(
     DateTime.now(),
   );
-  AppRelease? _updateRelease;
 
   @override
   void initState() {
@@ -71,11 +71,9 @@ class ChatScreenState extends State<ChatScreen> {
 
   Future<void> _initIntelligenceAndUpdates() async {
     final cachedDaily = await DailyIntelligenceService.instance.loadToday();
-    final cachedUpdate = await UpdateService.instance.cachedUpdate();
     if (!mounted) return;
     setState(() {
       _dailyBriefing = cachedDaily;
-      _updateRelease = cachedUpdate;
     });
     final app = AppScope.read(context);
     final uid = app.user?.uid;
@@ -85,7 +83,7 @@ class ChatScreenState extends State<ChatScreen> {
       language: app.settings.language,
       includeDailyTip: app.settings.notifyTips,
     );
-    final release = await UpdateService.instance.syncUpdateNotice(
+    await UpdateService.instance.syncUpdateNotice(
       uid,
       language: app.settings.language,
       notifyUpdates: app.settings.notifyUpdates,
@@ -93,7 +91,6 @@ class ChatScreenState extends State<ChatScreen> {
     if (!mounted) return;
     setState(() {
       _dailyBriefing = briefing;
-      if (release != null) _updateRelease = release;
     });
   }
 
@@ -356,7 +353,22 @@ class ChatScreenState extends State<ChatScreen> {
                       );
                     }
                   },
-                  icon: const Icon(Icons.add_comment_outlined, size: 23),
+                  icon: Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00C853).withValues(alpha: 0.14),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF00C853),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.add_comment_outlined,
+                      size: 20,
+                      color: Color(0xFF00C853),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -433,6 +445,12 @@ class ChatScreenState extends State<ChatScreen> {
                             message: message,
                             interactive: !streaming,
                             onCopy: () => _copyMessage(message),
+                            onSpeak: message.isUser
+                                ? null
+                                : () => SpeechService.instance.speak(
+                                      message.text,
+                                      force: true,
+                                    ),
                             onResend: message.isUser && !_sending
                                 ? () => _resend(message)
                                 : null,
@@ -452,14 +470,6 @@ class ChatScreenState extends State<ChatScreen> {
                       },
                     ),
             ),
-            // Update prompt sits at the bottom (above the composer) so the
-            // top of the chat stays clear for the mascot's eye animation.
-            if (_updateRelease != null)
-              _UpdateStrip(
-                release: _updateRelease!,
-                onTap: () =>
-                    UpdateService.instance.openDownload(_updateRelease!),
-              ),
             if (!_empty)
               _Composer(
                 controller: _input,
@@ -617,90 +627,6 @@ class _ChatGreeting extends StatelessWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _UpdateStrip extends StatefulWidget {
-  const _UpdateStrip({required this.release, required this.onTap});
-
-  final AppRelease release;
-  final Future<bool> Function() onTap;
-
-  @override
-  State<_UpdateStrip> createState() => _UpdateStripState();
-}
-
-class _UpdateStripState extends State<_UpdateStrip> {
-  bool _downloaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _restoreDownloaded();
-  }
-
-  /// Once this release was fetched the strip stops offering the download; it
-  /// re-arms itself as soon as a newer release appears.
-  Future<void> _restoreDownloaded() async {
-    try {
-      final done = await UpdateService.instance
-          .hasDownloaded(widget.release.version);
-      if (mounted && done) setState(() => _downloaded = true);
-    } catch (_) {
-      // No prefs access: keep the strip tappable.
-    }
-  }
-
-  Future<void> _tap() async {
-    if (_downloaded) return;
-    final opened = await widget.onTap();
-    if (mounted && opened) setState(() => _downloaded = true);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final release = widget.release;
-    final t = L10nScope.of(context);
-    return Material(
-      color: AppColors.primary,
-      child: InkWell(
-        onTap: _downloaded ? null : _tap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
-          child: Row(
-            children: [
-              Icon(
-                _downloaded
-                    ? Icons.check_circle_rounded
-                    : Icons.system_update_alt_rounded,
-                color: Colors.white,
-                size: 19,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  '${t.format('noticeUpdateTitle', {'version': release.version})} · ${t.get(_downloaded ? 'updateDownloadedShort' : 'downloadUpdate')}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (!_downloaded)
-                const Icon(
-                  Icons.download_rounded,
-                  color: Colors.white,
-                  size: 19,
-                ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -867,6 +793,7 @@ class _Bubble extends StatelessWidget {
   const _Bubble({
     required this.message,
     required this.onCopy,
+    this.onSpeak,
     this.onResend,
     this.onFeedback,
     this.interactive = true,
@@ -874,6 +801,7 @@ class _Bubble extends StatelessWidget {
 
   final ChatMessage message;
   final VoidCallback onCopy;
+  final VoidCallback? onSpeak;
   final VoidCallback? onResend;
   final ValueChanged<String>? onFeedback;
   final bool interactive;
@@ -904,6 +832,15 @@ class _Bubble extends StatelessWidget {
           );
         }
       } else {
+        if (onSpeak != null) {
+          actions.add(
+            _ActionIcon(
+              icon: Icons.volume_up_rounded,
+              tooltip: t.language == 'sw' ? 'Sikiliza' : 'Listen',
+              onTap: onSpeak!,
+            ),
+          );
+        }
         actions.add(
           _ActionIcon(
             icon: message.feedback == 'up'

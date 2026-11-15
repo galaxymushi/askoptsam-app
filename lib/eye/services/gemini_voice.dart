@@ -25,14 +25,13 @@ class GeminiVoice {
 
   static final GeminiVoice instance = GeminiVoice._();
 
-  static const String model = 'gemini-3.8-flash-lite-tts';
+  static const String model = 'gemini-3.8-flash-tts';
 
   static const List<String> fallbackTtsModels = [
-    'gemini-3.8-flash-lite-tts',
-    'gemini-3.1-flash-tts-preview',
-    'gemini-2.5-pro-preview-tts',
     'gemini-3.8-flash-tts',
+    'gemini-3.8-flash-lite-tts',
     'gemini-2.5-flash-preview-tts',
+    'gemini-3.1-flash-tts-preview',
   ];
 
   /// Prebuilt voices supported by the Gemini TTS models.
@@ -65,10 +64,9 @@ class GeminiVoice {
       await _player.setAudioContext(
         AudioContext(
           android: const AudioContextAndroid(
-            isSpeakerphoneOn: true,
             stayAwake: true,
             contentType: AndroidContentType.speech,
-            usageType: AndroidUsageType.assistant,
+            usageType: AndroidUsageType.media,
             audioFocus: AndroidAudioFocus.gainTransientMayDuck,
           ),
         ),
@@ -79,9 +77,10 @@ class GeminiVoice {
 
   /// Splits [raw] into sentence chunks so the first sentence is synthesized
   /// and spoken immediately (~2.5s) while remaining sentences are synthesized
-  /// in parallel in the background.
+  /// sequentially while the first sentence plays.
   static List<String> splitSentences(String raw) {
     final cleaned = raw
+        .replaceAll(RegExp(r'\*\*|__|`+'), '')
         .replaceAll(RegExp(r'\r\n|\r'), '\n')
         .replaceAll(RegExp(r'\n+'), '. ')
         .replaceAll(RegExp(r'\s+'), ' ')
@@ -96,7 +95,6 @@ class GeminiVoice {
         .toList();
 
     if (parts.length <= 1) {
-      // Long unpunctuated sentence: split around word boundary near 90 chars.
       final words = cleaned.split(' ');
       final chunks = <String>[];
       final buf = StringBuffer();
@@ -105,7 +103,7 @@ class GeminiVoice {
         if (buf.isNotEmpty && buf.length + 1 + w.length > limit) {
           chunks.add(buf.toString());
           buf.clear();
-          limit = 160;
+          limit = 220;
         }
         if (buf.isNotEmpty) buf.write(' ');
         buf.write(w);
@@ -118,12 +116,11 @@ class GeminiVoice {
     // Keep chunk 0 short (first sentence) for fast time-to-first-audio.
     chunks.add(parts.first);
 
-    // Group remaining sentences up to ~170 chars per request so parallel
-    // requests are fast and never hit TTS truncation limits.
+    // Group remaining sentences up to ~240 chars per request.
     final buf = StringBuffer();
     for (var i = 1; i < parts.length; i++) {
       final sentence = parts[i];
-      if (buf.isNotEmpty && buf.length + 1 + sentence.length > 170) {
+      if (buf.isNotEmpty && buf.length + 1 + sentence.length > 240) {
         chunks.add(buf.toString());
         buf.clear();
       }
@@ -152,12 +149,7 @@ class GeminiVoice {
       final chunks = splitSentences(trimmed);
       if (chunks.isEmpty) return false;
 
-      // Launch synthesis for ALL chunks concurrently at t = 0!
-      final chunkFutures = <Future<_PcmChunk?>>[
-        for (final chunk in chunks) _getOrSynthesizeChunk(apiKey, chunk, voice),
-      ];
-
-      final firstChunk = await chunkFutures.first;
+      final firstChunk = await _getOrSynthesizeChunk(apiKey, chunks.first, voice);
       if (runId != _activeRunId) return false;
       if (firstChunk == null) return false;
 
@@ -168,8 +160,16 @@ class GeminiVoice {
       final playedFirst = await _playWavBytes(firstWav, '${runId}_0');
       if (!playedFirst || runId != _activeRunId) return false;
 
-      // Continue playing remaining prefetched chunks seamlessly in background.
-      unawaited(_finishPlaybackQueue(runId, chunkFutures, firstChunk.sampleRate));
+      // Continue synthesizing and playing remaining chunks sequentially in background.
+      unawaited(
+        _finishPlaybackQueue(
+          runId,
+          apiKey,
+          voice,
+          chunks.sublist(1),
+          firstChunk.sampleRate,
+        ),
+      );
       return true;
     } catch (error) {
       debugPrint('Gemini voice failed: $error');
@@ -179,27 +179,37 @@ class GeminiVoice {
 
   Future<void> _finishPlaybackQueue(
     int runId,
-    List<Future<_PcmChunk?>> chunkFutures,
+    String apiKey,
+    String voice,
+    List<String> remainingTexts,
     int defaultSampleRate,
   ) async {
     try {
-      if (chunkFutures.length > 1) {
-        // Wait for all remaining parallel requests while chunk 0 is playing.
-        final remainingFutures = chunkFutures.sublist(1);
-        // Wait for chunk 0 to finish playing on the audio player.
+      if (remainingTexts.isNotEmpty) {
+        // Synthesize remaining chunks sequentially while chunk 0 is playing.
+        final synthesizedFuture = () async {
+          final list = <_PcmChunk>[];
+          for (final chunkText in remainingTexts) {
+            if (runId != _activeRunId) break;
+            final c = await _getOrSynthesizeChunk(apiKey, chunkText, voice);
+            if (c != null && c.pcm.isNotEmpty) {
+              list.add(c);
+            }
+          }
+          return list;
+        }();
+
         await _waitForClipEnd(runId);
         if (runId != _activeRunId) return;
 
-        final remainingChunks = await Future.wait(remainingFutures);
+        final remainingChunks = await synthesizedFuture;
         if (runId != _activeRunId) return;
 
         final combinedPcm = BytesBuilder(copy: false);
         var sampleRate = defaultSampleRate;
         for (final c in remainingChunks) {
-          if (c != null && c.pcm.isNotEmpty) {
-            combinedPcm.add(c.pcm);
-            sampleRate = c.sampleRate;
-          }
+          combinedPcm.add(c.pcm);
+          sampleRate = c.sampleRate;
         }
 
         if (combinedPcm.isNotEmpty && runId == _activeRunId) {
@@ -287,9 +297,7 @@ class GeminiVoice {
   ) async {
     final keysToTry = <String>{
       apiKey,
-      AppSettings.firebaseApiKey,
       AppSettings.builtInApiKey,
-      AppSettings.secondaryApiKey,
     };
 
     for (final ttsModel in fallbackTtsModels) {
@@ -328,7 +336,7 @@ class GeminiVoice {
                 },
                 body: body,
               )
-              .timeout(const Duration(seconds: 35));
+              .timeout(const Duration(seconds: 18));
           sw.stop();
           debugPrint(
             'GeminiVoice ($ttsModel, voice=$voice, len=${text.length}): HTTP ${response.statusCode} in ${sw.elapsedMilliseconds}ms (${response.bodyBytes.length} bytes)',

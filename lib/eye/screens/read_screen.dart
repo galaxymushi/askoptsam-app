@@ -53,6 +53,7 @@ class _ReadScreenState extends State<ReadScreen> {
           _text = text;
           _busy = false;
         });
+        SpeechService.instance.isEyeTabActive = true;
         await Haptics.cue(none ? NavCue.error : NavCue.success);
         await SpeechService.instance.speak(text);
       } else {
@@ -61,6 +62,7 @@ class _ReadScreenState extends State<ReadScreen> {
           _error = message;
           _busy = false;
         });
+        SpeechService.instance.isEyeTabActive = true;
         await Haptics.cue(NavCue.error);
         await SpeechService.instance.speak(message);
       }

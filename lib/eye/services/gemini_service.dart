@@ -43,11 +43,9 @@ class GeminiService {
       'If the image does not show the answer, say so plainly.';
 
   static const List<String> models = [
-    'gemini-3.8-flash',
+    'gemini-3.5-flash-lite',
     'gemini-3.5-flash',
-    'gemini-flash-latest',
-    'gemini-2.5-flash',
-    'gemini-3-flash-preview',
+    'gemini-3.8-flash',
   ];
 
   static String get _languageRule {
@@ -113,7 +111,7 @@ class GeminiService {
     List<Map<String, dynamic>> parts, {
     int maxTokens = 500,
   }) async {
-    // First try the primary model (gemini-2.5-flash) with the configured key
+    // First try the primary model (gemini-3.5-flash-lite) with the configured key
     final primary = await _generateSingle(
       apiKey,
       model,
@@ -122,14 +120,13 @@ class GeminiService {
     );
     if (primary.isOk) return primary;
 
-    // Fallback to secondary key / fallback models if needed
+    // Fallback to built-in key / fallback models if needed
     for (final fallbackModel in models) {
       for (final candidateKey in <String>{
         apiKey,
-        AppSettings.firebaseApiKey,
         AppSettings.builtInApiKey,
-        AppSettings.secondaryApiKey,
       }) {
+        if (candidateKey.trim().isEmpty) continue;
         if (candidateKey == apiKey && fallbackModel == model) continue;
         final res = await _generateSingle(
           candidateKey,

@@ -13,11 +13,11 @@ class AppSettings extends ChangeNotifier {
   static final AppSettings instance = AppSettings._();
 
   static const String _envApiKey = String.fromEnvironment('GEMINI_API_KEY');
-  // Active Gemini key (supports gemini-3.8-flash & gemini-3.8-flash-lite-tts)
+  // Active Gemini key (supports gemini-3.5-flash-lite, gemini-3.8-flash & gemini-3.8-flash-lite-tts)
   static const String _encodedOriginalKey =
       'QVEuQWI4Uk42SjkyQWI5ekxkZEtIWEdfYVlzaENLR0xrX3FaSjd3NVRoUGlpVmJTWUpxV1E=';
   static const String _encodedSecondaryKey =
-      'QVEuQWI4Uk42STNJRXlSbjhmMkxKbVhPUVNpRFl5OEI0eXM1eThxU0tjblFLSFNoYm1kSXc=';
+      'QVEuQWI4Uk42SjkyQWI5ekxkZEtIWEdfYVlzaENLR0xrX3FaSjd3NVRoUGlpVmJTWUpxV1E=';
 
   static String get builtInApiKey => _envApiKey.isNotEmpty
       ? _envApiKey
@@ -29,8 +29,8 @@ class AppSettings extends ChangeNotifier {
   static const String firebaseApiKey =
       'AIzaSyAqo0EzZdzY4loA3-HTyer7XFcXUfRbXQk';
 
-  static const _apiKeyStore = 'gemini_api_key_v2';
-  static const _modelKey = 'gemini_model_v2';
+  static const _apiKeyStore = 'gemini_api_key_v3';
+  static const _modelKey = 'gemini_model_v3';
   static const _speechRateKey = 'speech_rate';
   static const _textScaleKey = 'text_scale';
   static const _themeKey = 'theme_mode';
@@ -43,7 +43,7 @@ class AppSettings extends ChangeNotifier {
   SharedPreferences? _prefs;
 
   String _apiKey = builtInApiKey;
-  String _model = 'gemini-3.8-flash';
+  String _model = 'gemini-3.5-flash-lite';
   double _speechRate = 0.5;
   double _textScale = 1.0;
   AppThemeMode _themeMode = AppThemeMode.daylight;
@@ -52,7 +52,16 @@ class AppSettings extends ChangeNotifier {
   bool _autoSpeak = true;
   String _geminiVoice = 'Charon';
 
-  String get apiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : builtInApiKey;
+  static bool _isKnownDeadKey(String key) {
+    final k = key.trim();
+    return k.isEmpty ||
+        k.startsWith('AQ.Ab8RN6Kkg') ||
+        k.startsWith('AQ.Ab8RN6I3') ||
+        k == firebaseApiKey;
+  }
+
+  String get apiKey =>
+      !_isKnownDeadKey(_apiKey) ? _apiKey.trim() : builtInApiKey;
   String get model => _model;
   double get speechRate => _speechRate;
   double get textScale => _textScale;
@@ -70,15 +79,17 @@ class AppSettings extends ChangeNotifier {
     _prefs = await SharedPreferences.getInstance();
     try {
       final stored = await _secure.read(key: _apiKeyStore);
-      _apiKey = (stored != null && stored.trim().isNotEmpty)
+      _apiKey = (stored != null && !_isKnownDeadKey(stored))
           ? stored.trim()
           : builtInApiKey;
     } catch (_) {
       _apiKey = builtInApiKey;
     }
     final savedModel = _prefs!.getString(_modelKey);
-    _model = (savedModel == null || savedModel == 'gemini-2.5-flash')
-        ? 'gemini-3.8-flash'
+    _model = (savedModel == null ||
+            savedModel == 'gemini-2.5-flash' ||
+            savedModel == 'gemini-3.8-flash')
+        ? 'gemini-3.5-flash-lite'
         : savedModel;
     _speechRate = _prefs!.getDouble(_speechRateKey) ?? _speechRate;
     _textScale = _prefs!.getDouble(_textScaleKey) ?? _textScale;

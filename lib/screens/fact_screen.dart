@@ -4,8 +4,6 @@ import '../content/eye_facts.dart';
 import '../l10n.dart';
 import '../theme.dart';
 import '../widgets/fact_art.dart';
-import '../widgets/ui.dart';
-import 'chat_screen.dart';
 
 class FactScreen extends StatelessWidget {
   const FactScreen({super.key, required this.fact});
@@ -399,22 +397,6 @@ class FactScreen extends StatelessWidget {
                 height: 1.5,
                 color: isDark ? AppColors.darkMuted : AppColors.muted,
               ),
-            ),
-            const SizedBox(height: 22),
-            PrimaryButton(
-              label: t.get('askDoctorAboutThis'),
-              onPressed: () {
-                final prompt = lang == 'sw'
-                    ? 'Nieleze zaidi kuhusu "${fact.title('sw')}". '
-                        'Kama mtaalamu wa macho, nishauri dalili zangu na vitu vya kuacha au kufanya leo?'
-                    : 'Tell me more about "${fact.title('en')}". '
-                        'As an optometrist, advise me on symptoms and what I should avoid or do today?';
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ChatScreen(initialPrompt: prompt),
-                  ),
-                );
-              },
             ),
           ],
         ),

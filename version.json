@@ -1,8 +1,8 @@
 {
-  "version": "2.4.15",
-  "tagName": "v2.4.15",
-  "title": "AskOptSam v2.4.15 (Gemini AI Key & Sauti Imara)",
-  "notes": "Ufunguo mpya wa Gemini AI uliothibitishwa umeunganishwa moja kwa moja (gemini-3.8-flash & gemini-3.8-flash-lite-tts), sauti asilia ya asili inafanya kazi bila kusanidi chochote, na toleo la MB chache (25 MB) linapatikana.",
-  "downloadUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.15/AskOptSam-v2.4.15-arm64-v8a.apk",
+  "version": "2.4.16",
+  "tagName": "v2.4.16",
+  "title": "AskOptSam v2.4.16 (Fast AI, Reliable Voice & Clean Maktaba)",
+  "notes": "AI ya haraka sana (sekunde ~2 kwa gemini-3.5-flash-lite), sauti ya AI inayofanya kazi mara moja kwenye aEye na AskOptSam, na kitufe kimoja tu cha kijani cha mazungumzo/kupakua bila marudio kwenye Maktaba.",
+  "downloadUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.16/app-release.apk",
   "pageUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/latest"
 }

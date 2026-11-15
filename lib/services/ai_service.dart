@@ -34,16 +34,19 @@ class AiService {
   Future<bool> hasConnection() async {
     // dart:io is unavailable on the web; the request surfaces failures itself.
     if (kIsWeb) return true;
-    try {
-      final uri = Uri.parse(_base);
-      final result = await InternetAddress.lookup(uri.host)
-          .timeout(const Duration(seconds: 5));
-      return result.isNotEmpty && result.first.rawAddress.isNotEmpty;
-    } on SocketException {
-      return false;
-    } on TimeoutException {
-      return false;
+    for (final host in <String>[
+      Uri.parse(_base).host,
+      'generativelanguage.googleapis.com',
+    ]) {
+      try {
+        final result = await InternetAddress.lookup(host)
+            .timeout(const Duration(seconds: 4));
+        if (result.isNotEmpty && result.first.rawAddress.isNotEmpty) {
+          return true;
+        }
+      } catch (_) {}
     }
+    return false;
   }
 
   /// Streams the assistant reply token by token.
@@ -89,66 +92,91 @@ class AiService {
         : 'Wewe ni AskOptSam, msaidizi rafiki wa afya ya macho wa kliniki ya Optsam Eye Care, Dar es Salaam. Jibu kwa ufupi na kwa ufasaha kwa Kiswahili.';
 
     for (final model in const [
-      'gemini-3.8-flash',
+      'gemini-3.5-flash-lite',
       'gemini-3.5-flash',
-      'gemini-flash-latest',
-      'gemini-2.5-flash',
-      'gemini-3-flash-preview',
+      'gemini-3.8-flash',
     ]) {
-      try {
-        final uri = Uri.https(
-          'generativelanguage.googleapis.com',
-          '/v1beta/models/$model:generateContent',
-        );
-        final genConfig = <String, dynamic>{
-          'temperature': 0.5,
-          'maxOutputTokens': 600,
-          if (model.startsWith('gemini-2.5'))
+      for (final apiKey in <String>{
+        AppSettings.instance.apiKey,
+        AppSettings.builtInApiKey,
+      }) {
+        if (apiKey.trim().isEmpty) continue;
+        try {
+          final uri = Uri.https(
+            'generativelanguage.googleapis.com',
+            '/v1beta/models/$model:generateContent',
+          );
+          final genConfig = <String, dynamic>{
+            'temperature': 0.5,
+            'maxOutputTokens': 1024,
             'thinkingConfig': {'thinkingBudget': 0},
-        };
-        final response = await GeminiHttp.client
-            .post(
-              uri,
-              headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': AppSettings.instance.apiKey,
-              },
-              body: jsonEncode({
-                'systemInstruction': {
-                  'parts': [
-                    {'text': systemPrompt},
-                  ],
+          };
+          var response = await GeminiHttp.client
+              .post(
+                uri,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-goog-api-key': apiKey,
                 },
-                'contents': contents,
-                'generationConfig': genConfig,
-              }),
-            )
-            .timeout(const Duration(seconds: 25));
+                body: jsonEncode({
+                  'systemInstruction': {
+                    'parts': [
+                      {'text': systemPrompt},
+                    ],
+                  },
+                  'contents': contents,
+                  'generationConfig': genConfig,
+                }),
+              )
+              .timeout(const Duration(seconds: 25));
 
-        if (response.statusCode == 200) {
-          final data =
-              jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-          final candidates = data['candidates'];
-          if (candidates is List && candidates.isNotEmpty) {
-            final parts = (candidates.first as Map?)?['content']?['parts'];
-            if (parts is List) {
-              final buf = StringBuffer();
-              for (final part in parts) {
-                if (part is Map &&
-                    part['thought'] != true &&
-                    part['text'] is String) {
-                  buf.write(part['text']);
+          if (response.statusCode == 400) {
+            genConfig.remove('thinkingConfig');
+            response = await GeminiHttp.client
+                .post(
+                  uri,
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': apiKey,
+                  },
+                  body: jsonEncode({
+                    'systemInstruction': {
+                      'parts': [
+                        {'text': systemPrompt},
+                      ],
+                    },
+                    'contents': contents,
+                    'generationConfig': genConfig,
+                  }),
+                )
+                .timeout(const Duration(seconds: 25));
+          }
+
+          if (response.statusCode == 200) {
+            final data = jsonDecode(utf8.decode(response.bodyBytes))
+                as Map<String, dynamic>;
+            final candidates = data['candidates'];
+            if (candidates is List && candidates.isNotEmpty) {
+              final parts = (candidates.first as Map?)?['content']?['parts'];
+              if (parts is List) {
+                final buf = StringBuffer();
+                for (final part in parts) {
+                  if (part is Map &&
+                      part['thought'] != true &&
+                      part['text'] is String) {
+                    buf.write(part['text']);
+                  }
                 }
-              }
-              final reply = buf.toString().trim();
-              if (reply.isNotEmpty) {
-                yield reply;
-                return;
+                final reply = buf.toString().trim();
+                if (reply.isNotEmpty) {
+                  yield reply;
+                  return;
+                }
               }
             }
           }
-        }
-      } catch (_) {}
+        } catch (_) {}
+      }
     }
     throw const AiException('server', 'gemini fallback failed');
   }
@@ -200,7 +228,7 @@ class AiService {
         });
 
       final response =
-          await client.send(request).timeout(const Duration(seconds: 30));
+          await client.send(request).timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 401 || response.statusCode == 403) {
         throw const AiException('auth');
@@ -277,7 +305,7 @@ class AiService {
         });
 
       final response =
-          await client.send(request).timeout(const Duration(seconds: 30));
+          await client.send(request).timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 401 || response.statusCode == 403) {
         throw const AiException('auth');

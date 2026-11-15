@@ -80,9 +80,12 @@ class SpeechService {
     bool force = false,
     bool urgent = false,
   }) async {
-    if (text.trim().isEmpty) return;
+    final cleaned = text
+        .replaceAll(RegExp(r'\*\*|__|`+|#+\s*'), '')
+        .trim();
+    if (cleaned.isEmpty) return;
     if (!force && !AppSettings.instance.autoSpeak) return;
-    if (!isEyeTabActive) {
+    if (!force && !isEyeTabActive) {
       debugPrint('SpeechService: speak blocked because Eye tab is not active.');
       return;
     }
@@ -93,8 +96,8 @@ class SpeechService {
 
     final settings = AppSettings.instance;
     if (!urgent && settings.isConfigured) {
-      final started = await GeminiVoice.instance.speak(text);
-      if (runId != _speechRunId || !isEyeTabActive) {
+      final started = await GeminiVoice.instance.speak(cleaned);
+      if (runId != _speechRunId || (!force && !isEyeTabActive)) {
         return;
       }
       if (started) {
@@ -106,23 +109,28 @@ class SpeechService {
         });
         return;
       }
-      // If Gemini AI voice fails (e.g. invalid key, 401 unauthenticated, offline),
-      // seamlessly fall back to the phone's native TTS engine so speech ALWAYS works!
       debugPrint('SpeechService: Gemini voice failed to start; falling back to device TTS.');
     }
 
-    if (runId != _speechRunId || !isEyeTabActive) return;
-    await _speakWithDevice(text, runId);
+    if (runId != _speechRunId || (!force && !isEyeTabActive)) return;
+    await _speakWithDevice(cleaned, runId, force: force);
   }
 
-  Future<void> _speakWithDevice(String text, int runId) async {
-    if (!_ready || runId != _speechRunId || !isEyeTabActive) {
+  Future<void> _speakWithDevice(
+    String text,
+    int runId, {
+    bool force = false,
+  }) async {
+    if (!_ready) {
+      await init();
+    }
+    if (!_ready || runId != _speechRunId || (!force && !isEyeTabActive)) {
       if (runId == _speechRunId) isSpeaking.value = false;
       return;
     }
     try {
       await _tts.stop();
-      if (runId != _speechRunId || !isEyeTabActive) return;
+      if (runId != _speechRunId || (!force && !isEyeTabActive)) return;
       isSpeaking.value = true;
       await _tts.speak(text);
     } catch (error) {

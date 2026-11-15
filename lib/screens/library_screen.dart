@@ -33,7 +33,6 @@ class LibraryScreenState extends State<LibraryScreen> {
     DateTime.now(),
   );
   bool _generatingDaily = false;
-  AppRelease? _updateRelease;
 
   @override
   void initState() {
@@ -55,12 +54,10 @@ class LibraryScreenState extends State<LibraryScreen> {
     try {
       final sessions = await app.store.load(uid);
       final cachedDaily = await DailyIntelligenceService.instance.loadToday();
-      final cachedUpdate = await UpdateService.instance.cachedUpdate();
       if (!mounted) return;
       setState(() {
         _sessions = sessions;
         _dailyBriefing = cachedDaily;
-        _updateRelease = cachedUpdate;
         _loading = false;
       });
       await _syncNotices(
@@ -121,7 +118,7 @@ class LibraryScreenState extends State<LibraryScreen> {
         language: language,
         includeDailyTip: includeDailyTip,
       );
-      final release = await UpdateService.instance.syncUpdateNotice(
+      await UpdateService.instance.syncUpdateNotice(
         uid,
         language: language,
         notifyUpdates: includeUpdates,
@@ -130,7 +127,6 @@ class LibraryScreenState extends State<LibraryScreen> {
       if (!mounted) return;
       setState(() {
         _dailyBriefing = briefing;
-        if (release != null) _updateRelease = release;
         _unread = unread;
       });
     } catch (_) {}
@@ -352,15 +348,6 @@ class LibraryScreenState extends State<LibraryScreen> {
                       child: ListView(
                         padding: const EdgeInsets.fromLTRB(22, 6, 22, 24),
                         children: [
-                          if (_updateRelease != null)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 14),
-                              child: _UpdateBanner(
-                                release: _updateRelease!,
-                                onDownload: () => UpdateService.instance
-                                    .openDownload(_updateRelease!),
-                              ),
-                            ),
                           _FactHero(
                             fact: today,
                             lang: t.language,
@@ -388,36 +375,10 @@ class LibraryScreenState extends State<LibraryScreen> {
                             lang: t.language,
                             generating: _generatingDaily,
                             onRefresh: _generateFreshDaily,
-                            onExplore: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => ChatScreen(
-                                    initialPrompt:
-                                        _dailyBriefing.chatPrompt(t.language),
-                                  ),
-                                ),
-                              );
-                            },
-                            onPickQuestion: (q) {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => ChatScreen(initialPrompt: q),
-                                ),
-                              );
-                            },
                           ),
                           SectionLabel(t.get('savedChats')),
                           if (_sessions.isEmpty)
-                            _EmptyChats(
-                              onCreate: widget.onStartChat ??
-                                  () => Navigator.of(context)
-                                      .push(
-                                        MaterialPageRoute(
-                                          builder: (_) => const ChatScreen(),
-                                        ),
-                                      )
-                                      .then((_) => reload()),
-                            )
+                            const _EmptyChats()
                           else if (visible.isEmpty)
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 26),
@@ -754,9 +715,7 @@ class _ChatTile extends StatelessWidget {
 }
 
 class _EmptyChats extends StatelessWidget {
-  const _EmptyChats({required this.onCreate});
-
-  final VoidCallback onCreate;
+  const _EmptyChats();
 
   @override
   Widget build(BuildContext context) {
@@ -790,185 +749,6 @@ class _EmptyChats extends StatelessWidget {
               color: isDark ? AppColors.darkMuted : AppColors.muted,
             ),
           ),
-          const SizedBox(height: 16),
-          PrimaryButton(
-            label: t.get('startChat'),
-            height: 50,
-            onPressed: onCreate,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _UpdateBanner extends StatefulWidget {
-  const _UpdateBanner({required this.release, required this.onDownload});
-
-  final AppRelease release;
-  final Future<bool> Function() onDownload;
-
-  @override
-  State<_UpdateBanner> createState() => _UpdateBannerState();
-}
-
-class _UpdateBannerState extends State<_UpdateBanner> {
-  bool _downloaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _restoreDownloaded();
-  }
-
-  /// Hides the download button once this release was already fetched, and it
-  /// comes back automatically when a newer release appears.
-  Future<void> _restoreDownloaded() async {
-    try {
-      final done = await UpdateService.instance
-          .hasDownloaded(widget.release.version);
-      if (mounted && done) setState(() => _downloaded = true);
-    } catch (_) {
-      // No prefs access: keep the button visible.
-    }
-  }
-
-  Future<void> _download() async {
-    final opened = await widget.onDownload();
-    if (mounted && opened) setState(() => _downloaded = true);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final release = widget.release;
-    final t = L10nScope.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? const [Color(0xFF142C63), Color(0xFF0A438A)]
-              : const [Color(0xFF0A5FF2), Color(0xFF1B86F8)],
-        ),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  t.format('updateAvailableBadge', {
-                    'version': release.version,
-                  }),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              const Icon(
-                Icons.system_update_alt_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            t.format('updateAvailableTitle', {'version': release.version}),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18.5,
-              fontWeight: FontWeight.w800,
-              height: 1.2,
-            ),
-          ),
-          if (release.notes.isNotEmpty) ...[
-            const SizedBox(height: 5),
-            Text(
-              release.notes,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
-                fontSize: 13.5,
-                height: 1.35,
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          if (_downloaded)
-            Container(
-              width: double.infinity,
-              height: 44,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      t.get('updateDownloadedShort'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: ElevatedButton.icon(
-                onPressed: _download,
-                icon: const Icon(Icons.download_rounded, size: 19),
-                label: Text(
-                  t.get('downloadUpdate'),
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: AppColors.primary,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -981,22 +761,17 @@ class _DailyIntelligenceCard extends StatelessWidget {
     required this.lang,
     required this.generating,
     required this.onRefresh,
-    required this.onExplore,
-    required this.onPickQuestion,
   });
 
   final DailyBriefing briefing;
   final String lang;
   final bool generating;
   final VoidCallback onRefresh;
-  final VoidCallback onExplore;
-  final ValueChanged<String> onPickQuestion;
 
   @override
   Widget build(BuildContext context) {
     final t = L10nScope.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final questions = briefing.questions(lang);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
@@ -1140,72 +915,6 @@ class _DailyIntelligenceCard extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-          if (questions.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: questions
-                  .take(2)
-                  .map(
-                    (q) => InkWell(
-                      onTap: () => onPickQuestion(q),
-                      borderRadius: BorderRadius.circular(999),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkSoft : Colors.white,
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: isDark
-                                ? AppColors.darkBorder
-                                : AppColors.border,
-                          ),
-                        ),
-                        child: Text(
-                          q,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ],
-          const SizedBox(height: 12),
-          InkWell(
-            onTap: onExplore,
-            borderRadius: BorderRadius.circular(10),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  Text(
-                    t.get('exploreWithAi'),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 17,
-                    color: AppColors.primary,
-                  ),
-                ],
-              ),
             ),
           ),
         ],

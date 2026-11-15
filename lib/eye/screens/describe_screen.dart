@@ -60,6 +60,7 @@ class _DescribeScreenState extends State<DescribeScreen> {
           _description = result.text;
           _busy = false;
         });
+        SpeechService.instance.isEyeTabActive = true;
         await Haptics.cue(NavCue.success);
         await SpeechService.instance.speak(result.text!);
       } else {
@@ -68,6 +69,7 @@ class _DescribeScreenState extends State<DescribeScreen> {
           _error = message;
           _busy = false;
         });
+        SpeechService.instance.isEyeTabActive = true;
         await Haptics.cue(NavCue.error);
         await SpeechService.instance.speak(message);
       }
