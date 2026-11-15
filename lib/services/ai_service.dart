@@ -89,8 +89,10 @@ class AiService {
         : 'Wewe ni AskOptSam, msaidizi rafiki wa afya ya macho wa kliniki ya Optsam Eye Care, Dar es Salaam. Jibu kwa ufupi na kwa ufasaha kwa Kiswahili.';
 
     for (final model in const [
-      'gemini-2.5-flash',
+      'gemini-3.8-flash',
       'gemini-3.5-flash',
+      'gemini-flash-latest',
+      'gemini-2.5-flash',
       'gemini-3-flash-preview',
     ]) {
       try {

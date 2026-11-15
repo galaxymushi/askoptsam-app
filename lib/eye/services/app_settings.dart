@@ -13,9 +13,9 @@ class AppSettings extends ChangeNotifier {
   static final AppSettings instance = AppSettings._();
 
   static const String _envApiKey = String.fromEnvironment('GEMINI_API_KEY');
-  // Original eye-0.3.3.apk built-in key (supports gemini-2.5-flash & gemini-2.5-flash-preview-tts)
+  // Active Gemini key (supports gemini-3.8-flash & gemini-3.8-flash-lite-tts)
   static const String _encodedOriginalKey =
-      'QVEuQWI4Uk42S2tnWjZFY2IyYWtfOVByQTlQYlowQmE1X3NDSElXYTNSVTJiVmdUXzZ0R1E=';
+      'QVEuQWI4Uk42SjkyQWI5ekxkZEtIWEdfYVlzaENLR0xrX3FaSjd3NVRoUGlpVmJTWUpxV1E=';
   static const String _encodedSecondaryKey =
       'QVEuQWI4Uk42STNJRXlSbjhmMkxKbVhPUVNpRFl5OEI0eXM1eThxU0tjblFLSFNoYm1kSXc=';
 
@@ -43,7 +43,7 @@ class AppSettings extends ChangeNotifier {
   SharedPreferences? _prefs;
 
   String _apiKey = builtInApiKey;
-  String _model = 'gemini-2.5-flash';
+  String _model = 'gemini-3.8-flash';
   double _speechRate = 0.5;
   double _textScale = 1.0;
   AppThemeMode _themeMode = AppThemeMode.daylight;
@@ -76,7 +76,10 @@ class AppSettings extends ChangeNotifier {
     } catch (_) {
       _apiKey = builtInApiKey;
     }
-    _model = _prefs!.getString(_modelKey) ?? 'gemini-2.5-flash';
+    final savedModel = _prefs!.getString(_modelKey);
+    _model = (savedModel == null || savedModel == 'gemini-2.5-flash')
+        ? 'gemini-3.8-flash'
+        : savedModel;
     _speechRate = _prefs!.getDouble(_speechRateKey) ?? _speechRate;
     _textScale = _prefs!.getDouble(_textScaleKey) ?? _textScale;
     final themeName = _prefs!.getString(_themeKey);

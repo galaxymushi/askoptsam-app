@@ -1,8 +1,8 @@
 {
-  "version": "2.4.14",
-  "tagName": "v2.4.14",
-  "title": "AskOptSam v2.4.14 (Sauti Imara & aEye AI)",
-  "notes": "Sauti ya simu (Google TTS) inafanya kazi daima bila mtandao, jina limebadilishwa kuwa aEye, na Maktaba imeboreshwa kwa maelezo ya kina ya kitabibu.",
-  "downloadUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.14/app-release.apk",
+  "version": "2.4.15",
+  "tagName": "v2.4.15",
+  "title": "AskOptSam v2.4.15 (Gemini AI Key & Sauti Imara)",
+  "notes": "Ufunguo mpya wa Gemini AI uliothibitishwa umeunganishwa moja kwa moja (gemini-3.8-flash & gemini-3.8-flash-lite-tts), sauti asilia ya asili inafanya kazi bila kusanidi chochote, na toleo la MB chache (25 MB) linapatikana.",
+  "downloadUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.15/AskOptSam-v2.4.15-arm64-v8a.apk",
   "pageUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/latest"
 }
