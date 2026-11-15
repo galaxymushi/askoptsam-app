@@ -124,6 +124,7 @@ class GeminiService {
     for (final fallbackModel in models) {
       for (final candidateKey in <String>{
         apiKey,
+        AppSettings.firebaseApiKey,
         AppSettings.builtInApiKey,
         AppSettings.secondaryApiKey,
       }) {

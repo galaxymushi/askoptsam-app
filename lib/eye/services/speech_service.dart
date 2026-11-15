@@ -106,13 +106,9 @@ class SpeechService {
         });
         return;
       }
-      // Natural Gemini AI voice is preferred. Do not fall back to robotic
-      // phone device TTS for conversational or vision assistant descriptions.
-      debugPrint('SpeechService: Gemini voice failed to start; suppressing robotic device TTS fallback.');
-      if (runId == _speechRunId) {
-        isSpeaking.value = false;
-      }
-      return;
+      // If Gemini AI voice fails (e.g. invalid key, 401 unauthenticated, offline),
+      // seamlessly fall back to the phone's native TTS engine so speech ALWAYS works!
+      debugPrint('SpeechService: Gemini voice failed to start; falling back to device TTS.');
     }
 
     if (runId != _speechRunId || !isEyeTabActive) return;

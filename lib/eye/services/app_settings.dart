@@ -26,6 +26,9 @@ class AppSettings extends ChangeNotifier {
   static String get secondaryApiKey =>
       utf8.decode(base64Decode(_encodedSecondaryKey));
 
+  static const String firebaseApiKey =
+      'AIzaSyAqo0EzZdzY4loA3-HTyer7XFcXUfRbXQk';
+
   static const _apiKeyStore = 'gemini_api_key_v2';
   static const _modelKey = 'gemini_model_v2';
   static const _speechRateKey = 'speech_rate';

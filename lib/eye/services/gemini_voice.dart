@@ -287,6 +287,7 @@ class GeminiVoice {
   ) async {
     final keysToTry = <String>{
       apiKey,
+      AppSettings.firebaseApiKey,
       AppSettings.builtInApiKey,
       AppSettings.secondaryApiKey,
     };
