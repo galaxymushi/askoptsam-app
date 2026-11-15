@@ -148,6 +148,13 @@ class Strings {
     'factOfDay': 'FACT OF THE DAY',
     'readMore': 'Read more',
     'tipLabel': 'Tip',
+    'librarySubtitle':
+        'Evidence-based eye health guide, disease insights, and clinical wisdom.',
+    'clinicalDetails': 'Detailed Explanation',
+    'symptomsTitle': 'Key Symptoms to Watch',
+    'preventionTitle': 'Prevention and Daily Care',
+    'whenToSeeDoctorTitle': 'When to See an Eye Doctor',
+    'askDoctorAboutThis': 'Ask AI Optometrist About This',
     'factDisclaimer':
         'General eye-health education, not a diagnosis. If your eyes hurt or '
         'your sight changes, see an eye specialist.',
@@ -363,6 +370,13 @@ class Strings {
     'factOfDay': 'TAARIFA YA LEO',
     'readMore': 'Soma zaidi',
     'tipLabel': 'Kidokezo',
+    'librarySubtitle':
+        'Mwongozo sahihi wa elimu ya afya ya macho, dalili za magonjwa, na ushauri wa kitaalamu.',
+    'clinicalDetails': 'Ufafanuzi wa Kina wa Kitaalamu',
+    'symptomsTitle': 'Dalili Kuu za Kuzingatia',
+    'preventionTitle': 'Mwongozo wa Kinga na Utunzaji',
+    'whenToSeeDoctorTitle': 'Lini Umuone Daktari wa Macho',
+    'askDoctorAboutThis': 'Uliza Mtaalamu wa AI Kuhusu Mada Hii',
     'factDisclaimer':
         'Elimu ya jumla ya afya ya macho, si utambuzi. Macho yakiuma au uoni '
         'ukibadilika, mwone mtaalamu wa macho.',

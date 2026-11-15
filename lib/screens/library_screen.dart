@@ -276,15 +276,29 @@ class LibraryScreenState extends State<LibraryScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 18, 16, 0),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      t.get('library'),
-                      style: Theme.of(context).textTheme.displayLarge,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          t.get('library'),
+                          style: Theme.of(context).textTheme.displayLarge,
+                        ),
+                      ),
+                      _BellButton(unread: _unread, onTap: _openNotifications),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    t.get('librarySubtitle'),
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.35,
+                      color: isDark ? AppColors.darkMuted : AppColors.muted,
                     ),
                   ),
-                  _BellButton(unread: _unread, onTap: _openNotifications),
                 ],
               ),
             ),
