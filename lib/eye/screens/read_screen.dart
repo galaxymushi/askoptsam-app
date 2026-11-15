@@ -11,6 +11,7 @@ import '../widgets/camera_shell.dart';
 import '../widgets/eye_camera.dart';
 import '../widgets/eye_ui.dart';
 import '../widgets/semantic_control.dart';
+import 'settings_screen.dart';
 
 class ReadScreen extends StatefulWidget {
   const ReadScreen({super.key});
@@ -111,11 +112,31 @@ class _ReadScreenState extends State<ReadScreen> {
                 ResultCard(
                   label: s.problem,
                   live: true,
-                  child: Text(
-                    _error!,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.error,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _error!,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const SettingsScreen(),
+                          ),
+                        ),
+                        icon: const Icon(Icons.settings_outlined, size: 20),
+                        label: Text(
+                          s.pick(
+                            'Fungua Mipangilio / Weka Ufunguo',
+                            'Open Settings / Enter Key',
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 )
               else

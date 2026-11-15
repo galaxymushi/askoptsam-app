@@ -37,7 +37,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('Eye'), findsOneWidget);
+    expect(find.text('aEye'), findsOneWidget);
     expect(find.text('Tazama dunia kwa sauti'), findsOneWidget);
     expect(find.text('Soma'), findsOneWidget);
     expect(find.text('Uliza'), findsOneWidget);
@@ -52,7 +52,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('Eye'), findsOneWidget);
+    expect(find.text('aEye'), findsOneWidget);
     expect(find.text('See the world by voice'), findsOneWidget);
     expect(find.text('Read'), findsOneWidget);
     expect(find.text('Ask'), findsOneWidget);

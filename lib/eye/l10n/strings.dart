@@ -21,7 +21,7 @@ class S {
   }
 
   // Brand and common.
-  String get appName => 'Eye';
+  String get appName => 'aEye';
   String get tagline =>
       pick('Tazama dunia kwa sauti', 'See the world by voice');
   String get back => pick('Rudi', 'Back');
@@ -45,14 +45,14 @@ class S {
         'Voice is off · Tap one button to start',
       );
   String get welcomeSpeak => pick(
-        'Eye. Msaidizi wa maono. Nakusaidia kuelewa kilicho mbele yako, '
+        'aEye. Msaidizi wa maono. Nakusaidia kuelewa kilicho mbele yako, '
         'kusoma maandishi, na kujibu maswali kwa sauti. Gusa Anza ili kuanza.',
-        'Eye. A vision assistant. I help you understand what is ahead, read '
+        'aEye. A vision assistant. I help you understand what is ahead, read '
         'text, and answer questions by voice. Tap Start to begin.',
       );
   String get homeSpeak => pick(
-        'Eye. Chagua kimoja: Soma, Uliza, au Elezea.',
-        'Eye. Choose one: Read, Ask, or Describe.',
+        'aEye. Chagua kimoja: Soma, Uliza, au Elezea.',
+        'aEye. Choose one: Read, Ask, or Describe.',
       );
   String get settingsSpeak => pick(
         'Mipangilio. Sauti, ukubwa wa maandishi, na mandhari.',
@@ -590,8 +590,8 @@ class S {
         );
       case 'auth':
         return pick(
-            'Msaidizi amezuiwa kwa sasa. Jaribu tena baadaye.',
-            'The assistant is blocked right now. Try again later.');
+            'Ufunguo wa Gemini AI hauwezi kutumika (401). Fungua Mipangilio uweke ufunguo wa bure kutoka aistudio.google.com.',
+            'Gemini API key is unauthorized (401). Open Settings to enter a free key from aistudio.google.com.');
       case 'model':
         return pick('Huduma ya msaidizi haipatikani kwa sasa. Jaribu tena.',
             'The assistant service is unavailable right now. Try again.');

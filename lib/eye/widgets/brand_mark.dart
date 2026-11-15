@@ -90,7 +90,7 @@ class BrandMark extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Eye',
+                'aEye',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(

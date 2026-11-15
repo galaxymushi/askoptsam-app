@@ -150,10 +150,13 @@ class Strings {
     'tipLabel': 'Tip',
     'librarySubtitle':
         'Evidence-based eye health guide, disease insights, and clinical wisdom.',
-    'clinicalDetails': 'Detailed Explanation',
-    'symptomsTitle': 'Key Symptoms to Watch',
-    'preventionTitle': 'Prevention and Daily Care',
-    'whenToSeeDoctorTitle': 'When to See an Eye Doctor',
+    'whatIsItTitle': '1. What Is It & How It Affects the Eye',
+    'causesTitle': '2. Primary Causes',
+    'symptomsTitle': '3. Key Symptoms to Watch',
+    'avoidTitle': '4. What to Stop Doing & Avoid',
+    'preventionTitle': '5. Actionable Care & Daily Prevention',
+    'whenToSeeDoctorTitle': '6. When to See an Eye Doctor Immediately',
+    'clinicalDetails': 'Detailed Clinical Explanation',
     'askDoctorAboutThis': 'Ask AI Optometrist About This',
     'factDisclaimer':
         'General eye-health education, not a diagnosis. If your eyes hurt or '
@@ -216,7 +219,7 @@ class Strings {
     'noticeDailyAiTitle': 'Today\'s new discovery',
     'tapToAskAi': 'Tap to explore with AskOptSam',
     'todaySmartQuestions': 'TODAY\'S SMART QUESTIONS',
-    'eyeAssistant': 'Eye Assistant',
+    'eyeAssistant': 'aEye Assistant',
     'eyeSubtitle': 'See the world with voice',
     'eyeSoma': 'Read',
     'eyeSomaSub': 'Listen to text in front of you',
@@ -372,10 +375,13 @@ class Strings {
     'tipLabel': 'Kidokezo',
     'librarySubtitle':
         'Mwongozo sahihi wa elimu ya afya ya macho, dalili za magonjwa, na ushauri wa kitaalamu.',
+    'whatIsItTitle': '1. Ni Nini Hasa & Jinsi Jicho Linavyoathirika',
+    'causesTitle': '2. Sababu Kuu Zinazosababisha',
+    'symptomsTitle': '3. Dalili Kuu za Kuzingatia',
+    'avoidTitle': '4. Vitu vya Kuacha Kabisa & Kujiepusha Navyo',
+    'preventionTitle': '5. Mambo ya Kufanya: Tiba na Kinga ya Kila Siku',
+    'whenToSeeDoctorTitle': '6. Lini Umuone Daktari wa Macho Haraka',
     'clinicalDetails': 'Ufafanuzi wa Kina wa Kitaalamu',
-    'symptomsTitle': 'Dalili Kuu za Kuzingatia',
-    'preventionTitle': 'Mwongozo wa Kinga na Utunzaji',
-    'whenToSeeDoctorTitle': 'Lini Umuone Daktari wa Macho',
     'askDoctorAboutThis': 'Uliza Mtaalamu wa AI Kuhusu Mada Hii',
     'factDisclaimer':
         'Elimu ya jumla ya afya ya macho, si utambuzi. Macho yakiuma au uoni '
@@ -437,7 +443,7 @@ class Strings {
     'noticeDailyAiTitle': 'Jambo jipya la leo',
     'tapToAskAi': 'Bonyeza kujadili na AskOptSam',
     'todaySmartQuestions': 'MASWALI YA LEO KUTOKA AI',
-    'eyeAssistant': 'Msaidizi',
+    'eyeAssistant': 'aEye',
     'eyeSubtitle': 'Tazama dunia kwa sauti',
     'eyeSoma': 'Soma',
     'eyeSomaSub': 'Sikiliza maandishi yaliyo mbele yako',

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../l10n/strings.dart';
 import '../services/app_settings.dart';
+import '../services/gemini_service.dart';
 import '../services/gemini_voice.dart';
 import '../services/speech_service.dart';
 import '../theme.dart';
@@ -223,8 +225,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 10),
           ],
-          const SizedBox(height: 16),
-          SectionTitle(s.aboutTitle, number: '05'),
+          const SizedBox(height: 26),
+          SectionTitle(
+            s.pick('Ufunguo wa Gemini AI', 'Gemini AI API Key'),
+            number: '05',
+          ),
+          const SizedBox(height: 6),
+          _ApiKeyCard(
+            apiKey: _settings.apiKey,
+            onSave: (key) async {
+              await _settings.setApiKey(key);
+              setState(() {});
+            },
+          ),
+          const SizedBox(height: 26),
+          SectionTitle(s.aboutTitle, number: '06'),
           Text(
             s.aboutText,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -233,6 +248,196 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 10),
           Text(s.aboutCredits, style: theme.textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+}
+
+class _ApiKeyCard extends StatefulWidget {
+  const _ApiKeyCard({
+    required this.apiKey,
+    required this.onSave,
+  });
+
+  final String apiKey;
+  final ValueChanged<String> onSave;
+
+  @override
+  State<_ApiKeyCard> createState() => _ApiKeyCardState();
+}
+
+class _ApiKeyCardState extends State<_ApiKeyCard> {
+  bool _testing = false;
+  String? _testStatus;
+  bool _testPassed = false;
+
+  Future<void> _showEditDialog() async {
+    final s = S.of(context);
+    final controller = TextEditingController(text: widget.apiKey);
+    final key = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        title: Text(s.pick('Weka Ufunguo wa Gemini', 'Enter Gemini API Key')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              s.pick(
+                'Pata ufunguo wa bure kutoka Google AI Studio (aistudio.google.com) kisha ubandike hapa:',
+                'Get a free API key from Google AI Studio (aistudio.google.com) and paste it below:',
+              ),
+              style: const TextStyle(fontSize: 13.5, height: 1.4),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'AIzaSy...',
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.paste_rounded),
+                  onPressed: () async {
+                    final data = await Clipboard.getData(Clipboard.kTextPlain);
+                    if (data?.text != null) {
+                      controller.text = data!.text!.trim();
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(s.pick('Ghairi', 'Cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: Text(s.pick('Hifadhi', 'Save')),
+          ),
+        ],
+      ),
+    );
+    if (key != null) {
+      widget.onSave(key);
+      setState(() => _testStatus = null);
+    }
+  }
+
+  Future<void> _testKey() async {
+    final s = S.of(context);
+    setState(() {
+      _testing = true;
+      _testStatus = null;
+    });
+    final res = await GeminiService.testKey(
+      widget.apiKey,
+      AppSettings.instance.model,
+    );
+    if (!mounted) return;
+    setState(() {
+      _testing = false;
+      _testPassed = res.isOk;
+      _testStatus = res.isOk
+          ? s.pick('Ufunguo unafanya kazi kikamilifu! (OK)',
+              'API Key is active and working! (OK)')
+          : s.pick(
+              'Hitilafu ya ufunguo: ${res.errorCode ?? 'Haijaunganishwa'}. Weka ufunguo kutoka aistudio.google.com',
+              'Key error: ${res.errorCode ?? 'Failed'}. Check key on aistudio.google.com');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    final theme = Theme.of(context);
+    final masked = widget.apiKey.length > 10
+        ? '${widget.apiKey.substring(0, 6)}...${widget.apiKey.substring(widget.apiKey.length - 4)}'
+        : (widget.apiKey.isNotEmpty ? 'Imehifadhiwa' : 'Haijawekwa');
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.colorScheme.outline, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.vpn_key_outlined, size: 24),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  masked,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: _showEditDialog,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            s.pick(
+              'aEye inahitaji ufunguo wa bure wa Gemini API ili kusoma maandishi, kuelezea mazingira, na kujibu maswali ya picha.',
+              'aEye requires a free Gemini API key to transcribe text, describe scenes, and answer vision questions.',
+            ),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 13.5,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _testing ? null : _testKey,
+                  icon: _testing
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                        )
+                      : const Icon(Icons.network_check_rounded, size: 18),
+                  label: Text(s.pick('Pima Ufunguo', 'Test Key')),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: _showEditDialog,
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: Text(s.pick('Badilisha', 'Change Key')),
+                ),
+              ),
+            ],
+          ),
+          if (_testStatus != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              _testStatus!,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: _testPassed
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.error,
+              ),
+            ),
+          ],
         ],
       ),
     );
