@@ -222,14 +222,15 @@ class UpdateService {
           final release =
               AppRelease.fromMap(Map<String, dynamic>.from(decoded));
           if (release.version.isNotEmpty) {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString(_cacheKey, jsonEncode(release.toMap()));
             if (isNewerVersion(release.version, current)) {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString(_cacheKey, jsonEncode(release.toMap()));
               final done = await hasDownloaded(release.version);
               if (!done) updateNotifier.value = release;
               return release;
             }
-            return null;
+            // If CDN version.json is not newer, do not abort; fall through
+            // to GitHub Releases API in case the CDN is stale or cached.
           }
         }
       }

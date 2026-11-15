@@ -33,6 +33,10 @@ class _AboutScreenState extends State<AboutScreen> {
         _restoreDownloaded(release);
       }
     });
+    // Auto-check for fresh updates in the background on open
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _checkUpdates(silent: true);
+    });
   }
 
   /// Swaps the download button for a "downloaded" note until a newer release
@@ -49,7 +53,7 @@ class _AboutScreenState extends State<AboutScreen> {
     if (mounted && opened) setState(() => _downloaded = true);
   }
 
-  Future<void> _checkUpdates() async {
+  Future<void> _checkUpdates({bool silent = false}) async {
     if (_checking) return;
     setState(() => _checking = true);
     final release = await UpdateService.instance.checkForUpdate();
@@ -60,7 +64,7 @@ class _AboutScreenState extends State<AboutScreen> {
       _downloaded = false;
     });
     if (release != null) _restoreDownloaded(release);
-    if (release == null) {
+    if (release == null && !silent) {
       final t = L10nScope.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

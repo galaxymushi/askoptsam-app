@@ -1,8 +1,8 @@
 {
-  "version": "2.4.11",
-  "tagName": "v2.4.11",
-  "title": "AskOptSam v2.4.11 (Eye · Msaidizi wa Maono)",
-  "notes": "Sauti halisi ya asili ya Gemini AI (Flash-Lite / Pro) bila kutumia sauti ya mashine ya simu, na icon mpya ya app iliyoboreshwa kwa ukali na unadhifu wa kisasa (Adaptive Icon).",
-  "downloadUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.11/app-release.apk",
+  "version": "2.4.14",
+  "tagName": "v2.4.14",
+  "title": "AskOptSam v2.4.14 (Sauti Imara & aEye AI)",
+  "notes": "Sauti ya simu (Google TTS) inafanya kazi daima bila mtandao, jina limebadilishwa kuwa aEye, na Maktaba imeboreshwa kwa maelezo ya kina ya kitabibu.",
+  "downloadUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.14/app-release.apk",
   "pageUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/latest"
 }
