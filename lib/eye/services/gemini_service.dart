@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import '../l10n/strings.dart';
 import 'app_settings.dart';
 import 'gemini_http.dart';
+import 'gemini_voice.dart';
 
 class AiResult {
   const AiResult.ok(this.text) : errorCode = null;
@@ -44,8 +45,9 @@ class GeminiService {
 
   static const List<String> models = [
     'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
     'gemini-3.5-flash',
-    'gemini-3.8-flash',
+    'gemini-2.5-flash-lite',
   ];
 
   static String get _languageRule {
@@ -140,6 +142,13 @@ class GeminiService {
     return primary;
   }
 
+  static Map<String, dynamic> _thinkingConfigFor(String model) {
+    if (model.startsWith('gemini-2.5')) {
+      return const {'thinkingBudget': 0};
+    }
+    return const {'thinkingLevel': 'MINIMAL'};
+  }
+
   static Future<AiResult> _generateSingle(
     String apiKey,
     String model,
@@ -156,7 +165,7 @@ class GeminiService {
       'generationConfig': {
         'temperature': 0.2,
         'maxOutputTokens': maxTokens,
-        'thinkingConfig': {'thinkingBudget': 0},
+        'thinkingConfig': _thinkingConfigFor(model),
       },
     };
 
@@ -164,7 +173,7 @@ class GeminiService {
       final sw = Stopwatch()..start();
       var response = await _post(apiKey, model, body);
       if (response.statusCode == 400) {
-        // Some models reject thinkingConfig; retry without it.
+        // Retry without thinkingConfig if the model rejects it.
         (body['generationConfig'] as Map<String, dynamic>)
             .remove('thinkingConfig');
         response = await _post(apiKey, model, body);
@@ -189,7 +198,11 @@ class GeminiService {
         }
         return const AiResult.fail('empty');
       }
-      return AiResult.ok(text.trim());
+      final clean = text.trim();
+      if (maxTokens > 20) {
+        GeminiVoice.instance.prefetchFirstSentence(clean);
+      }
+      return AiResult.ok(clean);
     } on TimeoutException {
       return const AiResult.fail('timeout');
     } on http.ClientException {

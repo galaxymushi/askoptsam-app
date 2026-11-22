@@ -53,7 +53,7 @@ class _CameraShellState extends State<CameraShell> with WidgetsBindingObserver {
       );
       controller = CameraController(
         back,
-        ResolutionPreset.high,
+        ResolutionPreset.medium,
         enableAudio: false,
       );
       await controller.initialize();

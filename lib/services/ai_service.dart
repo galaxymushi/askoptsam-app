@@ -9,6 +9,7 @@ import '../config.dart';
 import '../content/citations.dart';
 import '../eye/services/app_settings.dart';
 import '../eye/services/gemini_http.dart';
+import '../eye/services/gemini_voice.dart';
 import '../models.dart';
 
 class AiException implements Exception {
@@ -58,21 +59,23 @@ class AiService {
       throw const AiException('offline');
     }
     if (AppConfig.aiProtocol == 'askoptsam') {
-      try {
-        yield* _streamAskOptsam(history, lang);
-      } catch (e) {
-        if (AppSettings.instance.isConfigured) {
-          yield* _streamGeminiFallback(history, lang);
-        } else {
-          rethrow;
+      // Primary ultra-fast path: stream directly from Google Gemini 3.5 Flash-Lite
+      // with thinkingLevel: MINIMAL (~0.35s time-to-first-token).
+      if (AppSettings.instance.isConfigured) {
+        try {
+          yield* _streamGeminiDirect(history, lang);
+          return;
+        } catch (_) {
+          // Fall back to hosted AskOptSam endpoint if direct Gemini fails.
         }
       }
+      yield* _streamAskOptsam(history, lang);
     } else {
       yield* _streamOpenAi(history);
     }
   }
 
-  Stream<String> _streamGeminiFallback(
+  Stream<String> _streamGeminiDirect(
     List<ChatMessage> history,
     String lang,
   ) async* {
@@ -88,13 +91,13 @@ class AiService {
       });
     }
     final systemPrompt = lang == 'en'
-        ? 'You are AskOptSam, the friendly optometry and eye-health assistant for Optsam Eye Care in Dar es Salaam. Reply clearly and concisely in English.'
-        : 'Wewe ni AskOptSam, msaidizi rafiki wa afya ya macho wa kliniki ya Optsam Eye Care, Dar es Salaam. Jibu kwa ufupi na kwa ufasaha kwa Kiswahili.';
+        ? 'You are AskOptSam, the friendly expert optometry and eye-health AI assistant for Optsam Eye Care in Dar es Salaam, Tanzania (founded by J.M. Samwel and J.M. Emanueli). Give clear, accurate, well-structured clinical eye-care guidance in English.'
+        : 'Wewe ni AskOptSam, msaidizi mahiri na rafiki wa afya ya macho wa kliniki ya Optsam Eye Care, Dar es Salaam, Tanzania (iliyoanzishwa na J.M. Samwel na J.M. Emanueli). Jibu kwa ufasaha, kwa mpangilio mzuri na kwa Kiswahili sanifu.';
 
     for (final model in const [
       'gemini-3.5-flash-lite',
+      'gemini-3.1-flash-lite',
       'gemini-3.5-flash',
-      'gemini-3.8-flash',
     ]) {
       for (final apiKey in <String>{
         AppSettings.instance.apiKey,
@@ -104,81 +107,97 @@ class AiService {
         try {
           final uri = Uri.https(
             'generativelanguage.googleapis.com',
-            '/v1beta/models/$model:generateContent',
+            '/v1beta/models/$model:streamGenerateContent',
+            {'alt': 'sse'},
           );
           final genConfig = <String, dynamic>{
-            'temperature': 0.5,
+            'temperature': 0.4,
             'maxOutputTokens': 1024,
-            'thinkingConfig': {'thinkingBudget': 0},
+            'thinkingConfig': model.startsWith('gemini-2.5')
+                ? const {'thinkingBudget': 0}
+                : const {'thinkingLevel': 'MINIMAL'},
           };
-          var response = await GeminiHttp.client
-              .post(
-                uri,
-                headers: {
-                  'Content-Type': 'application/json',
-                  'x-goog-api-key': apiKey,
-                },
-                body: jsonEncode({
-                  'systemInstruction': {
-                    'parts': [
-                      {'text': systemPrompt},
-                    ],
-                  },
-                  'contents': contents,
-                  'generationConfig': genConfig,
-                }),
-              )
-              .timeout(const Duration(seconds: 25));
 
-          if (response.statusCode == 400) {
-            genConfig.remove('thinkingConfig');
-            response = await GeminiHttp.client
-                .post(
-                  uri,
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'x-goog-api-key': apiKey,
-                  },
-                  body: jsonEncode({
-                    'systemInstruction': {
-                      'parts': [
-                        {'text': systemPrompt},
-                      ],
-                    },
-                    'contents': contents,
-                    'generationConfig': genConfig,
-                  }),
-                )
-                .timeout(const Duration(seconds: 25));
+          final request = http.Request('POST', uri)
+            ..headers.addAll({
+              'Content-Type': 'application/json',
+              'Accept': 'text/event-stream',
+              'x-goog-api-key': apiKey,
+            })
+            ..body = jsonEncode({
+              'systemInstruction': {
+                'parts': [
+                  {'text': systemPrompt},
+                ],
+              },
+              'contents': contents,
+              'generationConfig': genConfig,
+            });
+
+          final response = await GeminiHttp.client
+              .send(request)
+              .timeout(const Duration(seconds: 12));
+
+          if (response.statusCode != 200) {
+            continue;
           }
 
-          if (response.statusCode == 200) {
-            final data = jsonDecode(utf8.decode(response.bodyBytes))
-                as Map<String, dynamic>;
-            final candidates = data['candidates'];
-            if (candidates is List && candidates.isNotEmpty) {
-              final parts = (candidates.first as Map?)?['content']?['parts'];
-              if (parts is List) {
-                final buf = StringBuffer();
-                for (final part in parts) {
-                  if (part is Map &&
-                      part['thought'] != true &&
-                      part['text'] is String) {
-                    buf.write(part['text']);
+          var emitted = 0;
+          var prefetchedVoice = false;
+          final accumulated = StringBuffer();
+          final lines = response.stream
+              .transform(utf8.decoder)
+              .transform(const LineSplitter())
+              .timeout(const Duration(seconds: 30));
+
+          await for (final line in lines) {
+            if (!line.startsWith('data:')) continue;
+            final payload = line.substring(5).trim();
+            if (payload.isEmpty || payload == '[DONE]') continue;
+            try {
+              final data = jsonDecode(payload) as Map<String, dynamic>;
+              final candidates = data['candidates'];
+              if (candidates is List && candidates.isNotEmpty) {
+                final parts =
+                    (candidates.first as Map?)?['content']?['parts'];
+                if (parts is List) {
+                  for (final part in parts) {
+                    if (part is Map &&
+                        part['thought'] != true &&
+                        part['text'] is String) {
+                      final chunk = part['text'] as String;
+                      if (chunk.isNotEmpty) {
+                        emitted += chunk.length;
+                        accumulated.write(chunk);
+                        yield chunk;
+                        if (!prefetchedVoice &&
+                            accumulated.length >= 35 &&
+                            RegExp(r'[.!?]\s').hasMatch(accumulated.toString())) {
+                          prefetchedVoice = true;
+                          GeminiVoice.instance.prefetchFirstSentence(
+                            accumulated.toString(),
+                          );
+                        }
+                      }
+                    }
                   }
                 }
-                final reply = buf.toString().trim();
-                if (reply.isNotEmpty) {
-                  yield reply;
-                  return;
-                }
               }
+            } catch (_) {}
+          }
+
+          if (emitted > 0) {
+            if (!prefetchedVoice) {
+              GeminiVoice.instance.prefetchFirstSentence(
+                accumulated.toString(),
+              );
             }
+            return;
           }
         } catch (_) {}
       }
     }
-    throw const AiException('server', 'gemini fallback failed');
+    throw const AiException('server', 'gemini direct stream failed');
   }
 
   /// Collects a complete single-turn response from AskOptSam's AI brain.

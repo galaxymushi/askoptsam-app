@@ -1,8 +1,8 @@
 {
-  "version": "2.4.16",
-  "tagName": "v2.4.16",
-  "title": "AskOptSam v2.4.16 (Fast AI, Reliable Voice & Clean Maktaba)",
-  "notes": "AI ya haraka sana (sekunde ~2 kwa gemini-3.5-flash-lite), sauti ya AI inayofanya kazi mara moja kwenye aEye na AskOptSam, na kitufe kimoja tu cha kijani cha mazungumzo/kupakua bila marudio kwenye Maktaba.",
-  "downloadUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.16/app-release.apk",
+  "version": "2.4.17",
+  "tagName": "v2.4.17",
+  "title": "AskOptSam v2.4.17 (Ultra-Fast ~1s Gemini AI & Instant Voice)",
+  "notes": "Kasi ya juu kama Google Gemini: utiririshaji wa moja kwa moja (direct SSE streaming) kwa ~0.4s, thinkingLevel: MINIMAL (~1.0s vision response), kamera iliyoboreshwa mara 10 zaidi, na sauti inayoanza kuandaliwa kabla jibu halijaisha.",
+  "downloadUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.17/app-release.apk",
   "pageUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/latest"
 }
