@@ -26,7 +26,10 @@ class _FakeNavigator implements ConciergeNavigator {
   }
 
   @override
-  Future<void> onAskQuestion(String question) async {
+  Future<void> onAskQuestion(
+    String question, {
+    String? precomputedReply,
+  }) async {
     askedQuestions.add(question);
   }
 }
@@ -38,12 +41,29 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('detects Hey AskOptSam wake phrases in Kiswahili and English', () {
+  test('detects Eye / aEye / AskOptSam wake phrases and rejects false triggers', () {
+    expect(VoiceConciergeService.isWakePhrase('Eye'), isTrue);
+    expect(VoiceConciergeService.isWakePhrase('aEye'), isTrue);
+    expect(VoiceConciergeService.isWakePhrase('Hey Eye'), isTrue);
+    expect(VoiceConciergeService.isWakePhrase('Hey aEye'), isTrue);
+    expect(VoiceConciergeService.isWakePhrase('AskOptSam'), isTrue);
     expect(VoiceConciergeService.isWakePhrase('Hey AskOptSam'), isTrue);
     expect(VoiceConciergeService.isWakePhrase('hey ask optsam nisaidie'), isTrue);
+    expect(VoiceConciergeService.isWakePhrase('ask of sam'), isTrue);
+    expect(VoiceConciergeService.isWakePhrase('ask option'), isTrue);
+    expect(VoiceConciergeService.isWakePhrase('asko sam'), isTrue);
+    expect(VoiceConciergeService.isWakePhrase('hey sam'), isTrue);
     expect(VoiceConciergeService.isWakePhrase('Habari AskOptSam'), isTrue);
-    expect(VoiceConciergeService.isWakePhrase('Hey aEye'), isTrue);
+    // Must NEVER false-trigger on normal Swahili words or background talk
     expect(VoiceConciergeService.isWakePhrase('habari za asubuhi'), isFalse);
+    expect(VoiceConciergeService.isWakePhrase('habari samahani kaka'), isFalse);
+    expect(VoiceConciergeService.isWakePhrase('samaki ni watamu sana'), isFalse);
+    expect(
+      VoiceConciergeService.isWakePhrase(
+        'jana nilienda sokoni kununua matunda mengi sana na kurudi nyumbani',
+      ),
+      isFalse,
+    );
   });
 
   test('strips wake prefix when command is spoken in one sentence', () {

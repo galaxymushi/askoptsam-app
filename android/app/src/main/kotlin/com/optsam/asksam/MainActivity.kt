@@ -284,26 +284,10 @@ class MainActivity : FlutterActivity(), SensorEventListener {
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
-        if (!shakeEnabled || event?.sensor?.type != Sensor.TYPE_ACCELEROMETER) return
-        val x = event.values[0]
-        val y = event.values[1]
-        val z = event.values[2]
-        val gForce = sqrt((x * x + y * y + z * z).toDouble()) / SensorManager.GRAVITY_EARTH
-        if (gForce > 2.15) {
-            val now = System.currentTimeMillis()
-            if (now - lastShakeTimestamp < 2500L) return
-            if (now - firstPeakTimestamp > 900L) {
-                shakePeakCount = 0
-                firstPeakTimestamp = now
-            }
-            shakePeakCount++
-            if (shakePeakCount >= 2) {
-                shakePeakCount = 0
-                lastShakeTimestamp = now
-                wakeDeviceScreen()
-                methodChannel?.invokeMethod("onWakeTriggered", "shake")
-            }
-        }
+        // Disabled in-app accelerometer auto-popup so normal phone movement or
+        // setting the phone down never triggers false wake-ups. Waking up inside
+        // the app is triggered strictly by voice ("aEye" / "AskOptSam"),
+        // Assistant intent, or tapping the Voice Mode button.
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}

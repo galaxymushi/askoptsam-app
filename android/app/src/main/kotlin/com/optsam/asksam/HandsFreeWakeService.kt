@@ -165,19 +165,29 @@ class HandsFreeWakeService : Service(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event?.sensor?.type != Sensor.TYPE_ACCELEROMETER) return
+        // Only allow screen-off shake wake when the physical screen is actually OFF
+        val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
+        val isScreenOn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+            pm?.isInteractive == true
+        } else {
+            @Suppress("DEPRECATION")
+            pm?.isScreenOn == true
+        }
+        if (isScreenOn) return
+
         val x = event.values[0]
         val y = event.values[1]
         val z = event.values[2]
         val gForce = sqrt((x * x + y * y + z * z).toDouble()) / SensorManager.GRAVITY_EARTH
-        if (gForce > 2.2) {
+        if (gForce > 2.85) {
             val now = System.currentTimeMillis()
-            if (now - lastShakeTimestamp < 2500L) return
-            if (now - firstPeakTimestamp > 900L) {
+            if (now - lastShakeTimestamp < 3000L) return
+            if (now - firstPeakTimestamp > 850L) {
                 shakePeakCount = 0
                 firstPeakTimestamp = now
             }
             shakePeakCount++
-            if (shakePeakCount >= 2) {
+            if (shakePeakCount >= 3) {
                 shakePeakCount = 0
                 lastShakeTimestamp = now
                 wakeAndLaunchActivity()

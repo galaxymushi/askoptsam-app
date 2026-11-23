@@ -30,6 +30,7 @@ class GeminiVoice {
   static const List<String> fallbackTtsModels = [
     'gemini-3.8-flash-lite-tts',
     'gemini-3.8-flash-tts',
+    'gemini-3.1-flash-tts-preview',
     'gemini-2.5-flash-preview-tts',
   ];
 
@@ -47,32 +48,45 @@ class GeminiVoice {
 
   static const int _maxCachedClips = 16;
 
-  final AudioPlayer _player = AudioPlayer();
+  AudioPlayer? _playerInstance;
+  AudioPlayer get _player => _playerInstance ??= AudioPlayer();
   final Map<String, _PcmChunk> _pcmCache = {};
   final Map<String, Future<_PcmChunk?>> _inFlight = {};
   final StreamController<void> _completionController =
       StreamController<void>.broadcast();
   bool _configured = false;
   int _activeRunId = 0;
-  DateTime? _rateLimitedUntil;
 
   Stream<void> get onComplete => _completionController.stream;
 
-  /// Pre-synthesizes the first sentence in the background while the rest of
-  /// the AI text response is still streaming, cutting perceived voice latency
-  /// by 1.5-2.5 seconds.
+  /// Pre-synthesizes a phrase (such as the voice concierge greeting or first
+  /// sentence) in the background so it plays with zero network delay.
   void prefetchFirstSentence(String text) {
     final settings = AppSettings.instance;
     if (!settings.isConfigured) return;
-    final chunks = splitSentences(text);
-    if (chunks.isEmpty) return;
+    final cleaned = _cleanForTts(text);
+    if (cleaned.isEmpty) return;
+    final clipText = cleaned.length <= 420
+        ? cleaned
+        : (splitSentences(cleaned).isNotEmpty
+            ? splitSentences(cleaned).first
+            : cleaned);
     unawaited(
       _getOrSynthesizeChunk(
         settings.apiKey,
-        chunks.first,
+        clipText,
         settings.geminiVoice,
       ),
     );
+  }
+
+  static String _cleanForTts(String raw) {
+    return raw
+        .replaceAll(RegExp(r'\*\*|__|`+|#+\s*'), '')
+        .replaceAll(RegExp(r'\r\n|\r'), '\n')
+        .replaceAll(RegExp(r'\n+'), '. ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
   }
 
   Future<void> _ensureConfigured() async {
@@ -153,8 +167,8 @@ class GeminiVoice {
 
   Future<bool> speak(String text) async {
     final settings = AppSettings.instance;
-    final trimmed = text.trim();
-    if (trimmed.isEmpty || !settings.isConfigured) return false;
+    final cleaned = _cleanForTts(text);
+    if (cleaned.isEmpty || !settings.isConfigured) return false;
 
     final runId = ++_activeRunId;
     try {
@@ -164,10 +178,17 @@ class GeminiVoice {
 
       final voice = settings.geminiVoice;
       final apiKey = settings.apiKey;
-      final chunks = splitSentences(trimmed);
+
+      // For normal 1-4 sentence responses (<= 420 chars), synthesize as ONE
+      // single continuous audio clip! This prevents chunk #2 from hitting
+      // free-tier HTTP 429 rate limits and cutting off after the first sentence.
+      final chunks = cleaned.length <= 420
+          ? <String>[cleaned]
+          : splitSentences(cleaned);
       if (chunks.isEmpty) return false;
 
-      final firstChunk = await _getOrSynthesizeChunk(apiKey, chunks.first, voice);
+      final firstChunk =
+          await _getOrSynthesizeChunk(apiKey, chunks.first, voice);
       if (runId != _activeRunId) return false;
       if (firstChunk == null) return false;
 
@@ -178,7 +199,8 @@ class GeminiVoice {
       final playedFirst = await _playWavBytes(firstWav, '${runId}_0');
       if (!playedFirst || runId != _activeRunId) return false;
 
-      // Continue synthesizing and playing remaining chunks sequentially in background.
+      // Wait for the full audio clip (and any remaining chunks for >420 char text)
+      // to finish playing before emitting onComplete.
       unawaited(
         _finishPlaybackQueue(
           runId,
@@ -282,8 +304,10 @@ class GeminiVoice {
 
   Future<void> stop() async {
     _activeRunId++;
+    final player = _playerInstance;
+    if (player == null) return;
     try {
-      await _player.stop();
+      await player.stop();
     } catch (error) {
       debugPrint('Gemini voice could not stop: $error');
     }
@@ -322,74 +346,72 @@ class GeminiVoice {
     String text,
     String voice,
   ) async {
-    final cooldown = _rateLimitedUntil;
-    if (cooldown != null && DateTime.now().isBefore(cooldown)) {
-      return null;
-    }
-
     final keysToTry = <String>{
       apiKey,
       AppSettings.builtInApiKey,
     };
 
-    for (final ttsModel in fallbackTtsModels) {
-      for (final key in keysToTry) {
-        if (key.trim().isEmpty) continue;
-        try {
-          final uri = Uri.https(
-            'generativelanguage.googleapis.com',
-            '/v1beta/models/$ttsModel:generateContent',
-          );
-          final body = jsonEncode({
-            'contents': [
-              {
-                'parts': [
-                  {'text': text},
-                ],
-              },
-            ],
-            'generationConfig': {
-              'responseModalities': ['AUDIO'],
-              'speechConfig': {
-                'voiceConfig': {
-                  'prebuiltVoiceConfig': {'voiceName': voice},
+    // Up to 2 full passes across the Gemini TTS models so temporary rate
+    // limits or network jitter never cause GeminiVoice to buckle or drop out.
+    for (var pass = 0; pass < 2; pass++) {
+      if (pass > 0) {
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+      }
+      for (final ttsModel in fallbackTtsModels) {
+        for (final key in keysToTry) {
+          if (key.trim().isEmpty) continue;
+          try {
+            final uri = Uri.https(
+              'generativelanguage.googleapis.com',
+              '/v1beta/models/$ttsModel:generateContent',
+            );
+            final body = jsonEncode({
+              'contents': [
+                {
+                  'parts': [
+                    {'text': text},
+                  ],
+                },
+              ],
+              'generationConfig': {
+                'responseModalities': ['AUDIO'],
+                'speechConfig': {
+                  'voiceConfig': {
+                    'prebuiltVoiceConfig': {'voiceName': voice},
+                  },
                 },
               },
-            },
-          });
+            });
 
-          final sw = Stopwatch()..start();
-          final response = await GeminiHttp.client
-              .post(
-                uri,
-                headers: {
-                  'Content-Type': 'application/json',
-                  'x-goog-api-key': key,
-                },
-                body: body,
-              )
-              .timeout(const Duration(seconds: 10));
-          sw.stop();
-          debugPrint(
-            'GeminiVoice ($ttsModel, voice=$voice, len=${text.length}): HTTP ${response.statusCode} in ${sw.elapsedMilliseconds}ms (${response.bodyBytes.length} bytes)',
-          );
+            final sw = Stopwatch()..start();
+            final response = await GeminiHttp.client
+                .post(
+                  uri,
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': key,
+                  },
+                  body: body,
+                )
+                .timeout(const Duration(seconds: 15));
+            sw.stop();
+            debugPrint(
+              'GeminiVoice ($ttsModel, voice=$voice, len=${text.length}, pass=$pass): HTTP ${response.statusCode} in ${sw.elapsedMilliseconds}ms (${response.bodyBytes.length} bytes)',
+            );
 
-          if (response.statusCode == 429) {
-            _rateLimitedUntil = DateTime.now().add(const Duration(seconds: 30));
-            return null;
+            if (response.statusCode != 200) {
+              continue;
+            }
+
+            final data = jsonDecode(utf8.decode(response.bodyBytes));
+            if (data is! Map<String, dynamic>) continue;
+            final pcm = ttsExtractAllPcm(data);
+            if (pcm == null || pcm.isEmpty) continue;
+            final sampleRate = sampleRateFromMime(ttsMimeType(data));
+            return _PcmChunk(pcm, sampleRate);
+          } catch (e) {
+            debugPrint('Gemini voice ($ttsModel) error: $e');
           }
-          if (response.statusCode != 200) {
-            continue;
-          }
-
-          final data = jsonDecode(utf8.decode(response.bodyBytes));
-          if (data is! Map<String, dynamic>) continue;
-          final pcm = ttsExtractAllPcm(data);
-          if (pcm == null || pcm.isEmpty) continue;
-          final sampleRate = sampleRateFromMime(ttsMimeType(data));
-          return _PcmChunk(pcm, sampleRate);
-        } catch (e) {
-          debugPrint('Gemini voice ($ttsModel) error: $e');
         }
       }
     }

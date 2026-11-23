@@ -25,6 +25,7 @@ class SpeechService {
 
   Future<void> init() async {
     try {
+      await _tts.awaitSpeakCompletion(true);
       await setLanguage(AppSettings.instance.language);
       await _tts.setSpeechRate(AppSettings.instance.speechRate);
       await _tts.setVolume(1.0);
@@ -95,7 +96,7 @@ class SpeechService {
     isSpeaking.value = true;
 
     final settings = AppSettings.instance;
-    if (!urgent && settings.isConfigured) {
+    if (settings.isConfigured) {
       final started = await GeminiVoice.instance.speak(cleaned);
       if (runId != _speechRunId || (!force && !isEyeTabActive)) {
         return;
@@ -109,7 +110,12 @@ class SpeechService {
         });
         return;
       }
-      debugPrint('SpeechService: Gemini voice failed to start; falling back to device TTS.');
+      // Keep pure Gemini AI voice without falling back to robotic device TTS.
+      debugPrint('SpeechService: Gemini voice did not start; suppressing robotic device TTS fallback.');
+      if (runId == _speechRunId) {
+        isSpeaking.value = false;
+      }
+      return;
     }
 
     if (runId != _speechRunId || (!force && !isEyeTabActive)) return;
@@ -133,6 +139,9 @@ class SpeechService {
       if (runId != _speechRunId || (!force && !isEyeTabActive)) return;
       isSpeaking.value = true;
       await _tts.speak(text);
+      if (runId == _speechRunId) {
+        isSpeaking.value = false;
+      }
     } catch (error) {
       debugPrint('Text to speech failed: $error');
       if (runId == _speechRunId) isSpeaking.value = false;

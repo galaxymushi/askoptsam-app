@@ -60,8 +60,17 @@ class AppShellState extends State<AppShell>
   }
 
   @override
-  Future<void> onAskQuestion(String question) async {
+  Future<void> onAskQuestion(
+    String question, {
+    String? precomputedReply,
+  }) async {
     if (!mounted) return;
+    if (precomputedReply != null && precomputedReply.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _chatKey.currentState?.recordVoiceTurn(question, precomputedReply);
+      });
+      return;
+    }
     setTab(0);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _chatKey.currentState?.askFromVoiceConcierge(question);
@@ -105,7 +114,9 @@ class AppShellState extends State<AppShell>
     setState(() => _index = index);
 
     if (index == 1) {
-      // User entered Eye tab
+      // User entered Eye tab: pause passive wake listener so aEye has
+      // exclusive camera & mic control.
+      VoiceConciergeService.instance.setPassiveWakeAllowed(false);
       SpeechService.instance.isEyeTabActive = true;
       if (previous != 1) {
         _eyeKey.currentState?.onTabActivated();
@@ -117,6 +128,7 @@ class AppShellState extends State<AppShell>
         _eyeKey.currentState?.onTabDeactivated();
         SpeechService.instance.stop();
       }
+      VoiceConciergeService.instance.setPassiveWakeAllowed(index == 0);
     }
 
     if (index == 2) _libraryKey.currentState?.reload();
@@ -402,30 +414,65 @@ class _VoiceConciergeOverlay extends StatelessWidget {
                 valueListenable: concierge.state,
                 builder: (context, mode, _) {
                   final isListening = mode == ConciergeState.listening;
-                  return Container(
-                    width: 112,
-                    height: 112,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isListening
-                          ? const Color(0xFF00C853)
-                          : AppColors.primary,
-                      boxShadow: [
-                        BoxShadow(
-                          color: (isListening
-                                  ? const Color(0xFF00C853)
-                                  : AppColors.primary)
-                              .withValues(alpha: 0.45),
-                          blurRadius: 28,
-                          spreadRadius: 6,
+                  return GestureDetector(
+                    onTap: () {
+                      if (mode == ConciergeState.speaking) {
+                        // Barge-in: interrupt AI speech and listen immediately!
+                        concierge.bargeInAndListen();
+                      } else if (isListening &&
+                          concierge.lastHeard.value.trim().isNotEmpty) {
+                        concierge.handleSpokenCommand(
+                          concierge.lastHeard.value.trim(),
+                        );
+                      }
+                    },
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 118,
+                          height: 118,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isListening
+                                ? const Color(0xFF00C853)
+                                : AppColors.primary,
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isListening
+                                        ? const Color(0xFF00C853)
+                                        : AppColors.primary)
+                                    .withValues(alpha: 0.45),
+                                blurRadius: 28,
+                                spreadRadius: 6,
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            isListening
+                                ? Icons.mic_rounded
+                                : Icons.graphic_eq_rounded,
+                            color: Colors.white,
+                            size: 56,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          mode == ConciergeState.speaking
+                              ? (isSw
+                                  ? 'Gusa duara kukatisha na kuongea'
+                                  : 'Tap orb to interrupt and speak')
+                              : (isSw
+                                  ? 'Inasikiliza sauti yako...'
+                                  : 'Listening to your voice...'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
-                    ),
-                    child: Icon(
-                      isListening ? Icons.mic_rounded : Icons.volume_up_rounded,
-                      color: Colors.white,
-                      size: 54,
                     ),
                   );
                 },

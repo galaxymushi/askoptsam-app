@@ -337,6 +337,32 @@ class ChatScreenState extends State<ChatScreen> {
     await VoiceConciergeService.instance.offerFollowUp();
   }
 
+  /// Records a completed spoken Q&A turn from Live Voice Mode directly into
+  /// the chat session history without interrupting the voice overlay.
+  Future<void> recordVoiceTurn(String question, String reply) async {
+    if (!mounted) return;
+    setState(() {
+      _session.messages.add(
+        ChatMessage(
+          id: _newId(),
+          role: 'user',
+          text: question.trim(),
+          createdAt: DateTime.now(),
+        ),
+      );
+      _session.messages.add(
+        ChatMessage(
+          id: _newId(),
+          role: 'assistant',
+          text: reply.trim(),
+          createdAt: DateTime.now(),
+        ),
+      );
+    });
+    _scrollToEnd();
+    await _save();
+  }
+
   void startNewChat() {
     setState(() {
       _session = ChatSession(
@@ -791,6 +817,29 @@ class _Composer extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
+            Tooltip(
+              message: 'Live Voice Mode (ChatGPT Voice)',
+              child: Material(
+                color: const Color(0xFF00C853).withValues(alpha: 0.14),
+                shape: const CircleBorder(
+                  side: BorderSide(color: Color(0xFF00C853), width: 1.4),
+                ),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () => VoiceConciergeService.instance.triggerWake(),
+                  child: const SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: Icon(
+                      Icons.graphic_eq_rounded,
+                      color: Color(0xFF00C853),
+                      size: 22,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
             Material(
               color: onSend == null
                   ? AppColors.primary.withValues(alpha: 0.45)

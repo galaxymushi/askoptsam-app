@@ -1,8 +1,8 @@
 {
-  "version": "2.4.18",
-  "tagName": "v2.4.18",
-  "title": "AskOptSam v2.4.18 (Hands-Free Blind Accessibility & Smart Mobility Guide)",
-  "notes": "Hali ya Wasioona (Tikisa simu au bonyeza Assistant kuamsha hata kioo kikiwa kimezimwa), AI inayokuuliza unataka kwenda wapi na kukupeleka moja kwa moja kwenye kamera ya aEye au kujibu maswali kwa sauti, kumbukumbu ya hatua kwenye kamera, na kuwasha tochi yenyewe kukiwa na giza.",
-  "downloadUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.18/app-release.apk",
+  "version": "2.4.19",
+  "tagName": "v2.4.19",
+  "title": "AskOptSam v2.4.19 (Pure Gemini Voice, ChatGPT-Style Voice Mode & Precision aEye Wake)",
+  "notes": "Sauti asilia ya Gemini AI pekee isiyokatika wala kubadilika kuwa ya roboti, mazungumzo ya sauti ya moja kwa moja yanayouliza maswali kama daktari (ChatGPT Voice Mode + Barge-In), na kuamka kwa usahihi pale tu unapoita 'Eye' / 'aEye' / 'AskOptSam' bila kujiwasha ovyo.",
+  "downloadUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/download/v2.4.19/app-release.apk",
   "pageUrl": "https://github.com/galaxymushi/askoptsam-eye/releases/latest"
 }
