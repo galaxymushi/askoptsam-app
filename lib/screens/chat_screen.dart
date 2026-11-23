@@ -12,6 +12,7 @@ import '../services/ai_service.dart';
 import '../services/daily_intelligence_service.dart';
 import '../services/notification_store.dart';
 import '../services/update_service.dart';
+import '../services/voice_concierge_service.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 
@@ -307,6 +308,33 @@ class ChatScreenState extends State<ChatScreen> {
   Future<void> _resend(ChatMessage message) async {
     if (_sending) return;
     await _send(message.text);
+  }
+
+  /// Triggered by Hands-Free Voice Concierge when a blind user asks a question
+  /// by voice. Submits the question, speaks the AI answer aloud, and then
+  /// offers a follow-up prompt hands-free.
+  Future<void> askFromVoiceConcierge(String question) async {
+    final trimmed = question.trim();
+    if (trimmed.isEmpty) return;
+    await _send(trimmed);
+    if (!mounted) return;
+
+    final lastMsg =
+        _session.messages.isNotEmpty ? _session.messages.last : null;
+    final spokenReply = (lastMsg != null && !lastMsg.isUser)
+        ? lastMsg.text.trim()
+        : (_errorCard ?? '');
+    if (spokenReply.isEmpty) return;
+
+    await SpeechService.instance.speak(spokenReply, force: true);
+    final sw = Stopwatch()..start();
+    while (SpeechService.instance.isSpeaking.value &&
+        sw.elapsedMilliseconds < 45000 &&
+        mounted) {
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+    }
+    if (!mounted) return;
+    await VoiceConciergeService.instance.offerFollowUp();
   }
 
   void startNewChat() {

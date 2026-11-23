@@ -132,7 +132,15 @@ class _AskScreenState extends State<AskScreen> {
     try {
       final picture = await controller.takePicture();
       final bytes = await picture.readAsBytes();
-      final result = await GeminiService.askAboutImage(bytes, question);
+      final result = await GeminiService.askAboutImage(
+        bytes,
+        question,
+        onPartialText: (partial) {
+          if (mounted) {
+            setState(() => _answer = partial);
+          }
+        },
+      );
       if (!mounted) return;
       if (result.isOk) {
         setState(() {

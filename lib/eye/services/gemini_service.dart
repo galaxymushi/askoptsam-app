@@ -22,13 +22,23 @@ class GeminiService {
   GeminiService._();
 
   static const String describePrompt =
-      'You are Eye, a calm vision assistant for a blind or low-vision person. '
-      'Describe the scene in front of the camera in two to four short '
-      'sentences. Prioritize anything that affects walking: obstacles in the '
-      'path, stairs, curbs, vehicles, cyclists, people, doorways, and readable '
-      'signs. Use clock directions where the person is facing twelve o\'clock. '
-      'If the path ahead is clear, say so. Do not use lists, markdown, or '
-      'emoji.';
+      'You are aEye, an expert orientation-and-mobility vision guide for a '
+      'blind or low-vision person walking with periodic camera snapshots '
+      '(not continuous video). Give clear, calm, actionable guidance in two '
+      'to three short sentences:\n'
+      '1. DANGER FIRST: If a hazard (stairs, drop, curb, ditch, vehicle, pole, '
+      'person, or obstacle) is within 2 steps, start immediately with "SIMAMA!" '
+      '(in Kiswahili) or "STOP!" (in English).\n'
+      '2. STEPS & CLOCK DIRECTION: Give distances in human walking steps and '
+      'clock positions where 12 o\'clock is straight ahead (for example: '
+      '"3 steps ahead at 12 o\'clock" or "hatua 3 mbele yako saa 12").\n'
+      '3. NEXT STEPS ACTION: Tell the person how to move safely for the next '
+      '3 to 5 steps before the next snapshot arrives (for example: "Walk 4 '
+      'steps straight ahead" or "Move one step left toward 11 o\'clock to '
+      'pass the chair").\n'
+      '4. CAMERA & LIGHT COACHING: If the image is very dark, blurry, or '
+      'aimed at the floor/ceiling, tell them how to adjust the phone. '
+      'Do not use lists, markdown, or emoji.';
 
   static const String readPrompt =
       'Transcribe every piece of text visible in this image exactly as it '
@@ -59,43 +69,89 @@ class GeminiService {
     }
   }
 
-  static Future<AiResult> describeScene(Uint8List jpegBytes) => _vision(
-        '$describePrompt$_languageRule',
-        jpegBytes,
-        maxTokens: 400,
-      );
+  static Future<AiResult> describeScene(
+    Uint8List jpegBytes, {
+    List<String> previousDescriptions = const [],
+    String? targetObject,
+    ValueChanged<String>? onPartialText,
+  }) {
+    final memoryBlock = previousDescriptions.isEmpty
+        ? ''
+        : '\n\nPrevious snapshots (oldest to newest — compare progress, do not '
+            'repeat unchanged background, tell the user how far they moved or '
+            'how much closer obstacles are now):\n'
+            '${previousDescriptions.asMap().entries.map((e) => 'Frame ${e.key + 1}: ${e.value}').join('\n')}';
+    final targetBlock = (targetObject == null || targetObject.trim().isEmpty)
+        ? ''
+        : '\n\nThe user is specifically looking for: "${targetObject.trim()}". '
+            'Prioritize locating it with clock direction and step distance.';
+    return _vision(
+      '$describePrompt$_languageRule$targetBlock$memoryBlock',
+      jpegBytes,
+      maxTokens: 320,
+      onPartialText: onPartialText,
+    );
+  }
 
-  static Future<AiResult> readText(Uint8List jpegBytes) =>
-      _vision(readPrompt, jpegBytes, maxTokens: 1024);
+  /// Detects whether the AI description indicates the scene is too dark so the
+  /// camera screen can automatically turn on the flashlight for a blind user.
+  static bool indicatesLowLight(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('giza') ||
+        lower.contains('mwanga hafifu') ||
+        lower.contains('too dark') ||
+        lower.contains('very dark') ||
+        lower.contains('low light');
+  }
+
+  static Future<AiResult> readText(
+    Uint8List jpegBytes, {
+    ValueChanged<String>? onPartialText,
+  }) =>
+      _vision(
+        readPrompt,
+        jpegBytes,
+        maxTokens: 1024,
+        onPartialText: onPartialText,
+      );
 
   static Future<AiResult> askAboutImage(
     Uint8List jpegBytes,
-    String question,
-  ) =>
+    String question, {
+    ValueChanged<String>? onPartialText,
+  }) =>
       _vision(
         '$askPrompt$_languageRule\n\nQuestion: ${question.trim()}',
         jpegBytes,
         maxTokens: 400,
+        onPartialText: onPartialText,
       );
 
   static Future<AiResult> _vision(
     String prompt,
     Uint8List jpegBytes, {
     int maxTokens = 500,
+    ValueChanged<String>? onPartialText,
   }) async {
     final settings = AppSettings.instance;
     if (!settings.isConfigured) {
       return const AiResult.fail('no_key');
     }
-    return _generate(settings.apiKey, settings.model, [
-      {'text': prompt},
-      {
-        'inline_data': {
-          'mime_type': 'image/jpeg',
-          'data': base64Encode(jpegBytes),
+    return _generate(
+      settings.apiKey,
+      settings.model,
+      [
+        {'text': prompt},
+        {
+          'inline_data': {
+            'mime_type': 'image/jpeg',
+            'data': base64Encode(jpegBytes),
+          },
         },
-      },
-    ], maxTokens: maxTokens);
+      ],
+      maxTokens: maxTokens,
+      onPartialText: onPartialText,
+    );
   }
 
   static Future<AiResult> testKey(String apiKey, String model) async {
@@ -112,6 +168,7 @@ class GeminiService {
     String model,
     List<Map<String, dynamic>> parts, {
     int maxTokens = 500,
+    ValueChanged<String>? onPartialText,
   }) async {
     // First try the primary model (gemini-3.5-flash-lite) with the configured key
     final primary = await _generateSingle(
@@ -119,6 +176,7 @@ class GeminiService {
       model,
       parts,
       maxTokens: maxTokens,
+      onPartialText: onPartialText,
     );
     if (primary.isOk) return primary;
 
@@ -135,6 +193,7 @@ class GeminiService {
           fallbackModel,
           parts,
           maxTokens: maxTokens,
+          onPartialText: onPartialText,
         );
         if (res.isOk) return res;
       }
@@ -154,6 +213,7 @@ class GeminiService {
     String model,
     List<Map<String, dynamic>> parts, {
     int maxTokens = 500,
+    ValueChanged<String>? onPartialText,
   }) async {
     final body = <String, dynamic>{
       'contents': [
@@ -168,6 +228,22 @@ class GeminiService {
         'thinkingConfig': _thinkingConfigFor(model),
       },
     };
+
+    // When onPartialText is provided, use SSE streaming for ~0.4s first-word
+    // display and early first-sentence voice prefetching while vision streams!
+    if (onPartialText != null) {
+      try {
+        final streamed = await _streamSingle(
+          apiKey,
+          model,
+          body,
+          onPartialText: onPartialText,
+        );
+        if (streamed != null && streamed.isOk) {
+          return streamed;
+        }
+      } catch (_) {}
+    }
 
     try {
       final sw = Stopwatch()..start();
@@ -210,6 +286,66 @@ class GeminiService {
     } catch (_) {
       return const AiResult.fail('unknown');
     }
+  }
+
+  static Future<AiResult?> _streamSingle(
+    String apiKey,
+    String model,
+    Map<String, dynamic> body, {
+    required ValueChanged<String> onPartialText,
+  }) async {
+    final uri = Uri.https(
+      'generativelanguage.googleapis.com',
+      '/v1beta/models/$model:streamGenerateContent',
+      {'alt': 'sse'},
+    );
+    final request = http.Request('POST', uri)
+      ..headers.addAll({
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
+        'x-goog-api-key': apiKey,
+      })
+      ..body = jsonEncode(body);
+
+    final response = await GeminiHttp.client
+        .send(request)
+        .timeout(const Duration(seconds: 14));
+    if (response.statusCode != 200) return null;
+
+    final accumulated = StringBuffer();
+    var prefetched = false;
+    final lines = response.stream
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .timeout(const Duration(seconds: 25));
+
+    await for (final line in lines) {
+      if (!line.startsWith('data:')) continue;
+      final payload = line.substring(5).trim();
+      if (payload.isEmpty || payload == '[DONE]') continue;
+      try {
+        final data = jsonDecode(payload) as Map<String, dynamic>;
+        final chunk = _extractText(data);
+        if (chunk != null && chunk.isNotEmpty) {
+          accumulated.write(chunk);
+          final current = accumulated.toString().trim();
+          onPartialText(current);
+          if (!prefetched &&
+              current.length >= 28 &&
+              RegExp(r'[.!?]\s').hasMatch(current)) {
+            prefetched = true;
+            GeminiVoice.instance.prefetchFirstSentence(current);
+          }
+        }
+      } catch (_) {}
+    }
+
+    final finalClean = accumulated.toString().trim();
+    if (finalClean.isEmpty) return null;
+    if (!prefetched) {
+      GeminiVoice.instance.prefetchFirstSentence(finalClean);
+    }
+    return AiResult.ok(finalClean);
   }
 
   static Future<http.Response> _post(

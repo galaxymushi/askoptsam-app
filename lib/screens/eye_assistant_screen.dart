@@ -44,19 +44,28 @@ class EyeAssistantScreenState extends State<EyeAssistantScreen> {
     _navKey.currentState?.popUntil((route) => route.isFirst);
   }
 
-  void openCamera(EyeCameraAction action) {
+  void openCamera(
+    EyeCameraAction action, {
+    bool autoStart = false,
+    String? targetObject,
+  }) {
     final nav = _navKey.currentState;
     if (nav == null) return;
+    SpeechService.instance.isEyeTabActive = true;
+    nav.popUntil((route) => route.isFirst);
     Widget target;
     switch (action) {
       case EyeCameraAction.soma:
-        target = const ReadScreen();
+        target = ReadScreen(autoStart: autoStart);
         break;
       case EyeCameraAction.uliza:
         target = const AskScreen();
         break;
       case EyeCameraAction.elezea:
-        target = const DescribeScreen();
+        target = DescribeScreen(
+          autoStart: autoStart,
+          targetObject: targetObject,
+        );
         break;
     }
     nav.push(MaterialPageRoute<void>(builder: (_) => target));

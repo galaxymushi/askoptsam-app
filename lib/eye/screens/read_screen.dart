@@ -14,7 +14,9 @@ import '../widgets/semantic_control.dart';
 import 'settings_screen.dart';
 
 class ReadScreen extends StatefulWidget {
-  const ReadScreen({super.key});
+  const ReadScreen({super.key, this.autoStart = false});
+
+  final bool autoStart;
 
   @override
   State<ReadScreen> createState() => _ReadScreenState();
@@ -24,6 +26,7 @@ class _ReadScreenState extends State<ReadScreen> {
   CameraController? _camera;
   bool _busy = false;
   bool _torch = false;
+  bool _didAutoStart = false;
   String? _text;
   String? _error;
 
@@ -43,7 +46,14 @@ class _ReadScreenState extends State<ReadScreen> {
     try {
       final picture = await controller.takePicture();
       final bytes = await picture.readAsBytes();
-      final result = await GeminiService.readText(bytes);
+      final result = await GeminiService.readText(
+        bytes,
+        onPartialText: (partial) {
+          if (mounted && !partial.toLowerCase().contains('no text found')) {
+            setState(() => _text = partial);
+          }
+        },
+      );
       if (!mounted) return;
       if (result.isOk) {
         final raw = result.text!;
@@ -100,6 +110,16 @@ class _ReadScreenState extends State<ReadScreen> {
       child: CameraShell(
         builder: (context, controller) {
           _camera = controller;
+          if (widget.autoStart && !_didAutoStart) {
+            _didAutoStart = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              SpeechService.instance.isEyeTabActive = true;
+              Future<void>.delayed(const Duration(milliseconds: 500), () {
+                if (mounted && !_busy) _read();
+              });
+            });
+          }
           final text = _text;
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),

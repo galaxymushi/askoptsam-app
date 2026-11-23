@@ -16,7 +16,14 @@ import '../widgets/semantic_control.dart';
 import 'settings_screen.dart';
 
 class DescribeScreen extends StatefulWidget {
-  const DescribeScreen({super.key});
+  const DescribeScreen({
+    super.key,
+    this.autoStart = false,
+    this.targetObject,
+  });
+
+  final bool autoStart;
+  final String? targetObject;
 
   @override
   State<DescribeScreen> createState() => _DescribeScreenState();
@@ -27,8 +34,10 @@ class _DescribeScreenState extends State<DescribeScreen> {
   bool _busy = false;
   bool _auto = false;
   bool _torch = false;
+  bool _didAutoStart = false;
   String? _description;
   String? _error;
+  final List<String> _sceneMemory = [];
   Timer? _autoTimer;
 
   @override
@@ -53,16 +62,34 @@ class _DescribeScreenState extends State<DescribeScreen> {
     try {
       final picture = await controller.takePicture();
       final bytes = await picture.readAsBytes();
-      final result = await GeminiService.describeScene(bytes);
+      final result = await GeminiService.describeScene(
+        bytes,
+        previousDescriptions: List<String>.unmodifiable(_sceneMemory),
+        targetObject: widget.targetObject,
+        onPartialText: (partial) {
+          if (mounted) {
+            setState(() => _description = partial);
+          }
+        },
+      );
       if (!mounted) return;
       if (result.isOk) {
+        final text = result.text!;
+        _sceneMemory.add(text);
+        if (_sceneMemory.length > 3) {
+          _sceneMemory.removeAt(0);
+        }
         setState(() {
-          _description = result.text;
+          _description = text;
           _busy = false;
         });
+        // Auto-turn on flashlight if the AI detects a dark room/path
+        if (!_torch && GeminiService.indicatesLowLight(text)) {
+          unawaited(_toggleTorch());
+        }
         SpeechService.instance.isEyeTabActive = true;
         await Haptics.cue(NavCue.success);
-        await SpeechService.instance.speak(result.text!);
+        await SpeechService.instance.speak(text);
       } else {
         final message = s.aiError(result.errorCode);
         setState(() {
@@ -105,7 +132,7 @@ class _DescribeScreenState extends State<DescribeScreen> {
     if (enabled) {
       SpeechService.instance.speak(s.autoStarted);
       _autoTimer = Timer.periodic(
-        const Duration(seconds: 6),
+        const Duration(seconds: 3),
         (_) {
           if (!_busy && !SpeechService.instance.isSpeaking.value) {
             _describe();
@@ -126,6 +153,26 @@ class _DescribeScreenState extends State<DescribeScreen> {
       child: CameraShell(
         builder: (context, controller) {
           _camera = controller;
+          if (widget.autoStart && !_didAutoStart) {
+            _didAutoStart = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              SpeechService.instance.isEyeTabActive = true;
+              setState(() => _auto = true);
+              _autoTimer?.cancel();
+              _autoTimer = Timer.periodic(
+                const Duration(seconds: 3),
+                (_) {
+                  if (!_busy && !SpeechService.instance.isSpeaking.value) {
+                    _describe();
+                  }
+                },
+              );
+              Future<void>.delayed(const Duration(milliseconds: 350), () {
+                if (mounted && !_busy) _describe();
+              });
+            });
+          }
           final description = _description;
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../eye/services/speech_service.dart';
 import '../l10n.dart';
 import '../services/update_service.dart';
+import '../services/voice_concierge_service.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 import 'chat_screen.dart';
@@ -17,11 +18,55 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => AppShellState();
 }
 
-class AppShellState extends State<AppShell> with WidgetsBindingObserver {
+class AppShellState extends State<AppShell>
+    with WidgetsBindingObserver
+    implements ConciergeNavigator {
   int _index = 0;
   final _libraryKey = GlobalKey<LibraryScreenState>();
   final _chatKey = GlobalKey<ChatScreenState>();
   final _eyeKey = GlobalKey<EyeAssistantScreenState>();
+
+  @override
+  String get currentLanguage {
+    if (!mounted) return 'sw';
+    return L10nScope.of(context).language;
+  }
+
+  @override
+  Future<void> onOpenEyeNavigate({String? targetObject}) async {
+    if (!mounted) return;
+    setState(() => _index = 1);
+    SpeechService.instance.isEyeTabActive = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _eyeKey.currentState?.openCamera(
+        EyeCameraAction.elezea,
+        autoStart: true,
+        targetObject: targetObject,
+      );
+    });
+  }
+
+  @override
+  Future<void> onOpenEyeRead() async {
+    if (!mounted) return;
+    setState(() => _index = 1);
+    SpeechService.instance.isEyeTabActive = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _eyeKey.currentState?.openCamera(
+        EyeCameraAction.soma,
+        autoStart: true,
+      );
+    });
+  }
+
+  @override
+  Future<void> onAskQuestion(String question) async {
+    if (!mounted) return;
+    setTab(0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _chatKey.currentState?.askFromVoiceConcierge(question);
+    });
+  }
 
   @override
   void initState() {
@@ -34,6 +79,7 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       UpdateService.instance.checkForUpdate();
+      VoiceConciergeService.instance.init(this);
     });
   }
 
@@ -79,20 +125,33 @@ class AppShellState extends State<AppShell> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _index,
+      body: Stack(
         children: [
-          ChatScreen(
-            key: _chatKey,
-            embedded: true,
-            onOpenEye: () => setTab(1),
+          IndexedStack(
+            index: _index,
+            children: [
+              ChatScreen(
+                key: _chatKey,
+                embedded: true,
+                onOpenEye: () => setTab(1),
+              ),
+              EyeAssistantScreen(key: _eyeKey),
+              LibraryScreen(
+                key: _libraryKey,
+                onStartChat: () => setTab(0),
+              ),
+              const SettingsScreen(),
+            ],
           ),
-          EyeAssistantScreen(key: _eyeKey),
-          LibraryScreen(
-            key: _libraryKey,
-            onStartChat: () => setTab(0),
+          ListenableBuilder(
+            listenable: VoiceConciergeService.instance,
+            builder: (context, _) {
+              if (!VoiceConciergeService.instance.isActive) {
+                return const SizedBox.shrink();
+              }
+              return const _VoiceConciergeOverlay();
+            },
           ),
-          const SettingsScreen(),
         ],
       ),
       bottomNavigationBar: Column(
@@ -269,6 +328,224 @@ class _PersistentUpdateBottomBar extends StatelessWidget {
               tooltip: isSw ? 'Funga' : 'Dismiss',
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VoiceConciergeOverlay extends StatelessWidget {
+  const _VoiceConciergeOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    final concierge = VoiceConciergeService.instance;
+    final t = L10nScope.of(context);
+    final isSw = t.language == 'sw';
+
+    return Material(
+      color: Colors.black.withValues(alpha: 0.88),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 24, 22, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00C853),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.record_voice_over_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          isSw
+                              ? 'MSAIDIZI WA SAUTI (HEY ASKOPTSAM)'
+                              : 'VOICE CONCIERGE (HEY ASKOPTSAM)',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: isSw ? 'Funga' : 'Close',
+                    onPressed: concierge.cancelSession,
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              ValueListenableBuilder<ConciergeState>(
+                valueListenable: concierge.state,
+                builder: (context, mode, _) {
+                  final isListening = mode == ConciergeState.listening;
+                  return Container(
+                    width: 112,
+                    height: 112,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isListening
+                          ? const Color(0xFF00C853)
+                          : AppColors.primary,
+                      boxShadow: [
+                        BoxShadow(
+                          color: (isListening
+                                  ? const Color(0xFF00C853)
+                                  : AppColors.primary)
+                              .withValues(alpha: 0.45),
+                          blurRadius: 28,
+                          spreadRadius: 6,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      isListening ? Icons.mic_rounded : Icons.volume_up_rounded,
+                      color: Colors.white,
+                      size: 54,
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              ValueListenableBuilder<String>(
+                valueListenable: concierge.statusMessage,
+                builder: (context, msg, _) => Text(
+                  msg,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              ValueListenableBuilder<String>(
+                valueListenable: concierge.lastHeard,
+                builder: (context, heard, _) {
+                  if (heard.isEmpty) return const SizedBox.shrink();
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFF00C853),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Text(
+                      '"$heard"',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Color(0xFF69F0AE),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const Spacer(),
+              SizedBox(
+                height: 66,
+                child: ElevatedButton.icon(
+                  onPressed: () => concierge.handleSpokenCommand('aEye'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00C853),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  icon: const Icon(Icons.visibility_rounded, size: 28),
+                  label: Text(
+                    isSw
+                        ? 'Nenda aEye (Kamera Kunielekeza)'
+                        : 'Go to aEye (Camera Navigation)',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 64,
+                child: ElevatedButton.icon(
+                  onPressed: () => concierge.handleSpokenCommand('uliza swali'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  icon: const Icon(Icons.question_answer_rounded, size: 26),
+                  label: Text(
+                    isSw
+                        ? 'Uliza AskOptSam Swali kwa Sauti'
+                        : 'Ask AskOptSam a Question by Voice',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 58,
+                child: OutlinedButton.icon(
+                  onPressed: concierge.cancelSession,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white54, width: 2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  icon: const Icon(Icons.stop_circle_outlined, size: 24),
+                  label: Text(
+                    isSw ? 'Simamisha Sauti' : 'Stop Voice Concierge',
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
